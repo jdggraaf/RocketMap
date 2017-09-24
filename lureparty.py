@@ -17,6 +17,7 @@ logging.basicConfig(
            '%(message)s', level=logging.INFO)
 log = logging.getLogger(__name__)
 logging.getLogger("pgoapi").setLevel(logging.WARN)
+logging.getLogger("pogoservice").setLevel(logging.INFO)
 logging.getLogger("connectionpool").setLevel(logging.WARN)
 logging.getLogger("Account").setLevel(logging.INFO)
 
