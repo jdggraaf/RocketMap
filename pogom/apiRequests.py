@@ -205,14 +205,13 @@ def set_player_team(api, account, team):
     return send_generic_request(req, account)
 
 def add_lure(api, account, fort, step_location):
-    try:
-        req = api.create_request()
-        req.add_fort_modifier(
-            modifier_type=501,
-            fort_id=fort['id'],
-            player_latitude=step_location[0],
-            player_longitude=step_location[1])
-        return send_generic_request(req, account)
+    req = api.create_request()
+    req.add_fort_modifier(
+        modifier_type=501,
+        fort_id=fort['id'],
+        player_latitude=step_location[0],
+        player_longitude=step_location[1])
+    return send_generic_request(req, account)
 
 def claim_codename(api, account, name):
     req = api.create_request()
