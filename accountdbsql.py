@@ -201,7 +201,7 @@ def db_update_account(account_info):
 def load_accounts(owner):
     if not owner:
         raise ValueError("need owner")
-    sql = "SELECT username,password,provider as auth,rest_until,last_allocated,banned,blinded,times_blinded,behaviour,'level' FROM account WHERE owner=%s and Coalesce(banned, 0) < 4 ORDER BY username;"  # todo: Consider insertiondate
+    sql = "SELECT username,password,provider as auth,lures,rest_until,last_allocated,banned,blinded,times_blinded,behaviour,'level' FROM account WHERE owner=%s and Coalesce(banned, 0) < 4 ORDER BY username;"  # todo: Consider insertiondate
     connection = __account_db_connection()
 
     try:
