@@ -82,6 +82,8 @@ if os.path.isfile(LURE_FILE):
 else:
     idx = 1
 
+log.info("Branding sequence number is {}".format(str(idx)))
+
 lock = Lock()
 
 namecycler = cycle(args.base_name)
@@ -209,7 +211,7 @@ if args.json_locations:
             worker_route = routes[route_name]
 
             for idx, route in enumerate(chunks(worker_route, 6)):
-                name = "Thread-" + json_loc["name"][:14] + "-" + str(idx)
+                name = json_loc["name"][:14] + "-" + str(idx)
                 the_thread = Thread(name=name, target=lambda: safe_lure_one_json_worker(json_loc, route, counter))
                 the_thread.start()
                 if will_start_now(json_loc):
