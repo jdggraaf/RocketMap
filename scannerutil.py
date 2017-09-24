@@ -208,6 +208,9 @@ def parse_hh_mm(stop_at_string):
     h, m = map(int, stop_at_string.split(':'))
     return h,m
 
+def minute_of_day_parse_hh_mm(stop_at_string):
+    h, m = map(int, stop_at_string.split(':'))
+    return h*60+m
 
 def start_at_datetime(stop_at_string):
     h, m = parse_hh_mm(stop_at_string)
@@ -216,11 +219,13 @@ def start_at_datetime(stop_at_string):
     return start_at
 
 
-def stop_at_datetime(time_string):
-    now = datetime.datetime.now()
-    stop_at = start_at_datetime(time_string)
-    #if stop_at < now:
-    #    stop_at += datetime.timedelta(days=1)
+def stop_at_datetime(start_time_string, stop_time_string):
+    stop_at = start_at_datetime(stop_time_string)
+
+    stop_minute_of_day = minute_of_day_parse_hh_mm(stop_time_string)
+    start_minute_of_day = minute_of_day_parse_hh_mm(start_time_string)
+    if stop_minute_of_day < start_minute_of_day:
+        stop_at += datetime.timedelta(days=1)
     return stop_at
 
 
