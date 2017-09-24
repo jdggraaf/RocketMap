@@ -186,6 +186,25 @@ def fort_search(api, account, fort, step_location):
     return send_generic_request(req, account)
 
 
+@catchRequestException('feeding pokemon')
+def feed_pokemon(api, account, item, pokemon_id, gym_id, player_location, starting_quantity):
+    req = api.create_request()
+    req.gym_feed_pokemon(
+        item=item,
+        starting_quantity=starting_quantity,
+        gym_id=gym_id,
+        pokemon_id=pokemon_id,
+        player_lat_degrees=player_location[0],
+        player_lng_degrees=player_location[1])
+    return send_generic_request(req, account)
+
+@catchRequestException('select team pokemon')
+def set_player_team(api, account, team):
+    req = api.create_request()
+    req.set_player_team(team=team)
+    return send_generic_request(req, account)
+
+
 @catchRequestException('getting Pokestop details')
 def fort_details(api, account, fort):
     req = api.create_request()

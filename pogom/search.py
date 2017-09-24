@@ -30,7 +30,7 @@ import terminalsize
 import timeit
 import threading
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Thread, Lock
 from queue import Queue, Empty
 from sets import Set
@@ -41,6 +41,14 @@ from distutils.version import StrictVersion
 from cachetools import TTLCache
 
 from pgoapi.hash_server import HashServer
+from pgoapi.utilities import f2i
+from pgoapi import utilities as util
+from pgoapi.hash_server import (HashServer, BadHashRequestException,
+                                HashingOfflineException)
+
+from accounts import AccountManager
+from accountdbsql import db_increment_banned, db_set_last_allocated, db_load_accounts, db_load_reallocated_accounts
+from workers import WorkerQueueManager
 from .models import (parse_map, GymDetails, parse_gyms, MainWorker,
                      WorkerStatus, HashKeys)
 from .utils import now, distance
@@ -350,8 +358,30 @@ def search_overseer_thread(args, new_location_queue, control_flags, heartb,
     they can be tried again later, but must wait a bit before doing do so
     to prevent accounts from being cycled through too quickly.
     '''
-    for i, account in enumerate(args.accounts):
-        account_queue.put(account)
+
+    owner_name = args.status_name
+    fnords_account_manager = AccountManager(owner_name, True, args.accountcsv,
+                                             [], args,
+                                             [],
+                                            deque(),
+                                            Queue(), {})
+
+
+#    for i, account in enumerate(args.accounts):
+#        account_queue.put(account)
+
+    seen_accts = set()
+    from_db = db_load_reallocated_accounts(owner_name,  datetime.now() - timedelta(minutes = 180), datetime.now())
+    for db_acc in from_db:
+        seen_accts.add(db_acc["username"])
+        log.info("Reallocationg account {}".format( db_acc["username"]))
+        account_queue.put(db_acc)
+
+    from_db = db_load_accounts(owner_name)
+    for db_acc in from_db:
+        if db_acc["username"] not in seen_accts:
+            account_queue.put(db_acc)
+
 
     '''
     Create sets of special case accounts.
@@ -366,6 +396,24 @@ def search_overseer_thread(args, new_location_queue, control_flags, heartb,
     account_failures = []
     # Create a double-ended queue for captcha'd accounts
     account_captchas = deque()
+
+    # account pools
+    accounts_file = None
+    if args.high_lvl_accounts and "accounts30" in args.high_lvl_accounts:
+        accounts_file = args.high_lvl_accounts
+
+    owner_name = args.status_name + "_CP"
+    cp_scan_account_manager = AccountManager(owner_name, True, accounts_file,
+                                             [], args,
+                                             account_failures,
+                                             account_captchas,
+                                             wh_queue, threadStatus)
+    num_slots = int(math.floor((args.account_rest_interval + args.account_search_interval) / args.account_search_interval))
+    num_l30 = int(cp_scan_account_manager.size() / num_slots)
+    log.info("{} of {} level 30 workers will be used to fill {} slots".format(str(num_l30), str(cp_scan_account_manager.size()), str(num_slots)))
+    args.cp_worker_manager = WorkerQueueManager(cp_scan_account_manager, 9, 9, num_l30)
+
+    log.info("Encounter={}, CP scanning active={}, encountering: {}".format(str(args.encounter), str(args.cp_worker_manager.is_scanning_active()), str(args.enc_whitelist)) )
 
     threadStatus['Overseer'] = {
         'message': 'Initializing',
@@ -788,6 +836,7 @@ def search_worker_thread(args, account_queue, account_sets, account_failures,
 
             # Get an account.
             account = account_queue.get()
+            db_set_last_allocated( account['username'], datetime.now())
             # Reset account statistics tracked per loop.
             status.update(WorkerStatus.get_worker(
                 account['username'], scheduler.scan_location))
@@ -847,6 +896,7 @@ def search_worker_thread(args, account_queue, account_sets, account_failures,
                         'accounts...').format(account['username'],
                                               args.max_empty)
                     log.warning(status['message'])
+                    db_increment_banned(account['username'])
                     account_failures.append({'account': account,
                                              'last_fail_time': now(),
                                              'reason': 'empty scans'})

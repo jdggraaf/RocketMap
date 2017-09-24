@@ -1,0 +1,4 @@
+nohup python gymwatcher.py 2>&1 >log.txt &
+echo $! > gymwatcher.pid
+
+

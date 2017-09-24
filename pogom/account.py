@@ -20,6 +20,13 @@ from .apiRequests import (send_generic_request, fort_details,
 
 log = logging.getLogger(__name__)
 
+class OutOfAccountsException:
+    """We have run out of accounts and cannot serve more requests"""
+
+    def __init__(self):
+        pass
+
+
 
 class TooManyLoginAttempts(Exception):
     pass
@@ -27,6 +34,10 @@ class TooManyLoginAttempts(Exception):
 
 class LoginSequenceFail(Exception):
     pass
+
+class BlindAcount(Exception):
+    def __init__(self, account):
+        self.account = account
 
 
 # Create the API object that'll be used to scan.
@@ -101,7 +112,7 @@ def check_login(args, account, api, proxy_url):
             break
         except AuthException:
             num_tries += 1
-            log.error(
+            log.warn(
                 ('Failed to login to Pokemon Go with account %s. ' +
                  'Trying again in %g seconds.'),
                 account['username'], args.login_delay)
@@ -535,6 +546,8 @@ def parse_get_player(account, api_response):
         account['warning'] = api_response['responses']['GET_PLAYER'].warn
         account['tutorials'] = player_data.tutorial_state
         account['buddy'] = player_data.buddy_pokemon.id
+        account['codename'] = player_data.username
+        account['team'] = player_data.team
 
 
 def clear_inventory(api, account):
