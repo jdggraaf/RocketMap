@@ -1082,7 +1082,7 @@ class TravelTime(DelegatingPogoService):
         try:
             if now < self.earliest_next_gmo:
                 to_sleep = (self.earliest_next_gmo - now).total_seconds()
-                log.info("Sleeping for api constraint {}".format(to_sleep))
+                log.debug("Sleeping for api constraint {}".format(to_sleep))
                 time.sleep(to_sleep)
             return super(TravelTime, self).do_get_map_objects(position)
         finally:
@@ -1111,7 +1111,7 @@ class TravelTime(DelegatingPogoService):
         if not account.has_position():
             return
         delay = self.time_to_location(next_location)
-        if delay > 10:
+        if delay > 30:
             self.__log_info(
                 "Moving {} from {} to {}, delaying {} seconds"
                     .format(account.name(),
