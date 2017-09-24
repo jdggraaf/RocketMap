@@ -219,8 +219,8 @@ def start_at_datetime(stop_at_string):
 def stop_at_datetime(time_string):
     now = datetime.datetime.now()
     stop_at = start_at_datetime(time_string)
-    if stop_at < now:
-        stop_at += datetime.timedelta(days=1)
+    #if stop_at < now:
+    #    stop_at += datetime.timedelta(days=1)
     return stop_at
 
 
