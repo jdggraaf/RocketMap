@@ -160,6 +160,8 @@ def safe_lure_one_json_worker(json_location, route_section, counter):
             if now > stop_at:
                 start_at += timedelta(days=1)
             sleep_dur = (start_at - now).total_seconds()
+            if sleep_dur < 0:
+                sleep_dur = abs(sleep_dur)
             log.info("{} starts at {} and runs until {}, sleeping {} seconds".format(name_, start_at, stop_time, sleep_dur))
             time.sleep(sleep_dur)
 
