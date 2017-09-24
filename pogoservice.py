@@ -20,8 +20,10 @@ from getmapobjects import inventory_player_stats, cells_with_pokemon_data, can_n
 from accountdbsql import db_update_account
 from management_errors import GaveUpApiAction
 from pogom.account import check_login, TooManyLoginAttempts, LoginSequenceFail
+from pogom.apiRequests import add_lure, claim_codename, fort_details, fort_search, level_up_rewards, release_pokemon, \
+    recycle_inventory_item
 from pogom.utils import generate_device_info
-from scannerutil import pogo_api_version, nice_coordinate_string, nice_number
+from scannerutil import nice_coordinate_string, nice_number
 
 log = logging.getLogger("pogoserv")
 
@@ -449,9 +451,7 @@ class Account2(PogoService):
     def do_claim_codename(self, name):
         self.__update_proxies()
         self.__login_if_needed()
-        req = self.pgoApi.create_request()
-        x = req.claim_codename(codename=name)
-        x = req.call()
+        x = claim_codename(self, self.account_info(), name)
         return x
 
     def do_gym_get_info(self, position, gym_position, gym_id):
@@ -819,34 +819,15 @@ class Account2(PogoService):
     def __pokestop_details_request(self, fort):
         self.__update_proxies()
         req = self.pgoApi.create_request()
-        req.fort_details(
-            fort_id=fort['id'],
-            latitude=fort['latitude'],
-            longitude=fort['longitude'])
-        fort_details_response = req.call()
+        fort_details_response = fort_details(self.pgoApi, self.account_info(), fort)
         return fort_details_response
 
     def __spin_pokestop_request(self, fort, step_location):
         try:
             self.__update_proxies()
-            req = self.pgoApi.create_request()
-            spin_pokestop_response = req.fort_search(
-                fort_id=fort['id'],
-                fort_latitude=fort['latitude'],
-                fort_longitude=fort['longitude'],
-                player_latitude=step_location[0],
-                player_longitude=step_location[1])
-            spin_pokestop_response = req.check_challenge()
-            spin_pokestop_response = req.get_hatched_eggs()
-            spin_pokestop_response = req.get_inventory()
-            spin_pokestop_response = req.check_awarded_badges()
-            spin_pokestop_response = req.download_settings()
-            spin_pokestop_response = req.get_buddy_walked()
-            spin_pokestop_response = req.call()
+            spin_pokestop_response = fort_search(self.pgoApi, self.account_info(), fort, step_location)
             log.info(self.username + " called spin_pokestop API")
-
             return spin_pokestop_response
-
         except Exception as e:
             log.warning('Exception while spinning Pokestop: %s', repr(e))
             return False
@@ -854,10 +835,7 @@ class Account2(PogoService):
     def do_collect_level_up(self, current_level):
         self.__update_proxies()
         self.__login_if_needed()
-
-        request = self.pgoApi.create_request()
-        request.level_up_rewards(level=current_level)
-        response_dict = request.call()
+        response_dict = level_up_rewards(self.pgoApi, self.account_info())
 
         if 'status_code' in response_dict and response_dict['status_code'] == 1:
             data = (response_dict
@@ -881,24 +859,15 @@ class Account2(PogoService):
     def do_transfer_pokemon(self, pokemon_ids):
         req = self.pgoApi.create_request()
         log.info("{} transfering pokemons {}".format(self.username, str(pokemon_ids)))
-        req.release_pokemon(pokemon_ids=pokemon_ids)
-        rp = ReleasePokemon(req.call())
+        rp = ReleasePokemon(release_pokemon(self.pgoApi, self.account_info(), release_ids=pokemon_ids))
         return rp.ok()
 
     def do_add_lure(self, fort, step_location):
         try:
             self.__update_proxies()
-            req = self.pgoApi.create_request()
-            add_lure_response = req.add_fort_modifier(
-                modifier_type=501,
-                fort_id=fort['id'],
-                player_latitude=step_location[0],
-                player_longitude=step_location[1])
-            add_lure_response = req.call()
-
+            add_lure_response = add_lure(self.pgoApi, self.account_info(), fort, step_location)
             result_ = add_lure_response["responses"]["ADD_FORT_MODIFIER"]['result']
             return result_
-
         except Exception as e:
             log.warning('Exception while adding lure to Pokestop: %s', repr(e))
             return False
@@ -908,10 +877,7 @@ class Account2(PogoService):
         time.sleep(seconds + int(random.random() * 3))
 
     def do_recycle_inventory_item(self, item_id, count):
-        request = self.pgoApi.create_request()
-        request.recycle_inventory_item(item_id=item_id, count=count)
-        responses = request.call()
-
+        responses = recycle_inventory_item(self.pgoApi, self.account_info(), item_id, count)
         try:
             if responses['responses']['RECYCLE_INVENTORY_ITEM']['result'] != 1:
                 log.warning("Failed to remove item {}", item_id)
@@ -1082,7 +1048,7 @@ class TravelTime(DelegatingPogoService):
         try:
             if now < self.earliest_next_gmo:
                 to_sleep = (self.earliest_next_gmo - now).total_seconds()
-                log.info("Sleeping for api constraint {}".format(to_sleep))
+                log.debug("Sleeping for api constraint {}".format(to_sleep))
                 time.sleep(to_sleep)
             return super(TravelTime, self).do_get_map_objects(position)
         finally:
@@ -1111,7 +1077,7 @@ class TravelTime(DelegatingPogoService):
         if not account.has_position():
             return
         delay = self.time_to_location(next_location)
-        if delay > 10:
+        if delay > 30:
             self.__log_info(
                 "Moving {} from {} to {}, delaying {} seconds"
                     .format(account.name(),

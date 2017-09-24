@@ -157,7 +157,7 @@ def safe_lure_one_json_worker(json_location, route_section, counter):
 
         if not will_start_now(json_location):
             sleep_dur = (start_at - now).total_seconds()
-            log.info("{} starts at {}, sleeping {} seconds".format(name_, start_at, sleep_dur))
+            log.info("{} starts at {} and runs until {}, sleeping {} seconds".format(name_, start_at, stop_time, sleep_dur))
             time.sleep(sleep_dur)
 
         weekday = str(datetime.today().weekday())

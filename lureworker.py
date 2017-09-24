@@ -124,7 +124,7 @@ class LureWorker(object):
                 ordered.append((datetime.datetime.now() + datetime.timedelta(minutes=3), item))
 
         by_time = sorted(ordered, key=lambda tup: tup[0])
-        log.info("Route metrics {}".format(str(by_time)))
+        log.debug("Route metrics {}".format(str(by_time)))
         return [x[1] for x in by_time]
 
     def lure_json_worker_positions(self, route):
