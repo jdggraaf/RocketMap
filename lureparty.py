@@ -168,6 +168,7 @@ def safe_lure_one_json_worker(json_location, route_section, counter):
             log.info("Not today, waiting {} seconds until tomorrow".format(seel_dur))
             time.sleep(seel_dur)
         else:
+            log.info("{} running until {}".format(name_, stop_time))
             try:
                 ld = LureWorker(account_manager, fix_branding, lambda lure_dropped: datetime.now() < stop_time, counter)
                 ld.lure_json_worker_positions(route_section)
