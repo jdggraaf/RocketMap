@@ -451,7 +451,7 @@ class Account2(PogoService):
     def do_claim_codename(self, name):
         self.__update_proxies()
         self.__login_if_needed()
-        x = claim_codename(self, self.account_info(), name)
+        x = claim_codename(self.pgoApi, self.account_info(), name)
         return x
 
     def do_gym_get_info(self, position, gym_position, gym_id):
