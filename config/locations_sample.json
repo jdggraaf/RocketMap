@@ -1,0 +1,35 @@
+{
+  "schedules": [
+    {
+      "name": "weekend-route-1",
+      "start": "08:00",
+      "end": "23:00",
+      "days": "56",
+      "route": "standard_route1"
+    },
+    {
+      "name": "week-route-1",
+      "start": "16:00",
+      "end": "23:00",
+      "days": "01234",
+      "route": "standard_route1"
+    },
+    {
+      "name": "all-the-time",
+      "start": "12:00",
+      "end": "21:00",
+      "days": "01234567",
+      "route": "central-city"
+    }
+  ],
+  "routes": {
+    "standard_route1": [
+      "49.917889, 10.7398050",
+      "49.918025, 10.7389400"
+    ],
+    "central-city": [
+      "49.923813, 10.7316790",
+      "49.924321, 10.7307800"
+    ]
+  }
+}
