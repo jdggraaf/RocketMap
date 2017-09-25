@@ -217,7 +217,7 @@ class LureWorker(object):
             return False
 
     def time_of_lure_expiry(self, next_lure_expiry, pokestop):
-        expires_at = datetime.datetime.fromtimestamp(pokestop["lure_info"]["lure_expires_timestamp_ms"] / 1000)
+        expires_at = datetime.datetime.fromtimestamp(self.lure_expiry(pokestop) / 1000)
         thrity_seconds_from_now = (datetime.datetime.now() + datetime.timedelta(seconds=30))
         if expires_at <= thrity_seconds_from_now:
             expires_at = thrity_seconds_from_now
@@ -227,14 +227,20 @@ class LureWorker(object):
             log.info("Pokestop {} is lured until {}".format(str(self.stop_names[pokestop["id"]]), str(expires_at)))
         return next_lure_expiry
 
+    def lure_expiry(self, pokestop):
+        return pokestop["lure_info"].lure_expires_timestamp_ms
+
+    def has_lure(self, pokestop):
+        return self.lure_expiry(pokestop) > 0
+
     def is_lured_by_us(self, pos):
         return pos in self.next_lure_at and datetime.datetime.now() < self.next_lure_at[pos]
 
     def wait_for_lure_to_expire(self, first_stop, pos):
-        if "lure_info" in first_stop:
+        if self.has_lure(first_stop):
             log.info("First pokestop in route, waiting for existing lure to expire")
 
-        while first_stop and "lure_info" in first_stop:
+        while first_stop and self.has_lure(first_stop):
             self.sleep_for_one_expiration_period(first_stop)
             map_objects = self.safe_get_map_objects(pos)
             stops = pokstops_within_distance(map_objects, pos, 40)
@@ -242,7 +248,7 @@ class LureWorker(object):
 
     def sleep_for_one_expiration_period(self, first_stop):
         if "lure_info" in first_stop:
-            expires_at = datetime.datetime.fromtimestamp(first_stop["lure_info"]["lure_expires_timestamp_ms"] / 1000)
+            expires_at = datetime.datetime.fromtimestamp(self.lure_expiry(first_stop) / 1000)
             thrity_seconds_from_now = (datetime.datetime.now() + datetime.timedelta(seconds=30))
             if expires_at <= thrity_seconds_from_now:
                 expires_at = thrity_seconds_from_now
