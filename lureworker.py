@@ -234,11 +234,10 @@ class LureWorker(object):
         if "lure_info" in first_stop:
             log.info("First pokestop in route, waiting for existing lure to expire")
 
-        while first_stop and "lure_info" in first_stop:
+        while "lure_info" in first_stop:
             self.sleep_for_one_expiration_period(first_stop)
             map_objects = self.safe_get_map_objects(pos)
-            stops = pokstops_within_distance(map_objects, pos, 40)
-            first_stop = stops[0] if len(stops) > 0 else None
+            first_stop = pokstops_within_distance(map_objects, pos, 40)[0]
 
     def sleep_for_one_expiration_period(self, first_stop):
         if "lure_info" in first_stop:

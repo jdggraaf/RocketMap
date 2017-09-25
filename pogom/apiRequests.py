@@ -198,15 +198,12 @@ def feed_pokemon(api, account, item, pokemon_id, gym_id, player_location, starti
         player_lng_degrees=player_location[1])
     return send_generic_request(req, account)
 
-
 @catchRequestException('select team pokemon')
 def set_player_team(api, account, team):
     req = api.create_request()
     req.set_player_team(team=team)
     return send_generic_request(req, account)
 
-
-@catchRequestException('addLure')
 def add_lure(api, account, fort, step_location):
     req = api.create_request()
     req.add_fort_modifier(
@@ -216,18 +213,9 @@ def add_lure(api, account, fort, step_location):
         player_longitude=step_location[1])
     return send_generic_request(req, account)
 
-
-@catchRequestException('claim codename')
 def claim_codename(api, account, name):
     req = api.create_request()
     req.claim_codename(codename=name)
-    return send_generic_request(req, account)
-
-
-@catchRequestException('set favourite')
-def set_favourite(api, account, pokemon_uid, favourite):
-    req = api.create_request()
-    req.set_favorite_pokemon(pokemon_id=pokemon_uid, is_favorite=favourite)
     return send_generic_request(req, account)
 
 
