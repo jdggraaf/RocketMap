@@ -34,10 +34,20 @@ delete from account where owner="lureparty";
 
 Tips
 -----
-* Lures are dropped in routes or subsets of a route. Hence sometimes a route might lose its lure for a minute or so if an
-  account needs replacing or encounters a captcha.
-* If you are luring a specific grinding route that people walk in a single direction, it's smart to declare the route in the opposite direction.
+* Lures are dropped in routes or subsets of a route. Routes are chopped into sections of 6 pokestops, which each gets its
+  own worker.
+* If you are luring a specific grinding route that people walk in a single direction, it's smart to declare the route 
+  in the opposite direction.
 * Users should be discouraged from luring manually in the routes, it makes the bot work less well.
+* The bot typcally uses 1 extra minute per hour. For long runs (>3 hours) I recommend setting and end time that resembles
+  when you want the last lure to be activated. 09:00-01:29 will typically have the last lure activated at 01:16.
+  Using 07.00-09.00 will typically have the last lure expire at 09:04 (and set 4 lures per stop). Setting time to 
+  07.00-09.05 will normally give you 5 lures ending at 09:35-ish. But an end-time of 09:30 is far preferable if
+  this is what you want.
+* Captchas, account-bans, hashing failurs or other intermittent problems delay luring. Impatient users might have 
+  a segment without lures for a few minutes while things are being automatically fixed.
+
+
 
 Rocketmap with improved account manager
 ==========
