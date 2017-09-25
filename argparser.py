@@ -14,7 +14,7 @@ def __parse_unicode(bytestring):
 
 def std_config(name):
     parser = std_pogo_api_config(name)
-    parser.add_argument('--api-version', default='0.73.1',
+    parser.add_argument('--api-version', default='0.75.0',
                         help=('API version currently in use.'))
     parser.add_argument('-k', '--gmaps-key',
                         help='Google Maps Javascript API Key.',

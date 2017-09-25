@@ -94,7 +94,7 @@ def check_forced_version(api_version, api_check_time, pause_bit, proxy_cycler):
 
     return api_check_time
 
-pogo_api_version = '0.73.1'
+pogo_api_version = '0.75.0'
 
 
 def install_forced_update_check(args, force_update_bit):
