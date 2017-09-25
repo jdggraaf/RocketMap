@@ -70,7 +70,7 @@ class LureWorker(object):
         try:
             objects = self.worker.do_get_map_objects(pos)
             if not self.inventory:
-                self.inventory = self.worker.account_info()["items"]
+                self.inventory = inventory_elements_by_id(objects)
             return objects
         except CaptchaRequired:
             self.replace_worker(NetworkIssueRetryer(self.account_manager.get_account_with_lures()))
