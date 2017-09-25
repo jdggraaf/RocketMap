@@ -20,8 +20,10 @@ from getmapobjects import inventory_player_stats, cells_with_pokemon_data, can_n
 from accountdbsql import db_update_account
 from management_errors import GaveUpApiAction
 from pogom.account import check_login, TooManyLoginAttempts, LoginSequenceFail
+from pogom.apiRequests import add_lure, claim_codename, fort_details, fort_search, level_up_rewards, release_pokemon, \
+    recycle_inventory_item, set_favourite, gym_get_info, encounter, get_map_objects
 from pogom.utils import generate_device_info
-from scannerutil import pogo_api_version, nice_coordinate_string, nice_number
+from scannerutil import nice_coordinate_string, nice_number
 
 log = logging.getLogger("pogoserv")
 
@@ -436,9 +438,7 @@ class Account2(PogoService):
 
     def do_set_favourite(self, pokemon_uid, favourite):
         self.__update_proxies()
-        req = self.pgoApi.create_request()
-        x = req.set_favorite_pokemon(pokemon_id=pokemon_uid, is_favorite=favourite)
-        x = req.call()
+        x = set_favourite(self.pgoApi, self.account_info(), pokemon_uid,favourite)
         if self.is_empty_response(x, pokemon_uid):
             raise EmptyResponse(x)
         if self.is_empty_response_100(x):
@@ -449,9 +449,7 @@ class Account2(PogoService):
     def do_claim_codename(self, name):
         self.__update_proxies()
         self.__login_if_needed()
-        req = self.pgoApi.create_request()
-        x = req.claim_codename(codename=name)
-        x = req.call()
+        x = claim_codename(self.pgoApi, self.account_info(), name)
         return x
 
     def do_gym_get_info(self, position, gym_position, gym_id):
@@ -460,22 +458,9 @@ class Account2(PogoService):
             self.__update_position(position)
             self.__login_if_needed()
             self.__update_position(self.last_location)  # redundant ?
-            req = self.pgoApi.create_request()
-            self.__block_for_gym_requests()
-            self.last_api = datetime.now()
-            x = req.gym_get_info(gym_id=gym_id,
-                                 player_lat_degrees=f2i(position[0]),
-                                 player_lng_degrees=f2i(position[1]),
-                                 gym_lat_degrees=gym_position[0],
-                                 gym_lng_degrees=gym_position[1])
 
-            x = req.check_challenge()
-            x = req.get_hatched_eggs()
-            x = req.get_inventory()
-            x = req.check_awarded_badges()
-            x = req.download_settings()
-            x = req.get_buddy_walked()
-            x = req.call()
+            gym = {'gym_id': gym_id, 'latitude' : gym_position[0], 'longitude': gym_position[1]}
+            x = gym_get_info(self.pgoApi, self.account_info(), position, gym)
 
             if self.is_empty_response(x, gym_id):
                 raise EmptyResponse(x)
@@ -497,20 +482,7 @@ class Account2(PogoService):
         self.__login_if_needed()
 
         self.__block_for_encounter()
-        req30 = self.pgoApi.create_request()
-        encounter_result2 = req30.encounter(encounter_id=encounter_id,
-                                            spawn_point_id=spawn_point_id,
-                                            player_latitude=step_location[
-                                                0],
-                                            player_longitude=step_location[
-                                                1])
-        encounter_result2 = req30.check_challenge()
-        encounter_result2 = req30.get_hatched_eggs()
-        encounter_result2 = req30.get_inventory()
-        encounter_result2 = req30.check_awarded_badges()
-        encounter_result2 = req30.download_settings()
-        encounter_result2 = req30.get_buddy_walked()
-        encounter_result2 = req30.call()
+        encounter_result2 = encounter(self.pgoApi, self.account_info, encounter_id, spawn_point_id, step_location)
         self.next_encounter = (self.timestamp_ms() + 2000) + random.random() * 1000
 
         log.info(self.username + " called encounter API")
@@ -555,18 +527,9 @@ class Account2(PogoService):
             req = self.pgoApi.create_request()
 
             self.__block_for_get_map_objects(self)
+
             self.last_api = datetime.now()
-            map_objects = req.get_map_objects(cell_id=cellIds,
-                                              since_timestamp_ms=timestamps,
-                                              latitude=lat,
-                                              longitude=lng)
-            map_objects = req.check_challenge()
-            map_objects = req.get_hatched_eggs()
-            map_objects = req.get_inventory()
-            map_objects = req.check_awarded_badges()
-            map_objects = req.download_settings()
-            map_objects = req.get_buddy_walked()
-            map_objects = req.call()
+            map_objects = get_map_objects(self.pgoApi, self.account_info(), position, True)
             log.debug(self.username + " called get_map_objects API at (" + str(lat) + "," + str(lng) + ")")
 
             if self.is_empty_response_100(map_objects):
@@ -615,7 +578,7 @@ class Account2(PogoService):
 
     @staticmethod
     def is_empty_response_100(response_dict):
-        status_code_ = response_dict['status_code'] == 100
+        status_code_ = response_dict['envelope'].status_code == 100
         if status_code_:
             log.warn("Response is empty(2) " + str(response_dict))
         return status_code_
@@ -625,7 +588,7 @@ class Account2(PogoService):
         responses_ = response_dict['responses']
         if 'CHECK_CHALLENGE' not in responses_:
             return False
-        captcha_url = responses_['CHECK_CHALLENGE']['challenge_url']
+        captcha_url = responses_['CHECK_CHALLENGE'].challenge_url
         return len(captcha_url) > 1
 
     def name(self):
@@ -819,34 +782,15 @@ class Account2(PogoService):
     def __pokestop_details_request(self, fort):
         self.__update_proxies()
         req = self.pgoApi.create_request()
-        req.fort_details(
-            fort_id=fort['id'],
-            latitude=fort['latitude'],
-            longitude=fort['longitude'])
-        fort_details_response = req.call()
+        fort_details_response = fort_details(self.pgoApi, self.account_info(), fort)
         return fort_details_response
 
     def __spin_pokestop_request(self, fort, step_location):
         try:
             self.__update_proxies()
-            req = self.pgoApi.create_request()
-            spin_pokestop_response = req.fort_search(
-                fort_id=fort['id'],
-                fort_latitude=fort['latitude'],
-                fort_longitude=fort['longitude'],
-                player_latitude=step_location[0],
-                player_longitude=step_location[1])
-            spin_pokestop_response = req.check_challenge()
-            spin_pokestop_response = req.get_hatched_eggs()
-            spin_pokestop_response = req.get_inventory()
-            spin_pokestop_response = req.check_awarded_badges()
-            spin_pokestop_response = req.download_settings()
-            spin_pokestop_response = req.get_buddy_walked()
-            spin_pokestop_response = req.call()
+            spin_pokestop_response = fort_search(self.pgoApi, self.account_info(), fort, step_location)
             log.info(self.username + " called spin_pokestop API")
-
             return spin_pokestop_response
-
         except Exception as e:
             log.warning('Exception while spinning Pokestop: %s', repr(e))
             return False
@@ -854,10 +798,7 @@ class Account2(PogoService):
     def do_collect_level_up(self, current_level):
         self.__update_proxies()
         self.__login_if_needed()
-
-        request = self.pgoApi.create_request()
-        request.level_up_rewards(level=current_level)
-        response_dict = request.call()
+        response_dict = level_up_rewards(self.pgoApi, self.account_info())
 
         if 'status_code' in response_dict and response_dict['status_code'] == 1:
             data = (response_dict
@@ -881,24 +822,15 @@ class Account2(PogoService):
     def do_transfer_pokemon(self, pokemon_ids):
         req = self.pgoApi.create_request()
         log.info("{} transfering pokemons {}".format(self.username, str(pokemon_ids)))
-        req.release_pokemon(pokemon_ids=pokemon_ids)
-        rp = ReleasePokemon(req.call())
+        rp = ReleasePokemon(release_pokemon(self.pgoApi, self.account_info(), release_ids=pokemon_ids))
         return rp.ok()
 
     def do_add_lure(self, fort, step_location):
         try:
             self.__update_proxies()
-            req = self.pgoApi.create_request()
-            add_lure_response = req.add_fort_modifier(
-                modifier_type=501,
-                fort_id=fort['id'],
-                player_latitude=step_location[0],
-                player_longitude=step_location[1])
-            add_lure_response = req.call()
-
+            add_lure_response = add_lure(self.pgoApi, self.account_info(), fort, step_location)
             result_ = add_lure_response["responses"]["ADD_FORT_MODIFIER"]['result']
             return result_
-
         except Exception as e:
             log.warning('Exception while adding lure to Pokestop: %s', repr(e))
             return False
@@ -908,10 +840,7 @@ class Account2(PogoService):
         time.sleep(seconds + int(random.random() * 3))
 
     def do_recycle_inventory_item(self, item_id, count):
-        request = self.pgoApi.create_request()
-        request.recycle_inventory_item(item_id=item_id, count=count)
-        responses = request.call()
-
+        responses = recycle_inventory_item(self.pgoApi, self.account_info(), item_id, count)
         try:
             if responses['responses']['RECYCLE_INVENTORY_ITEM']['result'] != 1:
                 log.warning("Failed to remove item {}", item_id)
@@ -951,7 +880,7 @@ class BanChecker(DelegatingPogoService):
 
     @staticmethod
     def is_empty_status_3_response(response_dict):
-        status_code_ = response_dict['status_code'] == 3
+        status_code_ = response_dict['envelope'].status_code == 3
         return status_code_
 
     def do_get_map_objects(self, position):
@@ -1014,7 +943,7 @@ class CaptchaChecker(DelegatingPogoService):
         if 'CHECK_CHALLENGE' not in responses_:
             log.error("{}:Expected CHECK_CHALLENGE not in response {}".format(self.name(), str(response_dict)))
             return
-        captcha_url = responses_['CHECK_CHALLENGE']['challenge_url']
+        captcha_url = responses_['CHECK_CHALLENGE'].challenge_url
 
         if len(captcha_url) > 1:
             return captcha_url

@@ -104,7 +104,7 @@ class AccountManager:
         return any(s.is_available() for s in self.accounts)
 
     def free_count(self):
-        return len([s.is_available() for s in self.accounts])
+        return len([s for s in self.accounts if s.is_available()])
 
     def proxy_supplier(self, current_proxy):
         if self.currentproxies is None:

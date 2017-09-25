@@ -41,7 +41,7 @@ class CodenameResult:
 
     def ok(self):
         result = self.response.get("responses", {}).get("CLAIM_CODENAME", {})
-        status = result.get("status", 0)
+        status = result.status
         if status == 1:
             return True
         log.error(u'Error while renaming player: {}'.format(self.codename_result_error_codes[status]))
