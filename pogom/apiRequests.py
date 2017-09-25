@@ -211,7 +211,7 @@ def add_lure(api, account, fort, step_location):
     req = api.create_request()
     req.add_fort_modifier(
         modifier_type=501,
-        fort_id=fort['id'],
+        fort_id=fort.id,
         player_latitude=step_location[0],
         player_longitude=step_location[1])
     return send_generic_request(req, account)

@@ -28,6 +28,10 @@ from scannerutil import nice_coordinate_string, nice_number
 log = logging.getLogger("pogoserv")
 
 
+def _status_code(response):
+    return response['envelope'].status_code
+
+
 class PogoService(object):
     def __init__(self):
         raise NotImplementedError("This is an abstract method.")
@@ -482,7 +486,7 @@ class Account2(PogoService):
         self.__login_if_needed()
 
         self.__block_for_encounter()
-        encounter_result2 = encounter(self.pgoApi, self.account_info, encounter_id, spawn_point_id, step_location)
+        encounter_result2 = encounter(self.pgoApi, self.account_info(), encounter_id, spawn_point_id, step_location)
         self.next_encounter = (self.timestamp_ms() + 2000) + random.random() * 1000
 
         log.info(self.username + " called encounter API")
@@ -494,7 +498,7 @@ class Account2(PogoService):
             raise EmptyResponse(encounter_result2)
         if encounter_result2 is None:
             return
-        if encounter_result2['status_code'] == 100:
+        if _status_code(encounter_result2) == 100:
             log.error(
                 'Status code 100 usually indicates missing hash key '
                 'or coordinate rounding bug in pogo')
@@ -565,20 +569,20 @@ class Account2(PogoService):
         self.last_location = position
 
     def log_if_not_ok_response(self, response_dict):
-        sc = response_dict['status_code']
+        sc = _status_code(response_dict)
         if sc != 1:
             log.warn("Response status code is not OK" + str(self.STATUS_CODES[sc]))
 
     @staticmethod
     def is_empty_response(response_dict, request):
-        status_code_ = response_dict['status_code'] == 3
+        status_code_ = _status_code(response_dict) == 3
         if status_code_:
             log.warn("Response is empty (status 3) for " + str(request))
         return status_code_
 
     @staticmethod
     def is_empty_response_100(response_dict):
-        status_code_ = response_dict['envelope'].status_code == 100
+        status_code_ = _status_code(response_dict) == 100
         if status_code_:
             log.warn("Response is empty(2) " + str(response_dict))
         return status_code_
@@ -753,9 +757,9 @@ class Account2(PogoService):
 
         spinning_radius = 0.04
 
-        if self.in_radius((fort['latitude'], fort['longitude']), step_location,
+        if self.in_radius((fort.latitude, fort.longitude), step_location,
                           spinning_radius):
-            log.debug('Attempt to spin Pokestop (ID %s)', fort['id'])
+            log.debug('Attempt to spin Pokestop (ID %s)', fort.id)
 
             spin_response = self.__spin_pokestop_request(fort, step_location)
             time.sleep(random.uniform(2, 4))  # Do not let Niantic throttle
@@ -764,7 +768,7 @@ class Account2(PogoService):
                 return
 
             # todo: this class should not be doing this logic
-            spin_result = spin_response['responses']['FORT_SEARCH']['result']
+            spin_result = spin_response['responses']['FORT_SEARCH'].result
             if spin_result is 1:
                 log.debug('Successful Pokestop spin.')
                 return spin_response
@@ -829,8 +833,8 @@ class Account2(PogoService):
         try:
             self.__update_proxies()
             add_lure_response = add_lure(self.pgoApi, self.account_info(), fort, step_location)
-            result_ = add_lure_response["responses"]["ADD_FORT_MODIFIER"]['result']
-            return result_
+            add_fort_modifier_ = add_lure_response["responses"]["ADD_FORT_MODIFIER"]
+            return add_fort_modifier_.result
         except Exception as e:
             log.warning('Exception while adding lure to Pokestop: %s', repr(e))
             return False
@@ -975,11 +979,11 @@ class BlindChecker(DelegatingPogoService):
     def seen_blinded(map_objects):
         for cell in cells_with_pokemon_data(map_objects):
             for pkmn in nearby_pokemon_from_cell(cell):
-                pokemon_id = pkmn["pokemon_id"]
+                pokemon_id = pkmn.pokemon_id
                 if pokemon_id in cannot_be_seen_when_shadowbanned:
                     return True
             for pkmn in catchable_pokemon_from_cell(cell):
-                pokemon_id = pkmn["pokemon_id"]
+                pokemon_id = pkmn.pokemon_id
                 if pokemon_id in cannot_be_seen_when_shadowbanned:
                     return True
         return False
@@ -1213,3 +1217,4 @@ class BlindedAccount:
 
     def __init__(self, api_result):
         self.api_result = api_result
+

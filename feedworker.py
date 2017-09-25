@@ -6,7 +6,7 @@ from threading import Thread
 from time import sleep
 
 from accounts import OutOfAccounts
-from getmapobjects import get_player_level, inventory_elements_by_id, inrange_gyms
+from getmapobjects import inrange_gyms
 from pogom.apiRequests import feed_pokemon, set_player_team
 from pogoservice import CaptchaRequired, NetworkIssueRetryer
 from workers import wrap_account_no_replace
@@ -85,14 +85,14 @@ class BasicFeeder(object):
 
         map_objects = self.safe_get_map_objects(pos)
         if not self.inventory:
-            self.inventory = inventory_elements_by_id(map_objects)
+            self.inventory = self.worker.account_info()["items"]
 
         while self.worker.account_info()["team"] != 0 and self.worker.account_info()["team"] != team:
             if self.worker:
                 log.info("Skipping {}, wrong team on gym {}".format(self.worker.name(), self.gym_name))
             self.replace_account(pos)
             map_objects = self.safe_get_map_objects(pos)
-            self.inventory = inventory_elements_by_id(map_objects)
+            self.inventory = self.worker.account_info()["items"]
 
         if self.worker.account_info()["team"] == 0:
             sleep(10)
@@ -100,19 +100,17 @@ class BasicFeeder(object):
             sleep(5)
         sleep(2)
         if self.worker.name() not in self.collected:
-            level = get_player_level(map_objects)
+            level = self.worker.account_info()["level"]
             self.worker.do_collect_level_up(level)
             self.collected[self.worker.name()] = self.worker
             sleep(10)
             map_objects = self.safe_get_map_objects(pos)
 
-        by_id = inventory_elements_by_id(map_objects)
-        while not self.has_berries(by_id):
+        while not self.has_berries(self.inventory):
             log.info("No berries in inventory for worker {}, replacing".format(self.worker.name()))
             self.replace_account(pos)
             map_objects = self.safe_get_map_objects(pos)
-            self.inventory = inventory_elements_by_id(map_objects)
-            by_id = inventory_elements_by_id(map_objects)
+            self.inventory = self.worker.account_info()["items"]
         return map_objects
 
 

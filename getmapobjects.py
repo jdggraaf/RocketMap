@@ -67,22 +67,6 @@ def can_not_be_seen():  # todo add 'Evolved Pokemon'
     return names_to_ids(list)
 
 
-def get_player_level(map_dict):
-    inventory_items = map_dict['responses'].get(
-        'GET_INVENTORY', {}).get(
-        'inventory_delta', {}).get(
-        'inventory_items', [])
-    player_stats = [item['inventory_item_data']['player_stats']
-                    for item in inventory_items
-                    if 'player_stats' in item.get(
-                    'inventory_item_data', {})]
-    if len(player_stats) > 0:
-        player_level = player_stats[0].get('level', 1)
-        return player_level
-
-    return 0
-
-
 class NoPokemonFoundPossibleSpeedViolation:
     def __init__(self):
         pass
@@ -92,7 +76,7 @@ def cells_with_pokemon_data(response):
     cells = __get_map_cells(response)
     result = []
     for cell in cells:
-        if 'wild_pokemons' in cell or 'catchable_pokemons' in cell or 'nearby_pokemons' in cell:
+        if len(cell.wild_pokemons) > 0 or len(cell.catchable_pokemons) > 0 or len(cell.nearby_pokemons):
             result.append( cell)
     return result
 
@@ -133,11 +117,11 @@ def celldiff(old_cells, new_cells):
         for i, pkmn in enumerate(nearby_pokemon_from_cell(new_cell)):
             pokemon_in_old_cell = [x for x in nearby_pokemon_from_cell(old_cell[0]) if x['encounter_id'] == pkmn['encounter_id']]
             if pokemon_in_old_cell:
-                del new_cell["nearby_pokemons"][i]
+                del new_cell.nearby_pokemons[i]
         for i, catchable in enumerate(catchable_pokemon_from_cell(new_cell)):
             pokemon_in_old_cell = [x for x in catchable_pokemon_from_cell(old_cell[0]) if x['encounter_id'] == catchable['encounter_id']]
             if pokemon_in_old_cell:
-                del new_cell["catchable_pokemons"][i]
+                del new_cell.catchable_pokemons[i]
 
         for i, cell in enumerate(result):
             if len(nearby_pokemon_from_cell(cell)) == 0 and len(catchable_pokemon_from_cell(cell)) == 0:
@@ -151,7 +135,7 @@ def catchable_pokemon(response):
     cells = __get_map_cells(response)
     wilds = []
     for cell in cells:
-        for wild in cell.get('catchable_pokemons', []):
+        for wild in cell.catchable_pokemons:
             wilds.append(wild)
     return wilds
 
@@ -192,11 +176,11 @@ def nearby_pokemon_from_cells(cells):
 
 
 def nearby_pokemon_from_cell(cell):
-    return cell.get('nearby_pokemons', [])
+    return cell.nearby_pokemons
 
 
 def catchable_pokemon_from_cell(cell):
-    return cell.get('catchable_pokemons', [])
+    return cell.catchable_pokemons
 
 
 def all_pokemon_pokedex_ids(map_objects):
@@ -279,14 +263,6 @@ def inventory_player_stats(response):
 def inventory_elements(response):
     return inventory_item_data(response, "item")
 
-def inventory_elements_by_id(response):
-    result = {}
-    for inventory_element in inventory_elements(response):
-        el = inventory_element["item"]
-        result[el["item_id"]] = el.get("count", 0)
-    return result
-
-
 def s2_cell_ids_from_cells(cells):
     cellIds = []
     for cell in cells:
@@ -297,10 +273,10 @@ def s2_cell_ids_from_cells(cells):
 
 
 def parse_gyms(map_objects):
-    return [candidate for candidate in forts(map_objects) if 'owned_by_team' in candidate]
+    return [candidate for candidate in forts(map_objects) if candidate.type == 0]
 
 def parse_pokestops(map_objects):
-    return [candidate for candidate in forts(map_objects) if 'type' in candidate]
+    return [candidate for candidate in forts(map_objects) if candidate.type == 1]
 
 def nearest_pokstop(map_objects, pos):
     result = None
@@ -333,7 +309,7 @@ def pokstops_within_distance(map_objects, pos, m):
 def fort_within_distance(forts, pos, m):
     items = []
     for fort in forts:
-        distance = vincenty(pos, (fort["latitude"], fort["longitude"])).m
+        distance = vincenty(pos, (fort.latitude, fort.longitude)).m
         if distance < m:
             items.append((distance,fort))
     items.sort()
@@ -357,7 +333,7 @@ def forts(map_dict):
     forts = []
     cells = __get_map_cells( map_dict)
     for cell in cells:
-        forts += cell.get('forts', [])
+        forts += cell.forts
     return forts
 
 
@@ -368,16 +344,16 @@ def __check_speed_violation(cells):
 
 def match_pokemon_in_result(response, pkmn_ids):
     cells = __get_map_cells(response)
-    __check_speed_violation(cells)
-    found = [x["pokemon_id"] for x in catchable_pokemon(response) if x["pokemon_id"] in pkmn_ids]
-    found += [x["pokemon_id"] for x in nearby_pokemon(response) if x["pokemon_id"] in pkmn_ids]
+    # __check_speed_violation(cells)
+    found = [ x.pokemon_id for x in catchable_pokemon(response) if  x.pokemon_id in pkmn_ids]
+    found += [ x.pokemon_id for x in nearby_pokemon(response) if  x.pokemon_id in pkmn_ids]
     log.info("Found {} of the specified IDs {}".format(len(found), found))
     return len(found)
 
 
 def __get_map_cells(response):
     objects_ = response['responses']['GET_MAP_OBJECTS']
-    return objects_.get('map_cells',[])
+    return objects_.map_cells
 
 
 

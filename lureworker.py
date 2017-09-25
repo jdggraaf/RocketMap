@@ -6,7 +6,7 @@ from time import sleep
 
 from accountdbsql import db_consume_lures
 from argparser import location_parse
-from getmapobjects import get_player_level, inventory_elements_by_id, pokstops_within_distance, pokestop_detail
+from getmapobjects import pokstops_within_distance, pokestop_detail
 from pogoservice import CaptchaRequired, NetworkIssueRetryer
 from workers import wrap_account_no_replace
 
@@ -82,7 +82,7 @@ class LureWorker(object):
         map_objects = self.safe_get_map_objects(pos)
         sleep(2)
         if self.worker.name() not in self.collected:
-            level = get_player_level(map_objects)
+            level = self.worker.account_info()["level"]
             self.worker.do_collect_level_up(level)
             self.collected[self.worker.name()] = self.worker
             sleep(10)
@@ -169,7 +169,7 @@ class LureWorker(object):
         if first_time:
             self.log_first_time_pokestop_info(pokestop)
 
-        if "lure_info" not in pokestop:
+        if pokestop.lure_info.lure_expires_timestamp_ms == 0:
             counter = 0
             placed_lure = self.lure_single_stop(pokestop, pos)
             while self.running and not placed_lure and counter < 5:
@@ -191,7 +191,7 @@ class LureWorker(object):
         return other if other < current else current
 
     def lure_single_stop(self, pokestop, pos):
-        if "lure_info" not in pokestop:
+        if pokestop.lure_info.lure_expires_timestamp_ms == 0:
             lure, pokestop_name = self.lure_stop(pokestop)
             if lure == 4:
                 log.info("Replacing worker {} due to code 4, stop {}".format(self.worker.name(), pokestop_name))
@@ -251,15 +251,15 @@ class LureWorker(object):
 
     def log_first_time_pokestop_info(self, pokestop):
         details = pokestop_detail(self.worker.do_pokestop_details(pokestop))
-        pokestop_name = details.get("name", str(details)).encode('utf-8')
-        self.stop_names[pokestop["id"]] = pokestop_name
+        pokestop_name = details.name.encode('utf-8')
+        self.stop_names[pokestop.id] = pokestop_name
         log.info("Pokestop {} served by {}".format(pokestop_name, self.worker.name()))
         sleep(2)
 
     def lure_stop(self, pokestop):
-        stop_pos = (pokestop["latitude"], pokestop["longitude"])
+        stop_pos = (pokestop.latitude, pokestop.longitude)
         pokestop_details = pokestop_detail(self.worker.do_pokestop_details(pokestop))
         sleep(3)
         lure = self.worker.do_add_lure(pokestop, stop_pos)
-        pokestop_name = pokestop_details.get("name", str(pokestop_details)).encode('utf-8')
+        pokestop_name = pokestop_details.name.encode('utf-8')
         return lure, pokestop_name

@@ -16,7 +16,7 @@ from catchbot import CatchBot
 from geofence import get_geofences
 from geography import *
 from getmapobjects import catchable_pokemon_from_cell, nearby_pokemon_from_cell, catchable_pokemon, \
-    nearest_pokstop, get_player_level, can_not_be_seen, cells_with_pokemon_data, inrange_gyms, raid_gyms
+    nearest_pokstop, can_not_be_seen, cells_with_pokemon_data, inrange_gyms, raid_gyms
 from gymdb import update_missing_s2_ids, cell_spawnpoints, update_missing_altitudes
 from gymdbsql import set_args
 from accountdbsql import db_set_behaviour
@@ -212,7 +212,7 @@ from datetime import datetime,tzinfo,timedelta
 def do_work(worker, pos, worker_number, initial_map_objects, spawn_points, is_forced_update):
     next_ps = datetime.now() + timedelta(minutes=5, seconds=(10 * worker_number))  # always 5 minutes t be clear
     next_mon = datetime.now() + timedelta(seconds=(10 * worker_number))
-    level = get_player_level(initial_map_objects)
+    level = worker.account_info()["level"]
 
     prev_map_objects = datetime.now()
     encountered = set()
@@ -246,7 +246,7 @@ def do_work(worker, pos, worker_number, initial_map_objects, spawn_points, is_fo
         if is_pokestop(behaviour) and datetime.now() > next_ps:
             beh_spin_nearby_pokestops_with_log_map(worker, map_objects, pos, inrange_pokestops)
             next_ps = time_of_next_pokestop_spin(behaviour)
-            beh_random_bag_cleaning(map_objects, worker)
+            beh_random_bag_cleaning(worker)
 
         '''
         if is_pokemon(behaviour) and datetime.now() > next_mon:

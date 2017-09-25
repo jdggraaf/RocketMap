@@ -14,7 +14,7 @@ from behaviours import beh_handle_level_up, \
     beh_spin_nearby_pokestops_with_log_map
 from geofence import get_geofences
 from geography import *
-from getmapobjects import catchable_pokemon_from_cell, nearby_pokemon_from_cell, nearest_pokstop, get_player_level, \
+from getmapobjects import catchable_pokemon_from_cell, nearby_pokemon_from_cell, nearest_pokstop,  \
     can_not_be_seen, cells_with_pokemon_data, inrange_gyms, raid_gyms, pokemons, inrange_pokstops, \
     pokstops_within_distance
 from gymdb import update_missing_s2_ids, cell_spawnpoints, update_missing_altitudes, gym_map
@@ -228,7 +228,7 @@ def rnd_sleep(sleep_time):
 
 def do_work(worker, pos, worker_number, initial_map_objects, seen_raid_defender, is_forced_update):
     next_ps = datetime.now() + timedelta(minutes=5, seconds=(100 * worker_number))  # always 5 minutes t be clear
-    level = get_player_level(initial_map_objects)
+    level = worker.account_info()["level"]
 
     numscans = 0
     inrange_pokestops = {}
@@ -249,7 +249,7 @@ def do_work(worker, pos, worker_number, initial_map_objects, seen_raid_defender,
         if is_pokestop(behaviour) and datetime.now() > next_ps:
             beh_spin_nearby_pokestops_with_log_map(worker, map_objects, pos, inrange_pokestops)
             next_ps = time_of_next_pokestop_spin(behaviour)
-            beh_random_bag_cleaning(map_objects, worker)
+            beh_random_bag_cleaning(worker)
 
         numscans += 1
 

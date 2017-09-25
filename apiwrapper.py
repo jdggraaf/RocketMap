@@ -66,19 +66,19 @@ class EncounterPokemon:
 
     def probability(self):
         encounter = self.response.get("responses", {}).get("ENCOUNTER", {})
-        status = encounter["status"]
+        status = encounter.status
         if status != 1:
             if status == 4:
                 log.info(u'Pokemon fled from encounter')
             else:
                 log.error(u'Error while encountering pokemon: {}'.format(self.encounter_error_codes[status]))
             return
-        resp = encounter.get("capture_probability", None)
+        resp = encounter.capture_probability
         return resp
 
     def contains_expected_encounter(self):
-        wild = self.response.get("responses", {}).get("ENCOUNTER", {}).get("wild_pokemon", {})
-        actual_encounter_id = wild.get("encounter_id", None)
+        wild = self.response.get("responses", {}).get("ENCOUNTER", {}).wild_pokemon
+        actual_encounter_id = wild.encounter_id
         return self.expected_encounter_id == actual_encounter_id
 
 

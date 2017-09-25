@@ -7,7 +7,7 @@ from time import sleep
 
 from accounts import AccountManager
 from behaviours import beh_catch_pokemon, beh_handle_level_up
-from getmapobjects import find_catchable_encounter, get_player_level
+from getmapobjects import find_catchable_encounter
 from management_errors import NoMoreWorkers
 from workers import WorkerManager
 
@@ -67,7 +67,7 @@ class CatchBot():
             attempts = 0
 
             map_objects = worker.do_get_map_objects(pos)
-            level = get_player_level(map_objects)
+            level = worker.account_info()["level"]
 
             rnd_sleep(4)
             while not find_catchable_encounter(map_objects, encounter_id) and attempts < 4:

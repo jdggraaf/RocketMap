@@ -4,7 +4,7 @@ import random
 import time
 
 from apiwrapper import EncounterPokemon
-from getmapobjects import inventory_elements_by_id, inrange_pokstops, forts, get_player_level, inventory_elements, \
+from getmapobjects import inrange_pokstops, forts, inventory_elements, \
     inventory_discardable_pokemon, catchable_pokemon
 from gymdb import update_gym_from_details
 from accountdbsql import db_set_account_level
@@ -32,13 +32,10 @@ ITEM_LIMITS = {
 }
 
 
-def beh_clean_bag(pogoservice, inventory_items):
+def beh_clean_bag(pogoservice):
     rec_items = {}
     limits = ITEM_LIMITS
-    for item_dic in inventory_items:
-        item_ = item_dic["item"]
-        item = item_["item_id"]
-        count = item_.get("count", 0)
+    for item, count in pogoservice.account_info()["items"].iteritems():
         if item in limits and count > limits[item]:
             discard = count - limits[item]
             if discard > 50:
@@ -58,8 +55,8 @@ def beh_clean_bag(pogoservice, inventory_items):
 
 def beh_catch_all_nearby_pokemon(pogoservice, pos, map_objects, encountered):
     for catchable_ in catchable_pokemon(map_objects):
-        encounter_id = catchable_["encounter_id"]
-        spawn_point_id = catchable_["spawn_point_id"]
+        encounter_id = catchable_.encounter_id
+        spawn_point_id = catchable_.spawn_point_id
         if encounter_id not in encountered:
             res = beh_catch_pokemon(pogoservice, map_objects, pos, encounter_id, spawn_point_id)
             if res == WorkerResult.ERROR_NO_BALLS:
@@ -74,11 +71,11 @@ def beh_catch_pokemon(pogoservice, map_objects, position, encounter_id, spawn_po
 
     probablity = EncounterPokemon(encounter_response, encounter_id).probability()
     if probablity:
-        catch_rate_by_ball = [0] + probablity['capture_probability']
-        level = get_player_level(map_objects)
+        catch_rate_by_ball = [0] + list(probablity.capture_probability)
+        level = pogoservice.account_info()["level"]
 
         pcw = PokemonCatchWorker(position, spawn_point_id, pogoservice)
-        elements = inventory_elements_by_id(map_objects)
+        elements = pogoservice.account_info()["items"]
         catch = pcw.do_catch(encounter_id, catch_rate_by_ball, elements)
         if catch == WorkerResult.ERROR_NO_BALLS:
             return catch
@@ -103,14 +100,15 @@ def beh_spin_nearby_pokestops_with_log_map(pogoservice, map_objects, position, p
     if map_objects:
         pokestops = inrange_pokstops(map_objects, position)
         for pokestop in pokestops:
-            if "cooldown_complete_timestamp_ms" in pokestop:
+            if pokestop.cooldown_complete_timestamp_ms > 0:
                 log.debug('Pokestop is in cooldown, ignoring')
             else:
                 fort_details = pogoservice.do_pokestop_details(pokestop)
                 rnd_sleep(3)  # Randomization must be controlled consistently, not some here and some there 2 seconds was
                 if pogoservice.do_spin_pokestop(pokestop, position):
-                    fort_id = fort_details["responses"]["FORT_DETAILS"]["fort_id"]
-                    urls = fort_details["responses"]["FORT_DETAILS"]["image_urls"]
+                    fort_details_ = fort_details["responses"]["FORT_DETAILS"]
+                    fort_id = fort_details_.fort_id
+                    urls = fort_details_.image_urls
                     if not fort_id in previous_stops:
                         previous_stops[fort_id] = urls
                     else:
@@ -198,7 +196,7 @@ def rnd_sleep(sleep_time):
 
 
 def beh_handle_level_up(worker, previous_level, map_objects):
-    new_level = get_player_level(map_objects)
+    new_level = worker.account_info()["level"]
 
     if new_level != previous_level:
         rnd_sleep(2)
@@ -243,12 +241,16 @@ def beh_do_process_single_gmo_gym(pogoservice, gmo_gym, current_position):
     time.sleep(2 + random.random())
 
 
-def beh_random_bag_cleaning(map_objects, worker):
-    inventory = inventory_elements(map_objects)
-    if len(inventory) > 250 and random.random() > 0.5:
-        beh_clean_bag(worker, inventory)
-    elif len(inventory) > 320:
-        beh_clean_bag(worker, inventory)
+def beh_random_bag_cleaning(worker):
+    inventory = worker.account_info()["items"]
+    total = 0
+    for key,value in inventory.iteritems():
+        total += value
+
+    if total > 250 and random.random() > 0.5:
+        beh_clean_bag(worker)
+    elif total > 320:
+        beh_clean_bag(worker)
 
 
 def discard_random_pokemon(worker, map_objects):

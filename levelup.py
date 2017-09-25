@@ -41,6 +41,9 @@ add_webhooks(parser)
 add_geofence(parser)
 
 args = parser.parse_args()
+
+args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Oslo'}
+
 load_proxies(args)
 set_args(args)
 set_account_db_args(args)
@@ -119,7 +122,7 @@ def do_work(locations, is_forced_update):
                 map_objects = worker.do_get_map_objects(pos)
 
             beh_spin_nearby_pokestops_with_log_map(worker, map_objects, pos, inrange_pokestops)
-            beh_random_bag_cleaning(map_objects, worker)
+            beh_random_bag_cleaning(worker)
             beh_catch_all_nearby_pokemon(worker, pos, map_objects, encountered)
             did_work = True
 
