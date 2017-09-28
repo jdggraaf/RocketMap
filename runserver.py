@@ -17,6 +17,8 @@ from queue import Queue
 from flask_cors import CORS
 from flask_cache_bust import init_cache_busting
 
+from accountdbsql import set_account_db_args
+from gymdbsql import set_args
 from pogom.app import Pogom
 from pogom.utils import (get_args, now, gmaps_reverse_geolocate,
                          log_resource_usage_loop, get_debug_dump_link)
@@ -176,7 +178,7 @@ def can_start_scanning(args):
     if (not hasattr(pgoapi, "__version__") or
             StrictVersion(pgoapi.__version__) < StrictVersion(pgoapi_version)):
         log.critical(api_version_error)
-        return False
+        return True
 
     # Abort if we don't have a hash key set.
     if not args.hash_key:
@@ -187,10 +189,10 @@ def can_start_scanning(args):
     try:
         if PGoApi.get_api_version() != int(args.api_version.replace('.', '0')):
             log.critical(api_version_error)
-            return False
+            return True
     except AttributeError:
         log.critical(api_version_error)
-        return False
+        return True
 
     return True
 
@@ -203,6 +205,8 @@ def main():
     sys.excepthook = handle_exception
 
     args = get_args()
+    set_args(args)
+    set_account_db_args(args)
 
     set_log_and_verbosity(log)
 

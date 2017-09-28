@@ -50,6 +50,7 @@ def send_generic_request(req, account, settings=False, buddy=True, inbox=True):
     # Clean all unneeded data.
     del resp['envelope'].platform_returns[:]
     if 'responses' not in resp:
+        log.info("Unexpcetde response {}".format(str(resp)))
         return resp
     responses = [
         'GET_HATCHED_EGGS', 'GET_INVENTORY', 'CHECK_AWARDED_BADGES',
@@ -139,7 +140,9 @@ def parse_inventory(account, api_response):
                     'weight': p_data.weight_kg,
                     'gender': p_data.pokemon_display.gender,
                     'cp': p_data.cp,
-                    'cp_multiplier': p_data.cp_multiplier
+                    'cp_multiplier': p_data.cp_multiplier,
+                    'favorite' : p_data.favorite,
+                    'deployed_fort_id' : p_data.deployed_fort_id
                 }
                 parsed_pokemons += 1
             else:
@@ -165,9 +168,9 @@ def catchRequestException(task):
             try:
                 return function(*args, **kwargs)
             except Exception as e:
-                log.exception('Exception while %s with account %s: %s.', task,
-                              kwargs.get('account', args[1])['username'], e)
-                return False
+                # log.exception('Exception while %s with account %s: %s.', task,
+                #              kwargs.get('account', args[1])['username'], e)
+                raise e
 
         return wrapper
 
@@ -183,6 +186,51 @@ def fort_search(api, account, fort, step_location):
         fort_longitude=fort.longitude,
         player_latitude=step_location[0],
         player_longitude=step_location[1])
+    return send_generic_request(req, account)
+
+
+@catchRequestException('feeding pokemon')
+def feed_pokemon(api, account, item, pokemon_id, gym_id, player_location, starting_quantity):
+    req = api.create_request()
+    req.gym_feed_pokemon(
+        item=item,
+        starting_quantity=starting_quantity,
+        gym_id=gym_id,
+        pokemon_id=pokemon_id,
+        player_lat_degrees=player_location[0],
+        player_lng_degrees=player_location[1])
+    return send_generic_request(req, account)
+
+
+@catchRequestException('select team pokemon')
+def set_player_team(api, account, team):
+    req = api.create_request()
+    req.set_player_team(team=team)
+    return send_generic_request(req, account)
+
+
+@catchRequestException('addLure')
+def add_lure(api, account, fort, step_location):
+    req = api.create_request()
+    req.add_fort_modifier(
+        modifier_type=501,
+        fort_id=fort.id,
+        player_latitude=step_location[0],
+        player_longitude=step_location[1])
+    return send_generic_request(req, account)
+
+
+@catchRequestException('claim codename')
+def claim_codename(api, account, name):
+    req = api.create_request()
+    req.claim_codename(codename=name)
+    return send_generic_request(req, account)
+
+
+@catchRequestException('set favourite')
+def set_favourite(api, account, pokemon_uid, favourite):
+    req = api.create_request()
+    req.set_favorite_pokemon(pokemon_id=pokemon_uid, is_favorite=favourite)
     return send_generic_request(req, account)
 
 
@@ -218,6 +266,11 @@ def use_item_egg_incubator(api, account, incubator_id, egg_id):
     req.use_item_egg_incubator(item_id=incubator_id, pokemon_id=egg_id)
     return send_generic_request(req, account)
 
+@catchRequestException('putting an egg in incubator')
+def use_item_xp_boost(api, account):
+    req = api.create_request()
+    req.use_item_xp_boost(item_id=301)
+    return send_generic_request(req, account)
 
 @catchRequestException('releasing Pokemon')
 def release_pokemon(api, account, pokemon_id, release_ids=None):

@@ -1,0 +1,39 @@
+{
+  "schedules": [
+    {
+      "name": "weekend-park-1",
+      "start": "09:00",
+      "end": "01:30",
+      "days": "56",
+      "route": "park1_route,park2_route"
+    },
+    {
+      "name": "week-park-1",
+      "start": "16:00",
+      "end": "23:29",
+      "days": "01234",
+      "route": "park1_route"
+    },
+    {
+      "name": "community-favourite",
+      "start": "12:00",
+      "end": "21:00",
+      "days": "01234567",
+      "route": "central_city"
+    }
+  ],
+  "routes": {
+    "park1_route": [
+      "49.917889, 10.8398050",
+      "49.918025, 10.8389400"
+    ],
+    "park2_route": [
+      "49.817889, 10.7398050",
+      "49.818025, 10.7389400"
+    ],
+    "central_city": [
+      "49.923813, 10.7316790",
+      "49.924321, 10.7307800"
+    ]
+  }
+}

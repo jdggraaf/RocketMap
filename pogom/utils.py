@@ -448,6 +448,8 @@ def get_args():
                         help='Set the status page password.')
     parser.add_argument('-hk', '--hash-key', default=None, action='append',
                         help='Key for hash server')
+    parser.add_argument('-lhk', '--login-hash-key', default=None, action='append',
+                        help='Key for hash server during login. May be on the form http://endpoint/key')
     parser.add_argument('-novc', '--no-version-check', action='store_true',
                         help='Disable API version check.',
                         default=False)
@@ -721,7 +723,10 @@ def get_args():
         # IV/CP scanning.
         if args.enc_whitelist_file:
             with open(args.enc_whitelist_file) as f:
-                args.enc_whitelist = frozenset([int(l.strip()) for l in f])
+                all_enc = frozenset([l.strip() for l in f])
+                args.enc_whitelist = frozenset([int(l.strip()) for l in all_enc])
+                args.priority_encounters = frozenset([int(l.strip()) for l in all_enc if l.startswith("+")])
+                args.optional_encounters = frozenset([abs(int(l.strip())) for l in all_enc if l.startswith("-")])
 
         # Make max workers equal number of accounts if unspecified, and disable
         # account switching.

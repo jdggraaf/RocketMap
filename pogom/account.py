@@ -8,17 +8,32 @@ from threading import Lock
 from timeit import default_timer
 
 from pgoapi import PGoApi
-from pgoapi.exceptions import AuthException
+from pgoapi.exceptions import AuthException, HashingQuotaExceededException
 
+from scannerutil import is_forced_version
 from .fakePogoApi import FakePogoApi
 from .pgoapiwrapper import PGoApiWrapper
 from .utils import in_radius, generate_device_info, distance
 from .proxy import get_new_proxy
 from .apiRequests import (send_generic_request, fort_details,
                           recycle_inventory_item, use_item_egg_incubator,
-                          release_pokemon, level_up_rewards, fort_search)
+                          release_pokemon, level_up_rewards, fort_search, AccountBannedException)
 
 log = logging.getLogger(__name__)
+
+class OutOfAccountsException:
+    """We have run out of accounts and cannot serve more requests"""
+
+    def __init__(self):
+        pass
+
+
+class ForcedApiException(Exception):
+    """The API has been forced and we're stopping"""
+
+    def __init__(self):
+        pass
+
 
 
 class TooManyLoginAttempts(Exception):
@@ -27,6 +42,10 @@ class TooManyLoginAttempts(Exception):
 
 class LoginSequenceFail(Exception):
     pass
+
+class BlindAcount(Exception):
+    def __init__(self, account):
+        self.account = account
 
 
 # Create the API object that'll be used to scan.
@@ -69,7 +88,7 @@ def setup_api(args, status, account):
 
 
 # Use API to check the login status, and retry the login if possible.
-def check_login(args, account, api, proxy_url):
+def check_login(args, account, api, proxy_url, fail_early=False):
     # Logged in? Enough time left? Cool!
     if api._auth_provider and api._auth_provider._access_token:
         remaining_time = api._auth_provider._access_token_expiry - time.time()
@@ -82,6 +101,9 @@ def check_login(args, account, api, proxy_url):
 
     # Try to login. Repeat a few times, but don't get stuck here.
     num_tries = 0
+
+    #if is_forced_version(proxy_url):
+    #    raise ForcedApiException()
 
     # One initial try + login_retries.
     while num_tries < (args.login_retries + 1):
@@ -101,7 +123,7 @@ def check_login(args, account, api, proxy_url):
             break
         except AuthException:
             num_tries += 1
-            log.error(
+            log.warn(
                 ('Failed to login to Pokemon Go with account %s. ' +
                  'Trying again in %g seconds.'),
                 account['username'], args.login_delay)
@@ -117,23 +139,29 @@ def check_login(args, account, api, proxy_url):
     time.sleep(random.uniform(2, 4))
 
     # Simulate login sequence.
-    rpc_login_sequence(args, api, account)
+    rpc_login_sequence(args, api, account, fail_early)
 
 
 # Simulate real app via login sequence.
-def rpc_login_sequence(args, api, account):
+def rpc_login_sequence(args, api, account, fail_early=False):
     total_req = 0
     app_version = int(args.api_version.replace('.', '0'))
 
     # 1 - Make an empty request to mimick real app behavior.
     log.debug('Starting RPC login sequence...')
 
-    try:
+    def inner_login():
         req = api.create_request()
         req.call(False)
-
-        total_req += 1
         time.sleep(random.uniform(.43, .97))
+
+    try:
+        inner_login()
+        total_req += 1
+    except HashingQuotaExceededException as e:
+        log.warn("Hashing quota exceeded during login, waiting 30 seconds")
+        time.sleep(30)
+        inner_login()
     except Exception as e:
         log.exception('Login for account %s failed.'
                       + ' Exception in call request: %s.',
@@ -151,10 +179,14 @@ def rpc_login_sequence(args, api, account):
         req.get_player(player_locale=args.player_locale)
         resp = req.call(False)
         parse_get_player(account, resp)
+        warning_ = account['warning']
+        if fail_early and warning_:
+            log.warning('Account %s has received a warning aborting login sequence', account['username'])
+            return
 
         total_req += 1
         time.sleep(random.uniform(.53, 1.1))
-        if account['warning']:
+        if warning_:
             log.warning('Account %s has received a warning.',
                         account['username'])
     except Exception as e:
@@ -179,6 +211,8 @@ def rpc_login_sequence(args, api, account):
 
         total_req += 1
         time.sleep(random.uniform(.53, 1.1))
+    except AccountBannedException as abe:
+        raise abe
     except Exception as e:
         log.exception('Error while downloading remote config: %s.', e)
         raise LoginSequenceFail('Failed while getting remote config version in'
@@ -530,11 +564,15 @@ def spin_pokestop(api, account, args, fort, step_location):
 
 def parse_get_player(account, api_response):
     if 'GET_PLAYER' in api_response['responses']:
-        player_data = api_response['responses']['GET_PLAYER'].player_data
+        player_ = api_response['responses']['GET_PLAYER']
+        player_data = player_.player_data
 
-        account['warning'] = api_response['responses']['GET_PLAYER'].warn
+        account['warning'] = player_.warn
         account['tutorials'] = player_data.tutorial_state
         account['buddy'] = player_data.buddy_pokemon.id
+        account['codename'] = player_data.username
+        account['remaining_codename_claims'] = player_data.remaining_codename_claims
+        account['team'] = player_data.team
 
 
 def clear_inventory(api, account):

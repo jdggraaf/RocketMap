@@ -1,0 +1,24 @@
+db-type: mysql        # sqlite (default) or mysql
+db-host:          # required for mysql
+#db-port:               # required for mysql
+db-name:              # required for mysql
+db-user:               # required for mysql
+db-pass:
+
+captcha-key: your-2-captcha-key
+gmaps-key: your-gmaps-key
+hash-key: your-bossland-key
+#accountcsv: acounts.txt
+system-id: levelup-bot
+# legal routes are copenhagen, amsterdam1, amsterdam2, berlin, hamburg, oslo
+route: copenhagen
+# only use "locations" if you dont use routes
+#locations: 49.927931,10.699211 49.927420,10.698588 69.92605,10.70319 49.925661,10.704877 49.92492,10.70725 49.924027,10.704609 49.924242,10.703450
+# you probably want to give this your proxies for much speediness
+# one worker spends approx one hour going through a route. If you have 10 proxies and 5 threads (per-proxy), you will be runnning aprox 50 accounts per hour
+#proxy-file: proxies.txt
+# default threads is 5
+#threads-per-proxy: 5
+# default level is 5
+#target-level: 30
+proxy-file: proxies.txt

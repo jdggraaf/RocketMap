@@ -25,6 +25,9 @@ from cachetools import TTLCache
 from cachetools import cached
 from timeit import default_timer
 
+from apiwrapper import EncounterPokemon
+from management_errors import GaveUp, GaveUpApiAction, NoMoreWorkers, TooFarAway, SkippedDueToOptional
+
 from .utils import (get_pokemon_name, get_pokemon_rarity, get_pokemon_types,
                     get_args, cellid, in_radius, date_secs, clock_between,
                     get_move_name, get_move_damage, get_move_energy,
@@ -32,7 +35,8 @@ from .utils import (get_pokemon_name, get_pokemon_rarity, get_pokemon_types,
 from .transform import transform_from_wgs_to_gcj, get_new_coords
 from .customLog import printPokemon
 
-from .account import check_login, setup_api, pokestop_spinnable, spin_pokestop
+from .account import (check_login, setup_api,
+                      pokestop_spinnable, spin_pokestop, BlindAcount, OutOfAccountsException)
 from .proxy import get_new_proxy
 from .apiRequests import encounter
 
@@ -49,11 +53,67 @@ class MyRetryDB(RetryOperationalError, PooledMySQLDatabase):
     pass
 
 
+blindnessFailures = {}
+blind_can_see = {23, 46, 218, 198, 177, 161, 74, 60, 54, 81, 129, 209, 120, 191}
+
+
 # Reduction of CharField to fit max length inside 767 bytes for utf8mb4 charset
 class Utf8mb4CharField(CharField):
     def __init__(self, max_length=191, *args, **kwargs):
         self.max_length = max_length
         super(CharField, self).__init__(*args, **kwargs)
+
+
+def do_cp_iv_scan(cp_worker_manager, p, step_location, priority_encounter, optional_encounter):
+    try:
+        workerQueue = cp_worker_manager.get_worker_for_location(step_location, priority_encounter, optional_encounter)
+    except SkippedDueToOptional as s:
+        log.info("Nearest worker was {} meters away, skipping optional encounter".format(str(s.distance)))
+        return
+    except TooFarAway as t:
+        log.error("The requested CP scan location was unavailable because it was too far away, {}m. Need more workers if happening frequently".format(str(t.distance)))
+        return
+    except NoMoreWorkers:
+        log.error("Insufficient CP 30 workers, skipping encounter")
+        return
+
+    try:
+        log.info("Getting CP/IV for " + str(p['pokemon_data']['pokemon_id']) +
+                 " using " + str(workerQueue.worker.name()))
+        time.sleep(args.encounter_delay)
+        data = workerQueue.do_encounter_pokemon(p['encounter_id'], p['spawn_point_id'],
+                                           step_location)
+        actual = EncounterPokemon(data, p['encounter_id'])
+        if not actual.contains_expected_encounter():
+            log.warn("The CP encounter did not contain the expected pokemon, probably blind IV scanner {}".format(workerQueue.worker.name()))
+            return None
+
+        return actual
+    except GaveUp:
+        log.error("Gave UP scanning CP/IV for {} at {}".format(str(p['pokemon_data']['pokemon_id']), str(step_location) ) )
+    except GaveUpApiAction:
+        log.error(
+            "Gave UP api action scanning CP/IV for {} at {}".format(str(p['pokemon_data']['pokemon_id']), str(step_location)))
+    except OutOfAccountsException:
+        cp_worker_manager.discard_worker(workerQueue)
+    finally:
+        cp_worker_manager.free_worker(workerQueue)
+
+
+def is_bubble_strat_pokemon(pid):
+        return pid == 92 or pid == 63 or id == 64  # gastly, abra, kadabra
+
+
+def should_get_cp_for_bubblestrat(id, offensiveIv, defensiveIv, staminaIv, move1):
+    return (
+        (id == 92 and move1 == 263 and defensiveIv < 4 and staminaIv < 4) or # ghastly astonish. Unsure about exact defensiveIv value
+        (id == 122 and move1 == 235 and offensiveIv > 13) or # mr mime confusion (8 is enough, maybe even less)
+        (id == 64 and move1 == 235 and offensiveIv > 8) or # kadabra confusion
+        #        (id == 93 and move1 == 213) or # haunter shadow claw
+        (id == 63 and move1 == 234 and offensiveIv > 8 and defensiveIv < 10 and staminaIv < 10)  # abra zen headbutt (4 is just a number)
+        #        (id == 203 and move1 == 235 and offensiveIv > 13)  # girafarig confusion (8 is not enough)
+    )
+
 
 
 def init_database(app):
@@ -1873,6 +1933,30 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
     # Use separate level indicator for our L30 encounters.
     encounter_level = level
 
+    found_niantic_rare = False
+    for cell in cells:
+        for pokemons in cell.catchable_pokemons:
+            if pokemons.pokemon_id not in blind_can_see:
+                found_niantic_rare = True
+                break
+        for pokemons in cell.nearby_pokemons:
+            if pokemons.pokemon_id not in blind_can_see:
+                found_niantic_rare = True
+                break
+
+    username_ = account["username"]
+    if username_ not in blindnessFailures:
+        blindnessFailures[username_] = 0
+
+    if found_niantic_rare:
+        blindnessFailures[username_] = 0
+    else:
+        blindnessFailures[username_] += 1
+
+    if blindnessFailures[username_] > 30:
+        log.error('Account %s is blind', account['username'])
+        raise BlindAcount(account)
+
     for i, cell in enumerate(cells):
         # If we have map responses then use the time from the request
         if i == 0:
@@ -2023,7 +2107,23 @@ def parse_map(args, map_dict, step_location, db_update_queue, wh_update_queue,
 
             # Scan for IVs/CP and moves.
             pokemon_info = False
-            if args.encounter and (pokemon_id in args.enc_whitelist):
+            encounter_result = None
+
+            if args.cp_worker_manager.is_scanning_active() and args.encounter and (pokemon_id in args.enc_whitelist):
+                priority_encounter = pokemon_id in args.priority_encounters
+                optional_encounter = pokemon_id in args.optional_encounters
+                encounter_response = do_cp_iv_scan(args.cp_worker_manager, p, (p['latitude'], p['longitude']), priority_encounter, optional_encounter)
+
+                if encounter_response and encounter_response.response:
+                    encounter_level = get_player_level(encounter_response.response)
+
+                    # User error?
+                    if encounter_level < 30:
+                        log.error('Expected account of level 30 or higher, but account is only level '
+                                        + str(encounter_level) + '.')
+                    encounter_result = encounter_response.response
+
+            elif args.encounter and (pokemon_id in args.enc_whitelist):
                 pokemon_info = encounter_pokemon(
                     args, p, account, api, account_sets, status, key_scheduler)
 
