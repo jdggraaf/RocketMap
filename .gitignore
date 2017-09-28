@@ -28,6 +28,9 @@ static/js/custom.js
 *.bat
 *.sh
 *.log
+ScannerConfig.py
+accounts.txt
+*~
 !docs/make.bat
 !Tools/Easy-Setup/easy-setup.sh
 !Tools/Easy-Setup/setup.bat
@@ -36,3 +39,17 @@ static/js/custom.js
 !static/data/*
 !static/icons/hsl*.png
 !static/app/settings.json
+static/icons-large-sprite.png
+static/icons-sprite.png
+log.txt
+agymwatcher.ini
+bgymwatcher.ini
+gymwatcher.ini
+*.ini
+accounts*.txt
+*.pid
+sweeper.ini
+gymwatcher.ini
+gymanalyzer.ini
+startAnalyzer
+*fence.txt

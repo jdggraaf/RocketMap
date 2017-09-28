@@ -4,6 +4,7 @@
 import logging
 
 from .pgorequestwrapper import PGoRequestWrapper
+import collections
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ class PGoApiWrapper:
     def __getattr__(self, attr):
         orig_attr = getattr(self.api, attr)
 
-        if callable(orig_attr):
+        if isinstance(orig_attr, collections.Callable):
             def hooked(*args, **kwargs):
                 result = orig_attr(*args, **kwargs)
                 # Prevent wrapped class from becoming unwrapped.

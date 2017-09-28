@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
-
+import time
+import datetime
 from pgoapi.utilities import f2i, get_cell_ids
 from pgoapi.hash_server import BadHashRequestException, HashingOfflineException
 
@@ -33,15 +34,22 @@ def send_generic_request(req, account, settings=False, buddy=True, inbox=True):
     if inbox:
         req.get_inbox(is_history=True)
 
-    try:
-        resp = req.call(False)
-    except HashingOfflineException:
-        log.error('Hashing server is unreachable, it might be offline.')
-        raise
-    except BadHashRequestException:
-        log.error('Invalid or expired hashing key: %s.',
-                  req.__parent__.get_hash_server_token())
-        raise
+    hash_attempts = 0
+    while True:
+        try:
+            resp = req.call(False)
+            break
+        except HashingOfflineException:
+            if hash_attempts > 5:
+                log.error('Hashing server is unreachable, {} attempts, it might be offline.'.format(str(hash_attempts)))
+            hash_attempts += 1
+            time.sleep(min(hash_attempts,120))
+            if hash_attempts > 180:  # 6 hours
+                raise
+        except BadHashRequestException:
+            log.error('Invalid or expired hashing key: %s.',
+                      req.__parent__.get_hash_server_token())
+            raise
 
     parse_inventory(account, resp)
     if settings:
@@ -50,6 +58,7 @@ def send_generic_request(req, account, settings=False, buddy=True, inbox=True):
     # Clean all unneeded data.
     del resp['envelope'].platform_returns[:]
     if 'responses' not in resp:
+        log.info("Unexpcetde response {}".format(str(resp)))
         return resp
     responses = [
         'GET_HATCHED_EGGS', 'GET_INVENTORY', 'CHECK_AWARDED_BADGES',
@@ -105,15 +114,35 @@ def parse_inventory(account, api_response):
             account['level'] = stats.level
             account['spins'] = stats.poke_stop_visits
             account['walked'] = stats.km_walked
+            account['xp'] = stats.experience
 
             log.debug('Parsed %s player stats: level %d, %f km ' +
                       'walked, %d spins.', account['username'],
                       account['level'], account['walked'], account['spins'])
+        elif item_data.HasField("applied_items"):
+            applied_items = account["applied_items"]
+            for item in item_data.applied_items.item:
+                exp = datetime.datetime.fromtimestamp(item.expire_ms / 1000)
+                applied = datetime.datetime.fromtimestamp(item.applied_ms / 1000)
+                id = item.item_id
+
+                if id == 401 and applied < datetime.datetime.now() < exp:
+                    applied_items[401] = exp
+                else:
+                    if 401 in applied_items: del applied_items[401]
+
+                if id == 301 and applied < datetime.datetime.now() < exp:
+                    applied_items[301] = exp
+                else:
+                    if 301 in applied_items: del applied_items[301]
+
         elif item_data.HasField('item'):
             item_id = item_data.item.item_id
             item_count = item_data.item.count
             account['items'][item_id] = item_count
             parsed_items += item_count
+        elif item_data.HasField('candy'):
+            account['candy'][item_data.candy.family_id] = item_data.candy.candy
         elif item_data.HasField('egg_incubators'):
             incubators = item_data.egg_incubators.egg_incubator
             for incubator in incubators:
@@ -139,7 +168,10 @@ def parse_inventory(account, api_response):
                     'weight': p_data.weight_kg,
                     'gender': p_data.pokemon_display.gender,
                     'cp': p_data.cp,
-                    'cp_multiplier': p_data.cp_multiplier
+                    'cp_multiplier': p_data.cp_multiplier,
+                    'favorite' : p_data.favorite,
+                    'deployed_fort_id' : p_data.deployed_fort_id,
+                    'is_bad': p_data.is_bad
                 }
                 parsed_pokemons += 1
             else:
@@ -165,9 +197,9 @@ def catchRequestException(task):
             try:
                 return function(*args, **kwargs)
             except Exception as e:
-                log.exception('Exception while %s with account %s: %s.', task,
-                              kwargs.get('account', args[1])['username'], e)
-                return False
+                # log.exception('Exception while %s with account %s: %s.', task,
+                #              kwargs.get('account', args[1])['username'], e)
+                raise e
 
         return wrapper
 
@@ -183,6 +215,51 @@ def fort_search(api, account, fort, step_location):
         fort_longitude=fort.longitude,
         player_latitude=step_location[0],
         player_longitude=step_location[1])
+    return send_generic_request(req, account)
+
+
+@catchRequestException('feeding pokemon')
+def feed_pokemon(api, account, item, pokemon_id, gym_id, player_location, starting_quantity):
+    req = api.create_request()
+    req.gym_feed_pokemon(
+        item=item,
+        starting_quantity=starting_quantity,
+        gym_id=gym_id,
+        pokemon_id=pokemon_id,
+        player_lat_degrees=player_location[0],
+        player_lng_degrees=player_location[1])
+    return send_generic_request(req, account)
+
+
+@catchRequestException('select team pokemon')
+def set_player_team(api, account, team):
+    req = api.create_request()
+    req.set_player_team(team=team)
+    return send_generic_request(req, account)
+
+
+@catchRequestException('addLure')
+def add_lure(api, account, fort, step_location):
+    req = api.create_request()
+    req.add_fort_modifier(
+        modifier_type=501,
+        fort_id=fort.id,
+        player_latitude=step_location[0],
+        player_longitude=step_location[1])
+    return send_generic_request(req, account)
+
+
+@catchRequestException('claim codename')
+def claim_codename(api, account, name):
+    req = api.create_request()
+    req.claim_codename(codename=name)
+    return send_generic_request(req, account)
+
+
+@catchRequestException('set favourite')
+def set_favourite(api, account, pokemon_uid, favourite):
+    req = api.create_request()
+    req.set_favorite_pokemon(pokemon_id=pokemon_uid, is_favorite=favourite)
     return send_generic_request(req, account)
 
 
@@ -218,6 +295,19 @@ def use_item_egg_incubator(api, account, incubator_id, egg_id):
     req.use_item_egg_incubator(item_id=incubator_id, pokemon_id=egg_id)
     return send_generic_request(req, account)
 
+@catchRequestException('lycky egg')
+def use_item_xp_boost(api, account):
+    req = api.create_request()
+    req.use_item_xp_boost(item_id=301)
+    return send_generic_request(req, account)
+
+
+@catchRequestException('use incense')
+def use_item_incense(api, account):
+    req = api.create_request()
+    req.use_incense(incense_type=401)
+    return send_generic_request(req, account)
+
 
 @catchRequestException('releasing Pokemon')
 def release_pokemon(api, account, pokemon_id, release_ids=None):
@@ -228,6 +318,14 @@ def release_pokemon(api, account, pokemon_id, release_ids=None):
     req.release_pokemon(pokemon_id=pokemon_id, pokemon_ids=release_ids)
     return send_generic_request(req, account)
 
+@catchRequestException('evolving Pokemon')
+def evolve_pokemon(api, account, pokemon_id):
+    if pokemon_id is None:
+        raise ValueError
+
+    req = api.create_request()
+    req.evolve_pokemon(pokemon_id=pokemon_id)
+    return send_generic_request(req, account)
 
 @catchRequestException('getting Rewards')
 def level_up_rewards(api, account):

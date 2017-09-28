@@ -13,6 +13,7 @@ from pgoapi.exceptions import (HashingQuotaExceededException,
                                NianticThrottlingException,
                                HashingOfflineException,
                                HashingTimeoutException)
+import collections
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class PGoRequestWrapper:
     def __getattr__(self, attr):
         orig_attr = getattr(self.request, attr)
 
-        if callable(orig_attr):
+        if isinstance(orig_attr, collections.Callable):
             def hooked(*args, **kwargs):
                 result = orig_attr(*args, **kwargs)
                 # Prevent wrapped class from becoming unwrapped.

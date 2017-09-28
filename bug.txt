@@ -1,0 +1,85 @@
+2017-11-01 01:15:17,988 [    Thread-4][    levelup][    INFO][48705290] 66.4579391183 seconds to next position
+2017-11-01 01:15:17,988 [    Thread-4][    levelup][    INFO][48705290] Moving while catching for 66.5 seconds until next location
+2017-11-01 01:15:17,988 [    Thread-4][    levelup][    INFO][48705291] No suitable pokemon to catch (of 0 available), moving on
+2017-11-01 01:15:56,861 [    Thread-4][apiRequests][   ERROR][48744163] Hashing server is unreachable, it might be offline.
+2017-11-01 01:15:56,861 [    Thread-4][pogoservice][    INFO][48744163] API get_map_objects at (53.588767868088645, 10.023977249430192), 30083ms Movement 8.8s
+2017-11-01 01:15:56,861 [    Thread-4][pogoservice][ WARNING][48744163] g0g3m3sh89233:Hashing offline
+2017-11-01 01:16:40,923 [    Thread-4][apiRequests][   ERROR][48788225] Hashing server is unreachable, it might be offline.
+2017-11-01 01:16:40,923 [    Thread-4][pogoservice][    INFO][48788225] API get_map_objects at (53.588767868088645, 10.023977249430192), 30048ms
+2017-11-01 01:16:40,923 [    Thread-4][pogoservice][ WARNING][48788225] g0g3m3sh89233:Hashing offline
+2017-11-01 01:17:37,037 [    Thread-4][apiRequests][   ERROR][48844339] Hashing server is unreachable, it might be offline.
+2017-11-01 01:17:37,037 [    Thread-4][pogoservice][    INFO][48844340] API get_map_objects at (53.588767868088645, 10.023977249430192), 30078ms
+2017-11-01 01:17:37,037 [    Thread-4][pogoservice][ WARNING][48844340] g0g3m3sh89233:Hashing offline
+2017-11-01 01:18:11,394 [    Thread-4][apiRequests][   ERROR][48878696] Hashing server is unreachable, it might be offline.
+2017-11-01 01:18:11,394 [    Thread-4][pogoservice][    INFO][48878696] API get_map_objects at (53.588767868088645, 10.023977249430192), 8325ms
+2017-11-01 01:18:11,394 [    Thread-4][pogoservice][ WARNING][48878696] g0g3m3sh89233:Hashing offline
+2017-11-01 01:19:07,615 [    Thread-4][apiRequests][   ERROR][48934917] Hashing server is unreachable, it might be offline.
+2017-11-01 01:19:07,616 [    Thread-4][pogoservice][    INFO][48934918] API get_map_objects at (53.588767868088645, 10.023977249430192), 30202ms
+2017-11-01 01:19:07,616 [    Thread-4][pogoservice][ WARNING][48934919] g0g3m3sh89233:Hashing offline
+2017-11-01 01:20:03,863 [    Thread-4][apiRequests][   ERROR][48991166] Hashing server is unreachable, it might be offline.
+2017-11-01 01:20:03,864 [    Thread-4][pogoservice][    INFO][48991166] API get_map_objects at (53.588767868088645, 10.023977249430192), 30193ms
+2017-11-01 01:20:03,864 [    Thread-4][pogoservice][ WARNING][48991167] g0g3m3sh89233:Hashing offline
+2017-11-01 01:21:36,113 [    Thread-4][apiRequests][   ERROR][49083416] Hashing server is unreachable, it might be offline.
+2017-11-01 01:21:36,115 [    Thread-4][pogoservice][    INFO][49083417] API get_map_objects at (53.588767868088645, 10.023977249430192), 30139ms
+2017-11-01 01:21:36,115 [    Thread-4][pogoservice][ WARNING][49083418] g0g3m3sh89233:Hashing offline
+2017-11-01 01:23:08,362 [    Thread-4][apiRequests][   ERROR][49175664] Hashing server is unreachable, it might be offline.
+2017-11-01 01:23:08,364 [    Thread-4][pogoservice][    INFO][49175666] API get_map_objects at (53.588767868088645, 10.023977249430192), 30133ms
+2017-11-01 01:23:08,365 [    Thread-4][pogoservice][ WARNING][49175668] g0g3m3sh89233:Hashing offline
+2017-11-01 01:24:40,611 [    Thread-4][apiRequests][   ERROR][49267913] Hashing server is unreachable, it might be offline.
+2017-11-01 01:24:40,612 [    Thread-4][pogoservice][    INFO][49267914] API get_map_objects at (53.588767868088645, 10.023977249430192), 30138ms
+2017-11-01 01:24:40,614 [    Thread-4][pogoservice][ WARNING][49267916] g0g3m3sh89233:Hashing offline
+2017-11-01 01:26:46,364 [    Thread-4][apiRequests][   ERROR][49393667] Hashing server is unreachable, it might be offline.
+2017-11-01 01:26:46,364 [    Thread-4][pogoservice][    INFO][49393667] API get_map_objects at (53.588767868088645, 10.023977249430192), 3603ms
+2017-11-01 01:26:46,365 [    Thread-4][pogoservice][ WARNING][49393667] g0g3m3sh89233:Hashing offline
+2017-11-01 01:31:18,613 [    Thread-4][apiRequests][   ERROR][49665915] Hashing server is unreachable, it might be offline.
+2017-11-01 01:31:18,614 [    Thread-4][pogoservice][    INFO][49665917] API get_map_objects at (53.588767868088645, 10.023977249430192), 30138ms
+2017-11-01 01:31:18,616 [    Thread-4][pogoservice][ WARNING][49665918] g0g3m3sh89233:Hashing offline
+2017-11-01 01:39:20,675 [    Thread-4][    account][ WARNING][50147977] Failed to login to Pokemon Go with account g0g3m3sh89233. Trying again in 6 seconds.
+2017-11-01 01:39:26,684 [    Thread-4][    account][ WARNING][50153986] Failed to login to Pokemon Go with account g0g3m3sh89233. Trying again in 6 seconds.
+2017-11-01 01:39:32,690 [    Thread-4][    account][   ERROR][50159992] Failed to login to Pokemon Go with account g0g3m3sh89233 in 2 tries. Giving up.
+2017-11-01 01:39:32,690 [    Thread-4][   accounts][   ERROR][50159992] Account is temp g0g3m3sh89233   !!!!!!!
+2017-11-01 01:39:32,695 [    Thread-4][pogoservice][ WARNING][50159997] TooManyLoginAttempts
+2017-11-01 01:39:32,695 [    Thread-4][    levelup][   ERROR][50159997] Outer worker catch block caught exception
+
+
+2017-11-02 06:12:40,371 [    Thread-4][pokemon_catch_worker][    INFO][29062917] Catch failed, sleeping 6
+2017-11-02 06:12:48,684 [    Thread-4][pogoservice][    INFO][29071229] API catch_pokemon 17148807661808374012, 327ms
+2017-11-02 06:12:48,684 [    Thread-4][ behaviours][    INFO][29071229] g0g3m3sh89276 level 26 caught pokemon 10468295055309493788 in 0:00:10.662517
+2017-11-02 06:13:18,863 [    Thread-4][pogoservice][    INFO][29101408] API release_pokemon [10468295055309493788L], 30079ms API delay 0.099s from catch_pokemon to release_pokemon
+2017-11-02 06:13:18,863 [    Thread-4][pogoservice][ WARNING][29101409] g0g3m3sh89276:Niantic offline
+2017-11-02 06:14:00,877 [    Thread-4][pogoservice][ WARNING][29143422] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:14:01,372 [    Thread-4][pogoservice][    INFO][29143917] API release_pokemon [10468295055309493788L], 495ms
+2017-11-02 06:14:01,372 [    Thread-4][ apiwrapper][   ERROR][29143918] Error while transfer pokemon: FAILED
+2017-11-02 06:14:25,396 [    Thread-4][pogoservice][ WARNING][29167942] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:14:25,757 [    Thread-4][pogoservice][    INFO][29168303] API release_pokemon [10468295055309493788L], 360ms
+2017-11-02 06:14:25,757 [    Thread-4][ apiwrapper][   ERROR][29168303] Error while transfer pokemon: FAILED
+2017-11-02 06:14:49,802 [    Thread-4][pogoservice][ WARNING][29192348] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:14:50,116 [    Thread-4][pogoservice][    INFO][29192661] API release_pokemon [10468295055309493788L], 310ms
+2017-11-02 06:14:50,116 [    Thread-4][ apiwrapper][   ERROR][29192661] Error while transfer pokemon: FAILED
+2017-11-02 06:15:14,136 [    Thread-4][pogoservice][ WARNING][29216682] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:15:14,418 [    Thread-4][pogoservice][    INFO][29216964] API release_pokemon [10468295055309493788L], 281ms
+2017-11-02 06:15:14,419 [    Thread-4][ apiwrapper][   ERROR][29216964] Error while transfer pokemon: FAILED
+2017-11-02 06:15:38,443 [    Thread-4][pogoservice][ WARNING][29240989] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:15:38,728 [    Thread-4][pogoservice][    INFO][29241273] API release_pokemon [10468295055309493788L], 284ms
+2017-11-02 06:15:38,728 [    Thread-4][ apiwrapper][   ERROR][29241274] Error while transfer pokemon: FAILED
+2017-11-02 06:16:38,788 [    Thread-4][pogoservice][ WARNING][29301334] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:16:39,089 [    Thread-4][pogoservice][    INFO][29301635] API release_pokemon [10468295055309493788L], 300ms
+2017-11-02 06:16:39,089 [    Thread-4][ apiwrapper][   ERROR][29301635] Error while transfer pokemon: FAILED
+2017-11-02 06:17:39,092 [    Thread-4][pogoservice][ WARNING][29361638] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:17:39,441 [    Thread-4][pogoservice][    INFO][29361987] API release_pokemon [10468295055309493788L], 348ms
+2017-11-02 06:17:39,445 [    Thread-4][ apiwrapper][   ERROR][29361991] Error while transfer pokemon: FAILED
+2017-11-02 06:18:39,504 [    Thread-4][pogoservice][ WARNING][29422050] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:18:39,787 [    Thread-4][pogoservice][    INFO][29422332] API release_pokemon [10468295055309493788L], 282ms
+2017-11-02 06:18:39,787 [    Thread-4][ apiwrapper][   ERROR][29422333] Error while transfer pokemon: FAILED
+2017-11-02 06:20:39,887 [    Thread-4][pogoservice][ WARNING][29542432] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:20:40,172 [    Thread-4][pogoservice][    INFO][29542717] API release_pokemon [10468295055309493788L], 284ms
+2017-11-02 06:20:40,172 [    Thread-4][ apiwrapper][   ERROR][29542718] Error while transfer pokemon: FAILED
+2017-11-02 06:24:40,272 [    Thread-4][pogoservice][ WARNING][29782818] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:24:40,777 [    Thread-4][pogoservice][    INFO][29783322] API release_pokemon [10468295055309493788L], 504ms
+2017-11-02 06:24:40,777 [    Thread-4][ apiwrapper][   ERROR][29783323] Error while transfer pokemon: FAILED
+2017-11-02 06:32:40,877 [    Thread-4][pogoservice][ WARNING][30263423] There is no defined api transition from release_pokemon to release_pokemon
+2017-11-02 06:32:41,371 [    Thread-4][pogoservice][    INFO][30263917] API release_pokemon [10468295055309493788L], 493ms
+2017-11-02 06:32:41,372 [    Thread-4][ apiwrapper][   ERROR][30263918] Error while transfer pokemon: FAILED
+(END)
+
+

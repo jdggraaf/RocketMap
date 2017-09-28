@@ -7,7 +7,7 @@ import sys
 import time
 
 from random import randint
-from utils import get_async_requests_session
+from .utils import get_async_requests_session
 
 log = logging.getLogger(__name__)
 

@@ -99,4 +99,7 @@ def jitter_location(location=None, maxMeters=10):
     bearing = random.randint(0, 360)
     distance = math.sqrt(random.random()) * (float(maxMeters))
     destination = fast_get_new_coords(origin, distance, bearing)
-    return (destination[0], destination[1], location[2])
+    if len(location) > 2:
+        return (destination[0], destination[1], location[2])
+    else:
+        return (destination[0], destination[1])

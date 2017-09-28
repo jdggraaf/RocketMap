@@ -448,6 +448,8 @@ def get_args():
                         help='Set the status page password.')
     parser.add_argument('-hk', '--hash-key', default=None, action='append',
                         help='Key for hash server')
+    parser.add_argument('-lhk', '--login-hash-key', default=None, action='append',
+                        help='Key for hash server during login. May be on the form http://endpoint/key')
     parser.add_argument('-novc', '--no-version-check', action='store_true',
                         help='Disable API version check.',
                         default=False)
@@ -470,7 +472,7 @@ def get_args():
                         help=('Enables the use of X-FORWARDED-FOR headers ' +
                               'to identify the IP of clients connecting ' +
                               'through these trusted proxies.'))
-    parser.add_argument('--api-version', default='0.79.3',
+    parser.add_argument('--api-version', default='0.79.4',
                         help=('API version currently in use.'))
     parser.add_argument('--no-file-logs',
                         help=('Disable logging to files. ' +
@@ -500,8 +502,8 @@ def get_args():
     if args.only_server:
         if args.location is None:
             parser.print_usage()
-            print(sys.argv[0] +
-                  ": error: arguments -l/--location is required.")
+            print((sys.argv[0] +
+                  ": error: arguments -l/--location is required."))
             sys.exit(1)
     else:
         # If using a CSV file, add the data where needed into the username,
@@ -529,12 +531,12 @@ def get_args():
 
                     # If the number of fields is differend this is not a CSV.
                     if num_fields != line.count(',') + 1:
-                        print(sys.argv[0] +
+                        print((sys.argv[0] +
                               ": Error parsing CSV file on line " + str(num) +
                               ". Your file started with the following " +
                               "input, '" + csv_input[num_fields] +
                               "' but now you gave us '" +
-                              csv_input[line.count(',') + 1] + "'.")
+                              csv_input[line.count(',') + 1] + "'."))
                         sys.exit(1)
 
                     field_error = ''
@@ -548,7 +550,7 @@ def get_args():
                     # fields and strip them.
                     if num_fields > 1:
                         fields = line.split(",")
-                        fields = map(str.strip, fields)
+                        fields = list(map(str.strip, fields))
 
                     # If the number of fields is one then assume this is
                     # "username". As requested.
@@ -598,9 +600,9 @@ def get_args():
                             field_error = 'password'
 
                     if num_fields > 3:
-                        print(('Too many fields in accounts file: max ' +
+                        print((('Too many fields in accounts file: max ' +
                                'supported are 3 fields. ' +
-                               'Found {} fields').format(num_fields))
+                               'Found {} fields').format(num_fields)))
                         sys.exit(1)
 
                     # If something is wrong display error.
@@ -610,13 +612,13 @@ def get_args():
                             type_error = (
                                 'not ptc or google instead we got \'' +
                                 fields[0] + '\'!')
-                        print(sys.argv[0] +
+                        print((sys.argv[0] +
                               ": Error parsing CSV file on line " + str(num) +
                               ". We found " + str(num_fields) + " fields, " +
                               "so your input should have looked like '" +
                               csv_input[num_fields] + "'\nBut you gave us '" +
                               line + "', your " + field_error +
-                              " was " + type_error)
+                              " was " + type_error))
                         sys.exit(1)
 
         errors = []
@@ -666,7 +668,7 @@ def get_args():
 
         if len(errors) > 0:
             parser.print_usage()
-            print(sys.argv[0] + ": errors: \n - " + "\n - ".join(errors))
+            print((sys.argv[0] + ": errors: \n - " + "\n - ".join(errors)))
             sys.exit(1)
 
         # Fill the pass/auth if set to a single value.
@@ -721,7 +723,10 @@ def get_args():
         # IV/CP scanning.
         if args.enc_whitelist_file:
             with open(args.enc_whitelist_file) as f:
-                args.enc_whitelist = frozenset([int(l.strip()) for l in f])
+                all_enc = frozenset([l.strip() for l in f])
+                args.enc_whitelist = frozenset([int(l.strip()) for l in all_enc])
+                args.priority_encounters = frozenset([int(l.strip()) for l in all_enc if l.startswith("+")])
+                args.optional_encounters = frozenset([abs(int(l.strip())) for l in all_enc if l.startswith("-")])
 
         # Make max workers equal number of accounts if unspecified, and disable
         # account switching.
@@ -736,9 +741,9 @@ def get_args():
         # Make sure we don't have an empty account list after adding command
         # line and CSV accounts.
         if len(args.accounts) == 0:
-            print(sys.argv[0] +
+            print((sys.argv[0] +
                   ": Error: no accounts specified. Use -a, -u, and -p or " +
-                  "--accountcsv to add accounts.")
+                  "--accountcsv to add accounts."))
             sys.exit(1)
 
         if args.webhook_whitelist_file:
@@ -867,8 +872,7 @@ def get_pokemon_rarity(pokemon_id):
 
 def get_pokemon_types(pokemon_id):
     pokemon_types = get_pokemon_data(pokemon_id)['types']
-    return map(lambda x: {"type": i8ln(x['type']), "color": x['color']},
-               pokemon_types)
+    return [{"type": i8ln(x['type']), "color": x['color']} for x in pokemon_types]
 
 
 def get_moves_data(move_id):
