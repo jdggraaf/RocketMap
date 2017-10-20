@@ -951,29 +951,30 @@ class BanChecker(DelegatingPogoService):
             objects = func()
         except AccountBannedException as e:
             log.warn("EmptyResponse")
+            self.account_manager.mark_temp_banned(self.account_info())
             temp_banned = True
         except EmptyResponse as e:
             log.warn("EmptyResponse")
             objects = e.api_result
         except TooManyLoginAttempts as e:
+            self.account_manager.mark_perm_banned(self.account_info())
             log.warn("TooManyLoginAttempts")
             toomanylogins = True
         except LoginSequenceFail as e:
             log.warn("LoginSequenceFail")
             loginfail = True
         except WarnedAccount:
+            self.account_manager.mark_warned(self.account_info())
             log.warn("WarnedAccount")
             warned_account = True
             if self.account_replacer:
                 self.account_replacer.handle_warned()
 
         if warned_account:
-            self.account_manager.mark_warned(self.account_info())
             if self.account_replacer:
                 self.account_replacer.handle_warned()
                 return func()
         elif temp_banned:
-            self.account_manager.mark_temp_banned(self.account_info())
             if self.account_replacer:
                 self.account_replacer.replace_temp_banned()
                 return func()
