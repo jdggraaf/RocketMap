@@ -17,9 +17,9 @@ from pokemon_catch_worker import PokemonCatchWorker, WorkerResult
 log = logging.getLogger(__name__)
 
 L20_ITEM_LIMITS = {
-    1: 10,  # Poke Ball
-    2: 50,  # Great Ball
-    3: 225,  # Ultra Ball
+    1: 5,  # Poke Ball
+    2: 25,  # Great Ball
+    3: 170,  # Ultra Ball
     101: 0,  # Potion
     102: 0,  # Super Potion
     103: 0,  # Hyper Potion
@@ -39,8 +39,8 @@ L20_ITEM_LIMITS = {
 
 L12_ITEM_LIMITS = {
     1: 25,  # Poke Ball
-    2: 225,  # Great Ball
-    3: 50,  # Ultra Ball. Ensure that we keep some because we play level 20 with these limits
+    2: 150,  # Great Ball
+    3: 25,  # Ultra Ball. Ensure that we keep some because we play level 20 with these limits
     101: 0,  # Potion
     102: 0,  # Super Potion
     103: 0,  # Hyper Potion
@@ -59,7 +59,7 @@ L12_ITEM_LIMITS = {
 }
 
 PHASE_0_ITEM_LIMITS = {
-    1: 250,  # Poke Ball
+    1: 200,  # Poke Ball
     2: 50,  # Great Ball. Ensure that we keep some because we play level 12 with these limits
     3: 0,  # Ultra Ball
     101: 0,  # Potion
@@ -308,8 +308,8 @@ def beh_random_bag_cleaning(worker, item_limits):
 
 def beh_aggressive_bag_cleaning(worker, item_limits):
     total = total_iventory_count(worker)
-    log.info("Aggressive bag cleaning with inventory {}".format(str(total)))
     if total > 300:
+        log.info("Aggressive bag cleaning with inventory {}".format(str(total)))
         beh_clean_bag_with_limits(worker, item_limits)
 
 def discard_random_pokemon(worker):
