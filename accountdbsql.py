@@ -149,7 +149,7 @@ def db_roll_allocated_date_forward(account_info):
 def load_accounts(system_id):
     if not system_id:
         raise ValueError("need system_id")
-    sql = "SELECT username,password,provider as auth,lures,rest_until,allocated,temp_banned,last_login," \
+    sql = "SELECT username,password,provider as auth,lures,rest_until,allocated,perm_banned,temp_banned,last_login," \
           "blinded,behaviour,'level' " \
           "FROM account WHERE system_id=%s and temp_banned is null and perm_banned is null " \
           "ORDER BY username;"
