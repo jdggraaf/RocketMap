@@ -139,7 +139,7 @@ def check_login(args, account, api, proxy_url, proceed=lambda: True):
     time.sleep(random.uniform(2, 4))
 
     # Simulate login sequence.
-    rpc_login_sequence(args, api, account, proceed)
+    return rpc_login_sequence(args, api, account, proceed)
 
 
 # Simulate real app via login sequence.

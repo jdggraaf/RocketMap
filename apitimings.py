@@ -39,7 +39,7 @@ api_timings = {
 
     },
     "add_fort_modifier": {
-        "bogus": 0
+        "get_map_objects": 20
     },
     "use_item_encounter": {
         "bogus": 22

@@ -985,14 +985,6 @@ class BanChecker(DelegatingPogoService):
                 return func()
             else:
                 raise BannedAccountException
-        elif self.is_empty_status_3_response(objects):
-            self.account_manager.mark_temp_banned(self.account_info())
-            log.warning("{} is code 3 tempbanned".format(self.name()))
-            if self.account_replacer:
-                self.account_replacer.replace_temp_banned()
-                return func()
-            else:
-                raise BannedAccountException
         return objects
 
     def do_claim_codename(self, name):

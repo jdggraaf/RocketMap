@@ -135,10 +135,10 @@ class LureWorker(object):
         while not worker.login( pos, self.proceed):
             worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
             worker.account_info().update_position(pos)
-            sleep (retries * 10)
+            sleep(retries * 10)
+            retries += 1
 
-        if worker.account_info().lures == 0:
-            return self.get_account_with_lures(pos)
+        worker.do_get_map_objects(pos)
         try:
             branded = self.brander(worker)
         except LoginSequenceFail as e:
