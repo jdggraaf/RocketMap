@@ -172,9 +172,9 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
             log.info("Entering catch block with {} seconds until next location".format(str(nice_number_1(seconds_between_locations))))
             if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
                 pokemon_caught += 1
-            if seconds_between_locations > 25:
-                midpoint = center_geolocation([pos, next_pos])
-                map_objects = worker.do_get_map_objects(midpoint)
+            num_steps = int(seconds_between_locations / 10)
+            for step in steps_between_points(pos, next_pos, num_steps):
+                map_objects = worker.do_get_map_objects(step)
                 if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
                     pokemon_caught += 1
 

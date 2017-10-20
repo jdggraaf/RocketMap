@@ -6,6 +6,7 @@ from math import cos, sin, atan2, sqrt
 from geopy.distance import vincenty
 from datetime import datetime as dt
 
+from scannerutil import nice_coordinate_string
 
 log = logging.getLogger(__name__)
 
@@ -166,6 +167,17 @@ def within_fences(latitude, longitude, fences):
     return False
 
 
+def steps_between_points(start, stop,num_steps):
+    ax, ay = start
+    bx, by = stop
+    dx, dy = (bx - ax, by - ay)
+    result = []
+    stepx, stepy = (dx / float(num_steps+1), dy / float(num_steps+1))
+    for i in range(num_steps):
+        result.append((start[0] + (1+i)*stepx, start[1] + (1+i)*stepy))
+    return result
+
+
 def center_geolocation(geolocations):
     """
     Provide a relatively accurate center lat, lon returned as a list pair, given
@@ -263,3 +275,26 @@ class TestGeo2(unittest.TestCase):
         print "center is {}".format(str(center))
         for coord in coords:
             print("dist to {} is {}".format(str(coord), vincenty(center, coord).m))
+
+class TestSteps(unittest.TestCase):
+    def test(self):
+        start = 59.904162, 10.842091
+        stop = 59.898157, 10.831147
+        offset = steps_between_points(start, stop, 2)
+        self.assertEquals( (59.902160333333335,10.838443), offset[0])
+        self.assertEquals( (59.90015866666666, 10.834795), offset[1])
+
+    def test_other_direction(self):
+        start = 59.898157, 10.831147
+        stop = 59.904162, 10.842091
+        offset = steps_between_points(start, stop, 3)
+        self.assertEquals( (59.902160333333335,10.838443), offset[1])
+        self.assertEquals( (59.90015866666666, 10.834795), offset[0])
+
+    def test_misc_stuff(self):
+        start = 59.898157, 10.831147
+        stop = 59.904162, 10.842091
+        seconds = 49.1
+        num_steps = int(seconds / 10)
+        offset = steps_between_points(start, stop, num_steps)
+        print offset
