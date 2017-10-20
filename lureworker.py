@@ -4,9 +4,10 @@ import os
 from threading import Lock
 from time import sleep
 
-from accountdbsql import db_consume_lures
+from accountdbsql import db_consume_lures, db_set_logged_in_stats, db_set_warned
 from argparser import location_parse
 from getmapobjects import pokstops_within_distance, pokestop_detail
+from inventory import egg_count, lure_count
 from luredbsql import lures, db_consume_lure
 from pogom.account import LoginSequenceFail
 from pogoservice import CaptchaRequired, NetworkIssueRetryer
@@ -116,9 +117,26 @@ class LureWorker(object):
             map_objects = self.safe_get_map_objects(pos)
         return map_objects
 
+    def proceed(self, worker):
+        info = worker.account_info()
+        warning_ = info["warning"]
+        level = info["level"]
+        eggs = egg_count(worker)
+        lures = lure_count(worker)
+        db_set_logged_in_stats(info.username, lures, eggs, level)
+        if warning_:
+            db_set_warned(info,datetime.datetime.now())
+        return not warning_ and lures > 0
+
     def get_account_with_lures(self, pos):
         worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
         worker.account_info().update_position(pos)
+        retries = 0
+        while not worker.login( pos, self.proceed):
+            worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
+            worker.account_info().update_position(pos)
+            sleep (retries * 10)
+
         if worker.account_info().lures == 0:
             return self.get_account_with_lures(pos)
         try:

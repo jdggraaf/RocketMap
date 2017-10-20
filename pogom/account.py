@@ -88,7 +88,7 @@ def setup_api(args, status, account):
 
 
 # Use API to check the login status, and retry the login if possible.
-def check_login(args, account, api, proxy_url, fail_early=False):
+def check_login(args, account, api, proxy_url, proceed=lambda: True):
     # Logged in? Enough time left? Cool!
     if api._auth_provider and api._auth_provider._access_token:
         remaining_time = api._auth_provider._access_token_expiry - time.time()
@@ -97,7 +97,7 @@ def check_login(args, account, api, proxy_url, fail_early=False):
             log.debug(
                 'Credentials remain valid for another %f seconds.',
                 remaining_time)
-            return
+            return True
 
     # Try to login. Repeat a few times, but don't get stuck here.
     num_tries = 0
@@ -139,11 +139,11 @@ def check_login(args, account, api, proxy_url, fail_early=False):
     time.sleep(random.uniform(2, 4))
 
     # Simulate login sequence.
-    rpc_login_sequence(args, api, account, fail_early)
+    rpc_login_sequence(args, api, account, proceed)
 
 
 # Simulate real app via login sequence.
-def rpc_login_sequence(args, api, account, fail_early=False):
+def rpc_login_sequence(args, api, account, proceed):
     total_req = 0
     app_version = int(args.api_version.replace('.', '0'))
 
@@ -180,9 +180,6 @@ def rpc_login_sequence(args, api, account, fail_early=False):
         resp = req.call(False)
         parse_get_player(account, resp)
         warning_ = account['warning']
-        if fail_early and warning_:
-            log.warning('Account %s has received a warning aborting login sequence', account['username'])
-            return
 
         total_req += 1
         time.sleep(random.uniform(.53, 1.1))
@@ -218,6 +215,10 @@ def rpc_login_sequence(args, api, account, fail_early=False):
         raise LoginSequenceFail('Failed while getting remote config version in'
                                 + ' login sequence for account {}.'.format(
                                     account['username']))
+
+    if not proceed(account):
+        log.warning('Aborting login sequence for %s', account['username'])
+        return False
 
     # 4 - Get asset digest.
     log.debug('Fetching asset digest...')
@@ -376,6 +377,7 @@ def rpc_login_sequence(args, api, account, fail_early=False):
         send_generic_request(req, account)
 
     time.sleep(random.uniform(10, 20))
+    return True
 
 
 # Complete minimal tutorial steps.

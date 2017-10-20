@@ -142,7 +142,8 @@ def parse_inventory(account, api_response):
                     'cp': p_data.cp,
                     'cp_multiplier': p_data.cp_multiplier,
                     'favorite' : p_data.favorite,
-                    'deployed_fort_id' : p_data.deployed_fort_id
+                    'deployed_fort_id' : p_data.deployed_fort_id,
+                    'is_bad': p_data.is_bad
                 }
                 parsed_pokemons += 1
             else:

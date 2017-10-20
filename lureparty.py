@@ -235,10 +235,12 @@ def safe_lure_one_json_worker(json_location, route_section, counter):
 def index(user):
     return app.send_static_file("html/lureparty.html")
 
+
 @app.route('/<user>/lurebomb', methods=['POST'])
 def release_accounts(user):
     projectpath = request.form['Position1']
     return lure_bomb_get( user, projectpath, 120)
+
 
 @app.route('/lures/<user>/<position>/<minutes>', methods=['GET'])
 def lure_bomb_get(user, position, minutes, radius=50):

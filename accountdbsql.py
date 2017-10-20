@@ -94,6 +94,8 @@ def db_set_egg_count(account, egg_count):
 def db_set_lure_count(account, lure_count):
     do_update('UPDATE account SET lures=%s WHERE username=%s', (lure_count, account))
 
+def db_set_logged_in_stats(account, lure_count,egg_count,level):
+    do_update('UPDATE account SET lures=%s,level=%s,eggs=%s WHERE username=%s', (lure_count, level, egg_count, account))
 
 def db_set_temp_banned(username, when):
     do_update('UPDATE account SET temp_banned=%s WHERE username=%s', (when, username))
