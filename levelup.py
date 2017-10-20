@@ -10,8 +10,8 @@ from argparser import std_config, load_proxies, add_geofence, add_webhooks, add_
     location_parse, add_threads_per_proxy, add_use_account_db_true
 from argutils import thread_count
 from behaviours import beh_handle_level_up, \
-    beh_random_bag_cleaning, beh_spin_nearby_pokestops, PHASE_0_ITEM_LIMITS, beh_catch_pokemon, ITEM_LIMITS, \
-    beh_aggressive_bag_cleaning
+    beh_random_bag_cleaning, beh_spin_nearby_pokestops, PHASE_0_ITEM_LIMITS, beh_catch_pokemon, L20_ITEM_LIMITS, \
+    beh_aggressive_bag_cleaning, L12_ITEM_LIMITS
 from geography import *
 from getmapobjects import catchable_pokemon
 from gymdbsql import set_args
@@ -153,6 +153,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
             log.info("Worker has lucky egg at {} spins, {} pokeballs".format(str(spun), str(balls)))
         if has_lucky_egg(worker) and datetime.now() > next_egg:
             worker.do_use_lucky_egg()
+            # incense=8
             next_egg = datetime.now() + timedelta(minutes=30)
             db_set_egg_count(worker.account_info().username, egg_count(worker))
             phase = 1
@@ -161,7 +162,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
         if spun % 10 == 0:
             log.info("{} spun {} pokestops".format(worker.name(), str(spun)))
         seconds_between_locations = time_between_locations(pos, next_pos, 8)
-        limits = PHASE_0_ITEM_LIMITS if phase == 0 else ITEM_LIMITS
+        limits = PHASE_0_ITEM_LIMITS if phase == 0 else L20_ITEM_LIMITS
         if seconds_between_locations > 20:
             beh_aggressive_bag_cleaning(worker, limits)
         else:
@@ -195,6 +196,10 @@ def prioritize_catchable(caught, catchable):
             return pokemon
     return None
 
+
+def get_limits(level):
+    # one level above actual level to ensure supplies are accumulated
+    return PHASE_0_ITEM_LIMITS if level < 13 else L12_ITEM_LIMITS if level < 21 else L20_ITEM_LIMITS
 
 def get_level(worker):
     level = worker.account_info()["level"]

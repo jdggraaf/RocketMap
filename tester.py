@@ -72,7 +72,8 @@ Call 5062448961839693824
 
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {}, replace_warned=False)
 
-l5account = account_manager.add_account({"username":"PauTnrnsRmdL","password":"YIEzRkLDJhiu","provider":"ptc"})
+#l5account = account_manager.add_account({"username":"PauTnrnsRmdL","password":"YIEzRkLDJhiu","provider":"ptc"})
+l5account = account_manager.add_account({"username":"g0g3m3sh89079","password":"V!!Js3G4?","provider":"ptc"})
 # ptc,AysOuDaFend,Freedom4@ll
 #l5account = Account2("PauTnrnsRmdL", "YIEzRkLDJhiu", "ptc", args, 7200, 1800, cycle(args.hash_key), None, {}, None, account_manager)
 login = l5account.login(pos)

@@ -16,10 +16,10 @@ from pokemon_catch_worker import PokemonCatchWorker, WorkerResult
 
 log = logging.getLogger(__name__)
 
-ITEM_LIMITS = {
-    1: 50,  # Poke Ball
+L20_ITEM_LIMITS = {
+    1: 10,  # Poke Ball
     2: 50,  # Great Ball
-    3: 250,  # Ultra Ball
+    3: 225,  # Ultra Ball
     101: 0,  # Potion
     102: 0,  # Super Potion
     103: 0,  # Hyper Potion
@@ -31,11 +31,36 @@ ITEM_LIMITS = {
     703: 0,  # Nanab Berry
     704: 0,  # Wepar Berry
     705: 0,  # Pinap Berry
+    1101: 0,  # Sun stone
+    1103: 0,  # Metal coat
+    1105: 0,  # Upgrade
+    1104: 0  # Dragon scale
+}
+
+L12_ITEM_LIMITS = {
+    1: 25,  # Poke Ball
+    2: 225,  # Great Ball
+    3: 50,  # Ultra Ball. Ensure that we keep some because we play level 20 with these limits
+    101: 0,  # Potion
+    102: 0,  # Super Potion
+    103: 0,  # Hyper Potion
+    104: 0,  # Max Potion
+    201: 0,  # Revive
+    202: 0,  # Max Revive
+    701: 0,  # Razz Berry
+    702: 0,  # Bluk Berry
+    703: 0,  # Nanab Berry
+    704: 0,  # Wepar Berry
+    705: 0,  # Pinap Berry
+    1101: 0,  # Sun stone
+    1103: 0,  # Metal coat
+    1105: 0,  # Upgrade
+    1104: 0  # Dragon scale
 }
 
 PHASE_0_ITEM_LIMITS = {
-    1: 275,  # Poke Ball
-    2: 0,  # Great Ball
+    1: 250,  # Poke Ball
+    2: 50,  # Great Ball. Ensure that we keep some because we play level 12 with these limits
     3: 0,  # Ultra Ball
     101: 0,  # Potion
     102: 0,  # Super Potion
@@ -48,6 +73,10 @@ PHASE_0_ITEM_LIMITS = {
     703: 0,  # Nanab Berry
     704: 0,  # Wepar Berry
     705: 0,  # Pinap Berry
+    1101: 0,  # Sun stone
+    1103: 0,  # Metal coat
+    1105: 0,  # Upgrade
+    1104: 0  # Dragon scale
 }
 
 def random_zleep(lower, upper):
@@ -57,7 +86,7 @@ def random_zleep(lower, upper):
 
 
 def beh_clean_bag(pogoservice):
-    beh_clean_bag_with_limits(pogoservice, ITEM_LIMITS)
+    beh_clean_bag_with_limits(pogoservice, L20_ITEM_LIMITS)
 
 
 def beh_clean_bag_with_limits(pogoservice, limits):

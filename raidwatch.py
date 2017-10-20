@@ -12,7 +12,7 @@ from argparser import std_config, load_proxies, add_geofence, add_webhooks, loca
 from behaviours import beh_handle_level_up, \
     determine_behaviour, is_pokestop, is_aggressive_pokestop, is_aggressive_pokemon, beh_random_bag_cleaning, \
     discard_random_pokemon, \
-    beh_spin_nearby_pokestops, ITEM_LIMITS
+    beh_spin_nearby_pokestops, L20_ITEM_LIMITS
 from geofence import get_geofences
 from geography import *
 from getmapobjects import nearest_pokstop, \
@@ -245,7 +245,7 @@ def do_work(worker, pos, worker_number, initial_map_objects, seen_raid_defender,
         if is_pokestop(behaviour) and datetime.now() > next_ps:
             beh_spin_nearby_pokestops(worker, map_objects, pos)
             next_ps = time_of_next_pokestop_spin(behaviour)
-            beh_random_bag_cleaning(worker, ITEM_LIMITS)
+            beh_random_bag_cleaning(worker, L20_ITEM_LIMITS)
 
         numscans += 1
 
