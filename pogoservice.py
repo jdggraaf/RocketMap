@@ -48,7 +48,7 @@ class PogoService(object):
     def do_get_inventory(self, timestamp_millis):
         raise NotImplementedError("This is an abstract method.")
 
-    def login(self, position, proceeed=lambda: True):
+    def login(self, position, proceeed=lambda account: True):
         raise NotImplementedError("This is an abstract method.")
 
     def do_spin_pokestop(self, fort, step_location):
@@ -349,7 +349,7 @@ class Account2(PogoService):
     def is_available(self):
         return not self.is_resting() and not self.is_allocated()
 
-    def login(self, position, proceeed=lambda: True):
+    def login(self, position, proceeed=lambda account: True):
         self.__update_proxies()
         self.__update_position(position)
         # Activate hashing server
@@ -991,7 +991,7 @@ class BanChecker(DelegatingPogoService):
     def do_claim_codename(self, name):
         return self.__with_check(lambda: super(BanChecker, self).do_claim_codename(name))
 
-    def login(self, position, proceed=lambda: True):
+    def login(self, position, proceed=lambda account: True):
         return self.__with_check(lambda: super(BanChecker, self).login(position, proceed))
 
 
