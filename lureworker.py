@@ -140,12 +140,12 @@ class LureWorker(object):
                 else:
                     worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
                     worker.account_info().update_position(pos)
-                    sleep(retries * 10)
+                    sleep(10)
                     retries += 1
             except Exception:
                 worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
                 worker.account_info().update_position(pos)
-                sleep(retries * 10)
+                sleep(10)
                 retries += 1
 
         worker.do_get_map_objects(pos)
