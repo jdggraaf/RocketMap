@@ -10,7 +10,7 @@ from threading import Lock
 from accountdbsql import upsert_account, load_accounts, db_consume_lures, db_set_rest_time, db_set_temp_banned, \
     db_set_account_level, db_set_blinded, db_update_account, db_set_behaviour, db_set_warned, insert_account, \
     load_account, db_set_ios, db_set_model, db_set_device_id, \
-    update_account_level, db_set_system_id, update_allocated, update_allocation_end
+    update_account_level, db_set_system_id, update_allocated, update_allocation_end, db_set_perm_banned
 from management_errors import GaveUp
 from pogoservice import Account2
 from scannerutil import auth_service
@@ -315,7 +315,7 @@ class AccountManager:
         log.error("Account is temp " + account_info.name())
         account_info.set_banned()
         if self.usingdb:
-            db_set_temp_banned(account_info.username, datetime.now())
+            db_set_perm_banned(account_info.username, datetime.now())
 
     def too_much_trouble(self, account_info):
         log.error(
