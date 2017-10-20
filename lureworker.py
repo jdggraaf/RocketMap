@@ -152,6 +152,7 @@ class LureWorker(object):
         try:
             branded = self.brander(worker)
         except LoginSequenceFail as e:
+            log.warn("LSEIn branding")
             self.account_manager.report_failure()
             return None
         self.account_manager.clear_failure()
