@@ -160,7 +160,8 @@ def device_id(account):
     return account.get("device_id", account.get("id"))
 
 def install_forced_update_check(args, force_update_bit):
-    the_thread = Thread(target=run_forced_update_check, args=(args, force_update_bit))
+    the_thread = Thread(target=run_forced_update_check,  args=(args, force_update_bit))
+    the_thread.daemon = True
     the_thread.start()
 
 
