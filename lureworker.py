@@ -135,12 +135,13 @@ class LureWorker(object):
         success = False
         while not success:
             try:
-                if worker.login( pos, self.proceed):
+                if worker.login(pos, self.proceed):
                     success = True
+                else:
                     worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
                     worker.account_info().update_position(pos)
-                sleep(retries * 10)
-                retries += 1
+                    sleep(retries * 10)
+                    retries += 1
             except Exception:
                 pass
 
