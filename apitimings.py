@@ -42,7 +42,7 @@ api_timings = {
         "get_map_objects": 20
     },
     "use_item_encounter": {
-        "bogus": 22
+        "catch_pokemon": 22
     },
     "catch_pokemon": {
         "catch_pokemon": 100,

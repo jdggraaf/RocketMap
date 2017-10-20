@@ -132,11 +132,17 @@ class LureWorker(object):
         worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
         worker.account_info().update_position(pos)
         retries = 0
-        while not worker.login( pos, self.proceed):
-            worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
-            worker.account_info().update_position(pos)
-            sleep(retries * 10)
-            retries += 1
+        success = False
+        while not success:
+            try:
+                if worker.login( pos, self.proceed):
+                    success = True
+                    worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
+                    worker.account_info().update_position(pos)
+                sleep(retries * 10)
+                retries += 1
+            except Exception:
+                pass
 
         worker.do_get_map_objects(pos)
         try:
