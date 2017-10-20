@@ -170,18 +170,29 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
 
         if phase >= 1 and args.catch_pokemon > 0 and pokemon_caught < args.catch_pokemon and seconds_between_locations > 15:
             log.info("Entering catch block with {} seconds until next location".format(str(nice_number_1(seconds_between_locations))))
-            scan_catchable = catchable_pokemon(map_objects)
-            to_catch = prioritize_catchable(caught_pokemon_ids, scan_catchable)
-            if to_catch and to_catch.encounter_id not in caught_encounters:
-                caught_encounters.add(to_catch.encounter_id)
-                caught = beh_catch_pokemon(worker, map_objects, pos, to_catch.encounter_id, to_catch.spawn_point_id)
-                if caught:
+            if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
+                pokemon_caught += 1
+            if seconds_between_locations > 25:
+                midpoint = center_geolocation([pos, next_pos])
+                map_objects = worker.do_get_map_objects(midpoint)
+                if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
                     pokemon_caught += 1
-                    rval = worker.do_transfer_pokemon([caught])
-                    if rval > 1:
-                        log.error("Transfering pokemon {} gave status {}".format(caught, rval))
 
     log.info("Reached end of route with {} spins, going to rest".format(str(spun)))
+
+
+def do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
+    scan_catchable = catchable_pokemon(map_objects)
+    to_catch = prioritize_catchable(caught_pokemon_ids, scan_catchable)
+    if to_catch and to_catch.encounter_id not in caught_encounters:
+        caught_encounters.add(to_catch.encounter_id)
+        caught = beh_catch_pokemon(worker, map_objects, pos, to_catch.encounter_id, to_catch.spawn_point_id)
+        if caught:
+            rval = worker.do_transfer_pokemon([caught])
+            if rval > 1:
+                log.error("Transfering pokemon {} gave status {}".format(caught, rval))
+            return True
+
 
 preferred = {10, 13, 16, 19, 29, 32, 41, 69, 74, 92, 183}
 
