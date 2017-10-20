@@ -315,7 +315,7 @@ class AccountManager:
         log.error("Account is temp " + account_info.name())
         account_info.set_banned()
         if self.usingdb:
-            db_set_perm_banned(account_info.username, datetime.now())
+            db_set_perm_banned(account_info, datetime.now())
 
     def too_much_trouble(self, account_info):
         log.error(
