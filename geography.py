@@ -177,7 +177,9 @@ def center_geolocation(geolocations):
     y = 0
     z = 0
 
-    for lat, lon in geolocations:
+    for tuple_ in geolocations:
+        lat = tuple_[0]
+        lon = tuple_[1]
         lat = float(math.radians(lat))
         lon = float(math.radians(lon))
         x += cos(lat) * cos(lon)
