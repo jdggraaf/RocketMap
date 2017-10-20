@@ -364,7 +364,7 @@ class Account2(PogoService):
         return result
 
     def __login_if_needed(self):
-        self.login(self.pgoApi.get_position(), self.fail_eager)
+        self.login(self.pgoApi.get_position())
 
     STATUS_CODES = {
         0: 'UNKNOWN',
