@@ -6,12 +6,14 @@ import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from accountdbsql import set_account_db_args, db_set_logged_in_stats, db_set_warned, db_set_perm_banned
+from accountdbsql import set_account_db_args, db_set_logged_in_stats, db_set_warned, db_set_perm_banned, \
+    db_set_temp_banned
 from accounts import AccountManager
 from argparser import std_config, location_parse, add_threads_per_proxy
 from argutils import thread_count
 from inventory import egg_count, lure_count
 from pogom.account import LoginSequenceFail
+from pogom.apiRequests import AccountBannedException
 from scannerutil import setup_logging
 from workers import wrap_accounts_minimal
 setup_logging()
@@ -58,6 +60,8 @@ def check_one_account(wrapped, delay):
         return wrapped.login(location, proceed)
     except LoginSequenceFail:
         db_set_perm_banned(wrapped.account_info(), datetime.datetime.now())
+    except AccountBannedException:
+        db_set_temp_banned(wrapped.name(), datetime.datetime.now())
     except Exception:
         log.exception("Something bad happened")
 
