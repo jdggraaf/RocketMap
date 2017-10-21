@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from accountdbsql import set_account_db_args, db_set_logged_in_stats, db_set_warned, db_set_perm_banned, \
     db_set_temp_banned
 from accounts import AccountManager
-from argparser import std_config, location_parse, add_threads_per_proxy
+from argparser import std_config, location_parse, add_threads_per_proxy, load_proxies
 from argutils import thread_count
 from inventory import egg_count, lure_count
 from pogom.account import LoginSequenceFail
@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 from accountmanager import args
 
 set_account_db_args(args)
+load_proxies(args)
 
 
 def set_account_level(accounts):
