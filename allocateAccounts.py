@@ -11,24 +11,9 @@ from argparser import std_config, add_threads_per_proxy, add_system_id, add_use_
     location_parse, add_webhooks, load_proxies
 from argutils import thread_count
 from common_blindcheck import check_worker_for_future
+from accountmanager import args
 
 log = logging.getLogger(__name__)
-
-parser = std_config("accountmanager")
-add_webhooks(parser)
-parser.add_argument('-mlvl', '--min-level', default=20,
-                    help='Level of the loaded accounts')
-parser.add_argument('-minl', '--max-level', default=40,
-                    help='Level of the loaded accounts')
-parser.add_argument('-n', '--count', default=3,
-                    help='The number of accounts')
-parser.add_argument('-f', '--format', default="monocle",
-                    help='monocle or rocketmap')
-add_search_rest(parser)
-add_threads_per_proxy(parser)
-add_system_id(parser)
-add_use_account_db(parser)
-args = parser.parse_args()
 
 load_proxies(args)
 

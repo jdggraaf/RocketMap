@@ -16,24 +16,7 @@ from scannerutil import setup_logging
 from workers import wrap_accounts_minimal
 setup_logging()
 log = logging.getLogger(__name__)
-
-parser = std_config("accountmanager")
-add_threads_per_proxy(parser, 2)
-parser.add_argument('-on', '--system-id',
-                    help='Define the name of the node that will be used to identify accounts in the account table',
-                    default=None)
-parser.add_argument('-force', '--force-system-id',
-                    help='Force the accounts to the system id regardless of previous value',
-                    default=False)
-parser.add_argument('-lg', '--login', action='store_true', default=False,
-                    help='Login enough to find level and inventory (but not shadowban)')
-parser.add_argument('-lvl', '--level', default=30,
-                    help='Level of the loaded accounts  (meaningless with --login)')
-parser.add_argument('-ad', '--allocation-duration', default=None,
-                    help='If set, the accounts will be allocated from now() and the specified number of hours')
-
-args = parser.parse_args()
-args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Oslo'}
+from accountmanager import args
 
 set_account_db_args(args)
 

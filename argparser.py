@@ -85,7 +85,7 @@ def add_use_account_db_true(parser):
 def add_system_id(parser):
     parser.add_argument('-system-id', '--system-id',
                         help='Define the name of the node that will be used to identify accounts in the account table',
-                        default="blindCheck")
+                        default=None)
 
 
 def add_threads_per_proxy(parser, ndefault=5):
