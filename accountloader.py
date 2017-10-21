@@ -54,17 +54,6 @@ def proceed(worker):
 location = location_parse(args.location)
 
 
-def check_one_account(wrapped, delay):
-    try:
-        time.sleep( delay)
-        return wrapped.login(location, proceed)
-    except LoginSequenceFail:
-        db_set_perm_banned(wrapped.account_info(), datetime.datetime.now())
-    except AccountBannedException:
-        db_set_temp_banned(wrapped.name(), datetime.datetime.now())
-    except Exception:
-        log.exception("Something bad happened")
-
 def check_account(delay):
     wrapped = wrap_accounts_minimal(account_manager.get_account(False), account_manager)
     try:
@@ -72,6 +61,8 @@ def check_account(delay):
         return wrapped.login(location, proceed)
     except LoginSequenceFail:
         db_set_perm_banned(wrapped.account_info(), datetime.datetime.now())
+    except AccountBannedException:
+        db_set_temp_banned(wrapped.name(), datetime.datetime.now())
     except Exception:
         log.exception("Something bad happened")
 
