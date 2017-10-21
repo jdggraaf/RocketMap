@@ -77,10 +77,6 @@ if args.login:
             futures.append(pool.submit(lambda: check_account(4 if num_proxies < counter < (num_proxies*2) else 0)))
 
         results = [r.result() for r in as_completed(futures)]
-        print str(results)
-
-
-print ("Done")
 
 
 
