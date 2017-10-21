@@ -268,7 +268,7 @@ class PokemonCatchWorker:
                 exp_gain, candy_gain, stardust_gain = self.extract_award(awards)
 
                 # if it is a new pokemon to our dex, simulate app animation delay
-                if exp_gain >= 500:
+                if exp_gain >= 600:
                     sleep(randrange(self.catchsim_newtodex_wait_min, self.catchsim_newtodex_wait_max))
 
                 return pokemon_unique_id
