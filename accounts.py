@@ -78,7 +78,7 @@ class AccountManager:
         for acct in self.accounts:
             self.status[acct.username] = acct.status_data()
         if len(self.accounts) > 0:
-            log.info("Account pool " + self.name + " active with " + str(len(self.accounts)) + " accounts")
+            log.info("Account pool " + str(self.name) + " active with " + str(len(self.accounts)) + " accounts")
 
     def __load_db_account_objects(self):
         result = []

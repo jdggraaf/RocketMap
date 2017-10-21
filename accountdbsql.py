@@ -136,8 +136,8 @@ def db_set_warned(account_info, when):
     do_update('UPDATE account SET warned=%s WHERE username=%s', params)
 
 
-def db_set_perm_banned(account_info, perm_banned):
-    params = (perm_banned, account_info.username)
+def db_set_perm_banned(account_info, when):
+    params = (when, account_info.username)
     do_update('UPDATE account SET perm_banned=%s WHERE username=%s', params)
 
 

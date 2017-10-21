@@ -88,10 +88,10 @@ def add_system_id(parser):
                         default="blindCheck")
 
 
-def add_threads_per_proxy(parser):
+def add_threads_per_proxy(parser, ndefault=5):
     parser.add_argument('-t', '--threads-per-proxy',
                     help='threads-per-proxy',
-                    type=int, default=5)
+                    type=int, default=ndefault)
 
 def add_webhooks(parser):
     parser.add_argument('-wh', '--webhook',

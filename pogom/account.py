@@ -217,7 +217,7 @@ def rpc_login_sequence(args, api, account, proceed):
                                     account['username']))
 
     if not proceed(account):
-        log.warning('Aborting login sequence for %s', account['username'])
+        # log.warning('Aborting login sequence for %s', account['username'])
         return False
 
     # 4 - Get asset digest.
