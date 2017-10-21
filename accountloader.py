@@ -12,7 +12,7 @@ from accounts import AccountManager
 from argparser import std_config, location_parse, add_threads_per_proxy, load_proxies
 from argutils import thread_count
 from inventory import egg_count, lure_count
-from pogom.account import LoginSequenceFail
+from pogom.account import LoginSequenceFail, TooManyLoginAttempts
 from pogom.apiRequests import AccountBannedException
 from scannerutil import setup_logging
 from workers import wrap_accounts_minimal
@@ -61,6 +61,8 @@ def check_account(delay):
         time.sleep( delay)
         return wrapped.login(location, proceed)
     except LoginSequenceFail:
+        db_set_perm_banned(wrapped.account_info(), datetime.datetime.now())
+    except TooManyLoginAttempts:
         db_set_perm_banned(wrapped.account_info(), datetime.datetime.now())
     except AccountBannedException:
         db_set_temp_banned(wrapped.name(), datetime.datetime.now())
