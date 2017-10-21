@@ -168,8 +168,10 @@ def within_fences(latitude, longitude, fences):
 
 
 def steps_between_points(start, stop,num_steps):
-    ax, ay = start
-    bx, by = stop
+    ax= start[0]
+    ay = start[1]
+    bx = stop[0]
+    by = stop[1]
     dx, dy = (bx - ax, by - ay)
     result = []
     stepx, stepy = (dx / float(num_steps+1), dy / float(num_steps+1))
