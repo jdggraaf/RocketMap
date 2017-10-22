@@ -2,9 +2,9 @@ api_timings = {
     "get_map_objects": {
         "fort_details": 100,
         "get_map_objects": 10000,
-        "encounter": 20,
+        "encounter": 100,
         "level_up_rewards": 20,
-        "use_item_xp_boost": 20,
+        "use_item_xp_boost": 100,
         "gym_get_info" : 20
     },
     "fort_details": {
@@ -21,7 +21,7 @@ api_timings = {
     },
     "recycle_inventory_item": {
         "get_map_objects": 100,
-        "recycle_inventory_item": 200,
+        "recycle_inventory_item": 250,
         "encounter": 80
     },
     "encounter": {

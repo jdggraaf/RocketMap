@@ -168,7 +168,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
         else:
             beh_random_bag_cleaning(worker, limits)
 
-        if phase >= 1 and args.catch_pokemon > 0 and pokemon_caught < args.catch_pokemon and seconds_between_locations > 15:
+        if phase >= 1 and args.catch_pokemon > 0 and pokemon_caught < args.catch_pokemon and seconds_between_locations > 10:
             log.info("Entering catch block with {} seconds until next location".format(str(nice_number_1(seconds_between_locations))))
             if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
                 pokemon_caught += 1
@@ -205,6 +205,8 @@ def prioritize_catchable(caught, catchable):
     for pokemon in catchable:
         if pokemon.pokemon_id in preferred:
             return pokemon
+    if len(catchable) > 0:
+        return catchable[0]
     return None
 
 
