@@ -175,7 +175,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
             num_steps = int(seconds_between_locations / 10)
             for step in steps_between_points(pos, next_pos, num_steps):
                 map_objects = worker.do_get_map_objects(step)
-                if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
+                if do_catch(caught_encounters, caught_pokemon_ids, map_objects, step, worker):
                     pokemon_caught += 1
 
     log.info("Reached end of route with {} spins, going to rest".format(str(spun)))

@@ -52,7 +52,7 @@ api_timings = {
 
     },
     "gym_get_info": {
-        "dummy": 100
+        "get_map_objects": 100
     },
     "release_pokemon": {
         "get_map_objects": 100
