@@ -32,15 +32,15 @@ def try_a_couple_of_times(worker, location_to_use):
 
 def check_worker_for_future(account, account_manager, location_to_use):
     wrapped = wrap_accounts_minimal(account, account_manager)
-    res = check_worker(wrapped, location_to_use, None, True)
+    res = check_worker(wrapped, location_to_use, None, True, False, lambda: True)
     return res, account
 
 
-def check_worker(worker, location_to_use, accounts_file, use_account_db):
+def check_worker(worker, location_to_use, accounts_file, use_account_db, login_only, proceed):
     banned = False
 
     try:
-        worker.login(location_to_use, fail_early=True)
+        worker.login(location_to_use, proceed)
         db_set_warned(worker.account_info(), None)
     except AccountBannedException:
         db_set_temp_banned(worker.name(), datetime.datetime.now())
@@ -55,6 +55,9 @@ def check_worker(worker, location_to_use, accounts_file, use_account_db):
     except Exception:
         log.exception("Unknown exception with account {}".format(worker.name()))
         return False
+
+    if login_only:
+        return
 
     response = None
     try:

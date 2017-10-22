@@ -207,7 +207,9 @@ def prioritize_catchable(caught, catchable):
             return pokemon
     if len(catchable) > 0:
         return catchable[0]
-    return None
+    else:
+        log.info("Nothing to be caught at location")
+        return None
 
 
 def get_limits(level):

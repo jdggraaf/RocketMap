@@ -50,7 +50,6 @@ def find_accounts():
         futures.append(
             pool.submit(lambda: check_worker_for_future(next_account(), account_manager, location_to_use=location)))
 
-    completed = as_completed(futures)
     future_pos = 0
     while len(result) < requred_accounts:
         if future_pos > len(futures):

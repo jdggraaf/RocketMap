@@ -45,9 +45,6 @@ class PogoService(object):
     def do_get_map_objects(self, position):
         raise NotImplementedError("This is an abstract method.")
 
-    def do_get_inventory(self, timestamp_millis):
-        raise NotImplementedError("This is an abstract method.")
-
     def login(self, position, proceeed=lambda account: True):
         raise NotImplementedError("This is an abstract method.")
 
@@ -126,9 +123,6 @@ class DelegatingPogoService(PogoService):
 
     def do_encounter_pokemon(self, encounter_id, spawn_point_id, step_location):
         return self.target.do_encounter_pokemon(encounter_id, spawn_point_id, step_location)
-
-    def do_get_inventory(self, timestamp_millis):
-        return self.do_get_inventory(timestamp_millis)
 
     def login(self, position, proceed=lambda: True):
         return self.target.login(position, proceed)
@@ -453,28 +447,36 @@ class Account2(PogoService):
         return name_
 
     def do_use_item_encounter(self, berry_id, encounter_id, spawn_point_guid):
-        return self.pgoApi.use_item_encounter(
-            item=berry_id,
-            encounter_id=encounter_id,
-            spawn_point_guid=spawn_point_guid
-        )
+        return self.game_api_event(
+            lambda: self.pgoApi.use_item_encounter(
+                item=berry_id,
+                encounter_id=encounter_id,
+                spawn_point_guid=spawn_point_guid
+            ),
+            "use_item_encounter {}".format(str(berry_id)))
+
 
     def do_catch_pokemon(self, encounter_id, pokeball, normalized_reticle_size, spawn_point_id, hit_pokemon,
                          spin_modifier, normalized_hit_position):
-        response_dict = self.pgoApi.catch_pokemon(
-            encounter_id=encounter_id,
-            pokeball=pokeball,
-            normalized_reticle_size=normalized_reticle_size,
-            spawn_point_id=spawn_point_id,
-            hit_pokemon=hit_pokemon,
-            spin_modifier=spin_modifier,
-            normalized_hit_position=normalized_hit_position
-        )
+        response_dict = self.game_api_event(
+            lambda: self.pgoApi.catch_pokemon(
+                encounter_id=encounter_id,
+                pokeball=pokeball,
+                normalized_reticle_size=normalized_reticle_size,
+                spawn_point_id=spawn_point_id,
+                hit_pokemon=hit_pokemon,
+                spin_modifier=spin_modifier,
+                normalized_hit_position=normalized_hit_position
+            ),
+            "catch_pokemon {}".format(str(encounter_id)))
+
         return response_dict
 
     def do_set_favourite(self, pokemon_uid, favourite):
         self.__update_proxies()
-        x = set_favourite(self.pgoApi, self.account_info(), pokemon_uid, favourite)
+        x = self.game_api_event(
+            lambda: set_favourite(self.pgoApi, self.account_info(), pokemon_uid, favourite),
+            "set_favourite {}".format(str(pokemon_uid)))
         if self.is_empty_response(x, pokemon_uid):
             raise EmptyResponse(x)
         if self.is_empty_response_100(x):
@@ -485,7 +487,9 @@ class Account2(PogoService):
     def do_claim_codename(self, name):
         self.__update_proxies()
         self.__login_if_needed()
-        x = claim_codename(self.pgoApi, self.account_info(), name)
+        x = self.game_api_event(
+            lambda: claim_codename(self.pgoApi, self.account_info(), name),
+            "claim_codename {}".format(str(name)))
         return x
 
     def do_gym_get_info(self, position, gym_position, gym_id):
@@ -496,7 +500,9 @@ class Account2(PogoService):
             self.__update_position(self.last_location)  # redundant ?
 
             gym = {'gym_id': gym_id, 'latitude': gym_position[0], 'longitude': gym_position[1]}
-            x = gym_get_info(self.pgoApi, self.account_info(), position, gym)
+            x = self.game_api_event(
+                lambda: gym_get_info(self.pgoApi, self.account_info(), position, gym),
+                "gym_get_info {}".format(str(gym_id)))
 
             if self.is_empty_response(x, gym_id):
                 raise EmptyResponse(x)
@@ -518,8 +524,9 @@ class Account2(PogoService):
         self.__login_if_needed()
 
         self.__block_for_encounter()
-        encounter_result2 = encounter(self.pgoApi, self.account_info(), encounter_id, spawn_point_id, step_location)
-        log.debug(self.username + " called encounter API")
+        encounter_result2 = self.game_api_event(lambda: encounter(self.pgoApi, self.account_info(), encounter_id, spawn_point_id, step_location),
+                                          "encounter {}".format(str(encounter_id)))
+
         self.next_encounter = (self.timestamp_ms() + 2000) + random.random() * 1000
 
         if self.is_empty_response(encounter_result2, encounter_id):
@@ -535,12 +542,6 @@ class Account2(PogoService):
                 'or coordinate rounding bug in pogo')
 
         return encounter_result2
-
-    def do_get_inventory(self, timestamp_millis=0):
-        req2 = self.pgoApi.create_request()
-        req2.get_inventory(timestamp_millis=timestamp_millis)
-        inventory_response = req2.call()
-        return inventory_response
 
     def do_get_map_objects(self, position):
         try:
@@ -587,7 +588,6 @@ class Account2(PogoService):
                 msg += ', '.join(self.log)
                 self.log = []
             log.info(msg)
-
 
     def has_position(self):
         return self.most_recent_position() and self.most_recent_position()[0]
@@ -1152,8 +1152,7 @@ class ApiDelay(DelegatingPogoService):
                 if nextaction > now_:
                     sleep_ms = (nextaction - now_).microseconds / 1000
                     ms_ = float(sleep_ms) / 1000
-                    log.info(
-                        "Sleeping for {}s for api delay from {} to {}".format(str(ms_), self.previous_action, action))
+                    self.add_log("API delay {}s from {} to {}".format(str(ms_), self.previous_action, action))
                     time.sleep(ms_)
         time_of_request = dt.now()
         try:
@@ -1332,10 +1331,6 @@ class NetworkIssueRetryer(DelegatingPogoService):
     def do_encounter_pokemon(self, encounter_id, spawn_point_id, step_location):
         return self.handle_intermittemnt_issues(
             lambda: super(NetworkIssueRetryer, self).do_encounter_pokemon(encounter_id, spawn_point_id, step_location))
-
-    def do_get_inventory(self, timestamp_millis):
-        return self.handle_intermittemnt_issues(
-            lambda: super(NetworkIssueRetryer, self).do_get_inventory(timestamp_millis))
 
     def do_get_map_objects(self, position):
         # todo: find out who does jittering

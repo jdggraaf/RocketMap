@@ -48,6 +48,10 @@ CREATE TABLE lures
 );
 ```
 
+Practical view (not needed)
+```
+create view av as select username,model,level,lures,eggs,allocated,allocation_end,blinded,system_id,temp_banned,warned,rest_until,perm_banned,last_login from account;
+```
 
 changes 14-oct:
 =======

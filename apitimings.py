@@ -32,7 +32,9 @@ api_timings = {
     "level_up_rewards": {
         "fort_details": 100,
         "get_map_objects": 100,
-        "use_item_xp_boost" : 100
+        "use_item_xp_boost" : 100,
+        "encounter" : 100,
+        "recycle_inventory_item": 100
     },
     "use_item_xp_boost": {
         "use_item_xp_boost": 100,
