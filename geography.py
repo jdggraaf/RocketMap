@@ -167,16 +167,18 @@ def within_fences(latitude, longitude, fences):
     return False
 
 
-def steps_between_points(start, stop,num_steps):
+def steps_to_point(start, stop, num_steps):
     ax= start[0]
     ay = start[1]
     bx = stop[0]
     by = stop[1]
     dx, dy = (bx - ax, by - ay)
     result = []
-    stepx, stepy = (dx / float(num_steps+1), dy / float(num_steps+1))
-    for i in range(num_steps):
-        result.append((start[0] + (1+i)*stepx, start[1] + (1+i)*stepy))
+    stepx, stepy = (dx / float(num_steps), dy / float(num_steps))
+    for i in range(int(num_steps)):
+        stepy_ = (start[0] + (1 + i) * stepx, start[1] + (1 + i) * stepy)
+        if stepy_ != stop:
+            result.append(stepy_)
     return result
 
 
@@ -282,21 +284,29 @@ class TestSteps(unittest.TestCase):
     def test(self):
         start = 59.904162, 10.842091
         stop = 59.898157, 10.831147
-        offset = steps_between_points(start, stop, 2)
+        offset = steps_to_point(start, stop, 3)
         self.assertEquals( (59.902160333333335,10.838443), offset[0])
         self.assertEquals( (59.90015866666666, 10.834795), offset[1])
 
     def test_other_direction(self):
         start = 59.898157, 10.831147
         stop = 59.904162, 10.842091
-        offset = steps_between_points(start, stop, 3)
+        offset = steps_to_point(start, stop, 3)
         self.assertEquals( (59.902160333333335,10.838443), offset[1])
         self.assertEquals( (59.90015866666666, 10.834795), offset[0])
+
+    def test_halfstep(self):
+        start = 59.898157, 10.831147
+        stop = 59.904162, 10.842091
+        offset = steps_to_point(start, stop, 2.3)
+        print str(offset)
+        self.assertEquals( (59.900767869565215, 10.835905260869565), offset[0])
+        self.assertEquals( (59.90337873913043, 10.840663521739131), offset[1])
 
     def test_misc_stuff(self):
         start = 59.898157, 10.831147
         stop = 59.904162, 10.842091
         seconds = 49.1
         num_steps = int(seconds / 10)
-        offset = steps_between_points(start, stop, num_steps)
+        offset = steps_to_point(start, stop, num_steps)
         print offset

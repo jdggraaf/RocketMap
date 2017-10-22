@@ -3,6 +3,8 @@ import random
 
 import time
 
+import datetime
+
 from apiwrapper import EncounterPokemon
 from geography import center_geolocation
 from getmapobjects import inrange_pokstops, forts,  \
@@ -122,9 +124,10 @@ def beh_catch_all_nearby_pokemon(pogoservice, pos, map_objects, encountered):
 
 
 def beh_catch_pokemon(pogoservice, map_objects, position, encounter_id, spawn_point_id):
+    start_catch_at = datetime.datetime.now()
     encounter_response = pogoservice.do_encounter_pokemon(encounter_id, spawn_point_id, position)
-
     probablity = EncounterPokemon(encounter_response, encounter_id).probability()
+
     if probablity:
         catch_rate_by_ball = [0] + list(probablity.capture_probability)
         level = pogoservice.account_info()["level"]
@@ -135,9 +138,11 @@ def beh_catch_pokemon(pogoservice, map_objects, position, encounter_id, spawn_po
         if catch == WorkerResult.ERROR_NO_BALLS:
             return catch
         if catch:
-            log.info("{} level {} caught pokemon {}".format(str(pogoservice.name()), str(level), str(catch)))
+            log.info("{} level {} caught pokemon {} in {}".format(str(pogoservice.name()), str(level), str(catch),
+                                                                  str(datetime.datetime.now() - start_catch_at)))
         return catch
-
+    else:
+        log.warn("Encounter did not succeed")
 
 def random_sleep_z(lower, upper, client):
     ms = int(random.uniform(lower, upper))

@@ -16,8 +16,8 @@ api_timings = {
         "fort_details": 125,
         "fort_search": 0,
         "get_map_objects": 0,
-        "encounter": 80,
-        "recycle_inventory_item": 95
+        "encounter": 100,
+        "recycle_inventory_item": 120
     },
     "recycle_inventory_item": {
         "get_map_objects": 100,
@@ -31,11 +31,13 @@ api_timings = {
     },
     "level_up_rewards": {
         "fort_details": 100,
-        "get_map_objects": 100
+        "get_map_objects": 100,
+        "use_item_xp_boost" : 100
     },
     "use_item_xp_boost": {
         "use_item_xp_boost": 100,
-        "fort_details": 100
+        "fort_details": 100,
+        "get_map_objects" : 100
 
     },
     "add_fort_modifier": {
