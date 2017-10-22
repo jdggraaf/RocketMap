@@ -88,16 +88,18 @@ for loc in locs:
     time.sleep(10)
     threads.append(the_thread)
 
-heavy_locs = add_gmaps_altitude(args, args.heavy_locations)
-for loc in heavy_locs:
-    the_thread = berry_location(loc, FeedWorker(account_manager, termination_condition, args.trainers, True, True))
-    time.sleep(120)
-    threads.append(the_thread)
+if args.heavy_locations:
+    heavy_locs = add_gmaps_altitude(args, args.heavy_locations)
+    for loc in heavy_locs:
+        the_thread = berry_location(loc, FeedWorker(account_manager, termination_condition, args.trainers, True, True))
+        time.sleep(120)
+        threads.append(the_thread)
 
-for loc in add_gmaps_altitude(args, args.lowfeed_locations):
-    the_thread = berry_location(loc, FeedWorker(account_manager, termination_condition, args.trainers, False, True))
-    time.sleep(10)
-    threads.append(the_thread)
+if args.lowfeed_locations:
+    for loc in add_gmaps_altitude(args, args.lowfeed_locations):
+        the_thread = berry_location(loc, FeedWorker(account_manager, termination_condition, args.trainers, False, True))
+        time.sleep(10)
+        threads.append(the_thread)
 
 for thread in threads:
     thread.join()
