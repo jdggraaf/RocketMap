@@ -195,7 +195,7 @@ def safe_do_work(worker, suggested_pos, worker_number, _seen_raid_defender, _for
         pos = suggested_pos
 
     if not worker.account_info().behaviour:
-        worker.account_info().behaviour = determine_behaviour(pos, map_objects, worker_number)
+        worker.account_info().behaviour = determine_behaviour(pos, map_objects)
         db_set_behaviour(worker.account_info().username, worker.account_info().behaviour)
 
     cells = worker.process_map_objects(map_objects)
@@ -236,10 +236,10 @@ def do_work(worker, pos, worker_number, initial_map_objects, seen_raid_defender,
         map_objects = worker.do_get_map_objects(pos)
 
         if not worker.account_info().behaviour:
-            worker.account_info().behaviour = determine_behaviour(pos, map_objects, worker_number)
+            worker.account_info().behaviour = determine_behaviour(pos, map_objects)
             db_set_behaviour(worker.account_info().username, worker.account_info().behaviour)
 
-        level = beh_handle_level_up(worker, level, map_objects)
+        level = beh_handle_level_up(worker, level)
 
         behaviour = worker.account_info().behaviour
         if is_pokestop(behaviour) and datetime.now() > next_ps:

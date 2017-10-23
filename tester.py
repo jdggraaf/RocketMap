@@ -107,7 +107,7 @@ print (str(first.pokemon_id))
 encounter = l5account.do_encounter_pokemon(first.encounter_id, first.spawn_point_id, pos)
 api = EncounterPokemon(encounter, first.encounter_id)
 res = api.contains_expected_encounter()
-pokemon = beh_catch_pokemon(l5account, l5obj, pos, first.encounter_id, first.spawn_point_id)
+pokemon = beh_catch_pokemon(l5account, pos, first.encounter_id, first.spawn_point_id)
 discard_all_pokemon(l5account)
 
 #res = l5account.do_claim_codename("us02mn45321")

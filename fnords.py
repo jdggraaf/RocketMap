@@ -179,7 +179,7 @@ def safe_do_work(worker, suggested_pos, worker_number, account_search_interval, 
         pos = suggested_pos
 
     if not worker.account_info().behaviour:
-        worker.account_info().behaviour = determine_behaviour(pos, map_objects, worker_number)
+        worker.account_info().behaviour = determine_behaviour(pos, map_objects)
         db_set_behaviour(worker.account_info().username, worker.account_info().behaviour)
 
     cells = worker.process_map_objects(map_objects)
@@ -222,10 +222,10 @@ def do_work(worker, pos, worker_number, initial_map_objects, spawn_points, is_fo
         this_map_objects = datetime.now()
 
         if not worker.account_info().behaviour:
-            worker.account_info().behaviour = determine_behaviour(pos, map_objects, worker_number)
+            worker.account_info().behaviour = determine_behaviour(pos, map_objects)
             db_set_behaviour(worker.account_info().username, worker.account_info().behaviour)
 
-        level = beh_handle_level_up(worker, level, map_objects)
+        level = beh_handle_level_up(worker, level)
 
         cells = worker.process_map_objects(map_objects)
         for cell in cells:

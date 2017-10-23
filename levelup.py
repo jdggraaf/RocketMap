@@ -6,17 +6,17 @@ from queue import Queue
 import pokemonhandler
 from accountdbsql import set_account_db_args, db_set_egg_count
 from accounts import *
+from apiwrapper import EncounterPokemon
 from argparser import std_config, load_proxies, add_geofence, add_webhooks, add_search_rest, parse_unicode, \
     location_parse, add_threads_per_proxy, add_use_account_db_true
 from argutils import thread_count
 from behaviours import beh_handle_level_up, \
-    beh_random_bag_cleaning, beh_spin_nearby_pokestops, PHASE_0_ITEM_LIMITS, beh_catch_pokemon, L20_ITEM_LIMITS, \
-    beh_aggressive_bag_cleaning, L12_ITEM_LIMITS
+    beh_random_bag_cleaning, beh_spin_nearby_pokestops, PHASE_0_ITEM_LIMITS, L20_ITEM_LIMITS, \
+    beh_aggressive_bag_cleaning, L12_ITEM_LIMITS, beh_catch_encountered_pokemon
 from geography import *
 from getmapobjects import catchable_pokemon
 from gymdbsql import set_args
 from inventory import has_lucky_egg, poke_balls, egg_count
-from management_errors import NoMoreWorkers
 from pogom.fnord_altitude import with_gmaps_altitude
 from pokestop_routes import all_routes
 from scannerutil import install_thread_excepthook, install_forced_update_check, setup_logging, nice_number_1
@@ -89,8 +89,7 @@ def create_leveler_thread(pos, thread_num, forced_update_check):
 
 
 def safe_do_work(locations, thread_num, forced_update_):
-
-    #while not forced_update_.isSet():
+    # while not forced_update_.isSet():
     # noinspection PyBroadException
     try:
         worker = next_worker()
@@ -116,7 +115,7 @@ def next_worker():
 def random_sleep(lower, upper):
     ms = int(random.uniform(lower, upper))
     log.info("Sleeping(2) for {}ms".format(str(ms)))
-    time.sleep(float(ms)/1000)
+    time.sleep(float(ms) / 1000)
 
 
 def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
@@ -132,7 +131,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
 
     spun = 0
     for index, pos in enumerate(locations):
-        next_pos = locations[index+1] if index < len(locations) else None
+        next_pos = locations[index + 1] if index < len(locations) else None
         if is_forced_update.isSet():
             log.info("Forced update, qutting")
             return
@@ -143,7 +142,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
             log.info("Reached target spins {}".format(str(spun)))
             break
         map_objects = worker.do_get_map_objects(pos)
-        level = beh_handle_level_up(worker, level, map_objects)
+        level = beh_handle_level_up(worker, level)
         if level == args.target_level:
             log.info("Reached target level {}, exiting thread".format(level))
             return
@@ -169,7 +168,8 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
             beh_random_bag_cleaning(worker, limits)
 
         if phase >= 1 and args.catch_pokemon > 0 and pokemon_caught < args.catch_pokemon and seconds_between_locations > 10:
-            log.info("Moving while catching for {} seconds until next location".format(str(nice_number_1(seconds_between_locations))))
+            log.info("Moving while catching for {} seconds until next location".format(
+                str(nice_number_1(seconds_between_locations))))
             if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
                 pokemon_caught += 1
             num_steps = seconds_between_locations / 10.0
@@ -183,38 +183,55 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
 
 def do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
     scan_catchable = catchable_pokemon(map_objects)
-    to_catch = prioritize_catchable(caught_pokemon_ids, scan_catchable)
-    if to_catch and to_catch.encounter_id not in caught_encounters:
-        caught_encounters.add(to_catch.encounter_id)
-        caught = beh_catch_pokemon(worker, map_objects, pos, to_catch.encounter_id, to_catch.spawn_point_id)
-        if caught:
-            rval = worker.do_transfer_pokemon([caught])
-            if rval > 1:
-                log.error("Transfering pokemon {} gave status {}".format(caught, rval))
-            return True
+    catch_list = prioritize_catchable(caught_pokemon_ids, scan_catchable)
+    inital_len = len(catch_list)
+    while len(catch_list) > 0:
+        to_catch = catch_list[0]
+        encounter_id = to_catch.encounter_id
+        spawn_point_id = to_catch.spawn_point_id
+        if encounter_id not in caught_encounters:
+            caught_encounters.add(encounter_id)  # leaks memory. fix todo
+            encounter_response = worker.do_encounter_pokemon(encounter_id, spawn_point_id, pos)
+            probability = EncounterPokemon(encounter_response, encounter_id).probability()
+            if len(filter(lambda x: x > 0.35, probability.capture_probability)) > 0:
+                caught = beh_catch_encountered_pokemon(worker, pos, encounter_id, spawn_point_id, probability)
+                if caught:
+                    caught_pokemon_ids.add(to_catch.pokemon_id)
+                    if isinstance(caught, (int, long)):
+                        rval = worker.do_transfer_pokemon([caught])
+                        if rval > 1:
+                            log.error("Transfering pokemon {} gave status {}".format(caught, rval))
+                        return True
+                    else:
+                        log.warning("Did not catch because {}".format(str(caught)))
+            else:
+                log.info("Encounter {} is too hard to catch, skipping".format(str(encounter_id)))
+        del catch_list[0]
+    log.info("No suitable pokemon to catch (of {} available), moving on".format(str(inital_len)))
 
 
 preferred = {10, 13, 16, 19, 29, 32, 41, 69, 74, 92, 183}
 
 
 def prioritize_catchable(caught, catchable):
+    pri1 = []
+    pri2 = []
+    pri3 = []
     for pokemon in catchable:
-        if pokemon.pokemon_id not in caught:
-            caught.add(pokemon.pokemon_id)
-            return pokemon
-    for pokemon in catchable:
-        if pokemon.pokemon_id in preferred:
-            return pokemon
-    if len(catchable) > 0:
-        return catchable[0]
-    else:
-        log.info("Nothing to be caught at location")
-        return None
+        pokemon_id = pokemon.pokemon_id
+        if pokemon_id not in caught:
+            pri1.append(pokemon)
+        elif pokemon_id in preferred:
+            pri2.append(pokemon)
+        else:
+            pri3.append(pokemon)
+    return pri1 + pri2 + pri3
 
 
 def get_limits(level):
     # one level above actual level to ensure supplies are accumulated
     return PHASE_0_ITEM_LIMITS if level < 13 else L12_ITEM_LIMITS if level < 21 else L20_ITEM_LIMITS
+
 
 def get_level(worker):
     level = worker.account_info()["level"]
@@ -238,5 +255,3 @@ for i in range(nthreads):
 
 for thread in threads:
     thread.join()
-
-

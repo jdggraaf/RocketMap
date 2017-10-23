@@ -76,12 +76,12 @@ class CatchBot():
                 attempts += 1
 
             if attempts < 4:
-                pokemon = beh_catch_pokemon(worker, map_objects, pos, encounter_id, spawn_point_id)
+                pokemon = beh_catch_pokemon(worker, pos, encounter_id, spawn_point_id)
                 if pokemon:
                     return
                 rnd_sleep(10)
             map_objects = worker.do_get_map_objects(pos)
-            beh_handle_level_up(worker, level, map_objects)
+            beh_handle_level_up(worker, level)
         self.spawn = None
 
 

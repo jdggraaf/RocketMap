@@ -265,6 +265,11 @@ def percise_nice_number(number):
     return str("%.4f" % round(number, 4))
 
 
+def filter_list(full_list, excludes):
+    s = set(excludes)
+    return (x for x in full_list if x not in s)
+
+
 def nice_coordinate_string(pos):
     if len(pos) > 2 and pos[2]:
         return "({},{},{})".format(nice_number(pos[0]),

@@ -7,7 +7,7 @@ import datetime
 
 from apiwrapper import EncounterPokemon
 from geography import center_geolocation
-from getmapobjects import inrange_pokstops, forts,  \
+from getmapobjects import inrange_pokstops, forts, \
     inventory_discardable_pokemon, catchable_pokemon
 from gymdb import update_gym_from_details
 from accountdbsql import db_set_account_level, db_set_egg_count, db_set_lure_count
@@ -81,10 +81,11 @@ PHASE_0_ITEM_LIMITS = {
     1104: 0  # Dragon scale
 }
 
+
 def random_zleep(lower, upper):
     ms = int(random.uniform(lower, upper))
     log.info("Sleeping(4) for {}ms".format(str(ms)))
-    time.sleep(float(ms)/1000)
+    time.sleep(float(ms) / 1000)
 
 
 def beh_clean_bag(pogoservice):
@@ -110,12 +111,13 @@ def beh_clean_bag_with_limits(pogoservice, limits):
             removed += count
     log.info("Bag cleaning Removed {} items".format(str(removed)))
 
+
 def beh_catch_all_nearby_pokemon(pogoservice, pos, map_objects, encountered):
     for catchable_ in catchable_pokemon(map_objects):
         encounter_id = catchable_.encounter_id
         spawn_point_id = catchable_.spawn_point_id
         if encounter_id not in encountered:
-            res = beh_catch_pokemon(pogoservice, map_objects, pos, encounter_id, spawn_point_id)
+            res = beh_catch_pokemon(pogoservice, pos, encounter_id, spawn_point_id)
             if res == WorkerResult.ERROR_NO_BALLS:
                 log.info("Worker is out of pokeballs")
                 break
@@ -123,10 +125,14 @@ def beh_catch_all_nearby_pokemon(pogoservice, pos, map_objects, encountered):
         rnd_sleep(15)
 
 
-def beh_catch_pokemon(pogoservice, map_objects, position, encounter_id, spawn_point_id):
-    start_catch_at = datetime.datetime.now()
+def beh_catch_pokemon(pogoservice, position, encounter_id, spawn_point_id):
     encounter_response = pogoservice.do_encounter_pokemon(encounter_id, spawn_point_id, position)
     probablity = EncounterPokemon(encounter_response, encounter_id).probability()
+    return beh_catch_encountered_pokemon(pogoservice, position, encounter_id,probablity)
+
+
+def beh_catch_encountered_pokemon(pogoservice, position, encounter_id, spawn_point_id, probablity):
+    start_catch_at = datetime.datetime.now()
 
     if probablity:
         catch_rate_by_ball = [0] + list(probablity.capture_probability)
@@ -144,9 +150,10 @@ def beh_catch_pokemon(pogoservice, map_objects, position, encounter_id, spawn_po
     else:
         log.warn("Encounter did not succeed")
 
+
 def random_sleep_z(lower, upper, client):
     ms = int(random.uniform(lower, upper))
-    time.sleep(float(ms)/1000)
+    time.sleep(float(ms) / 1000)
 
 
 def beh_spin_nearby_pokestops(pogoservice, map_objects, position):
@@ -178,10 +185,10 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position):
 
 
 def beh_safe_scanner_bot(pogoservice, moves_generator):
-        try:
-            beh_do_scanner_bot(pogoservice, moves_generator, 120)
-        except:
-            logging.exception("Outer worker catch block caught exception")
+    try:
+        beh_do_scanner_bot(pogoservice, moves_generator, 120)
+    except:
+        logging.exception("Outer worker catch block caught exception")
 
 
 def beh_do_scanner_bot(pogoservice, moves_generator, delay):
@@ -220,10 +227,10 @@ def beh_do_scanner_bot(pogoservice, moves_generator, delay):
 
 # noinspection PyBroadException
 def beh_safe_do_gym_scan(pogoservice, moves_generator):
-        try:
-            beh_gym_scan(pogoservice, moves_generator, 0)
-        except:
-            logging.exception("Outer worker catch block caught exception")
+    try:
+        beh_gym_scan(pogoservice, moves_generator, 0)
+    except:
+        logging.exception("Outer worker catch block caught exception")
 
 
 def beh_gym_scan(pogoservice, moves_generator, delay):
@@ -253,12 +260,13 @@ def rnd_sleep(sleep_time):
     time.sleep(random_)
 
 
-def beh_handle_level_up(worker, previous_level, map_objects):
+def beh_handle_level_up(worker, previous_level):
     new_level = worker.account_info()["level"]
 
     if previous_level and new_level != previous_level:
         # rnd_sleep(2)
-        log.info("{} Leveled up from {} to level {}".format(str(worker.account_info().username), str(previous_level), str(new_level)))
+        log.info("{} Leveled up from {} to level {}".format(str(worker.account_info().username), str(previous_level),
+                                                            str(new_level)))
         worker.do_collect_level_up(new_level)
 
     if new_level != previous_level:
@@ -293,7 +301,7 @@ def beh_do_process_single_gmo_gym(pogoservice, gmo_gym, current_position):
     try:
         gym_pos = gmo_gym['latitude'], gmo_gym['longitude']
 
-        b = pogoservice.do_gym_get_info(current_position,gym_pos, gym_id)
+        b = pogoservice.do_gym_get_info(current_position, gym_pos, gym_id)
         __log_info(pogoservice, "Sending gym {} to db".format(gym_id))
         update_gym_from_details(b)
     except GaveUpApiAction:
@@ -316,6 +324,7 @@ def beh_aggressive_bag_cleaning(worker, item_limits):
     if total > 300:
         log.info("Aggressive bag cleaning with inventory {}".format(str(total)))
         beh_clean_bag_with_limits(worker, item_limits)
+
 
 def discard_random_pokemon(worker):
     nonfavs = inventory_discardable_pokemon(worker, worker.account_info()["buddy"])
@@ -349,6 +358,7 @@ def discard_all_pokemon(worker):
 def random_sleep(seconds):
     time.sleep(seconds + int(random.random() * 3))
 
+
 def is_lowhalf(afl):
     ms = str(afl).split(".")[1]
     return ms.endswith('1') or ms.endswith('2') or ms.endswith('3') or ms.endswith('4') or ms.endswith('5')
@@ -373,7 +383,6 @@ def is_rare(pkmn):
     return id_ in real_rares
 
 
-
 WORKER_STRATEGY = {
     0: 'UNSET',
     1: 'IMMOBILE_GMO_ONLY',
@@ -386,7 +395,7 @@ WORKER_STRATEGY = {
 }
 
 
-def determine_behaviour(pos, get_map_objects, worker_number):
+def determine_behaviour(pos, get_map_objects):
     pokstops = inrange_pokstops(get_map_objects, pos)
     if len(pokstops) == 0:
         return "IMM"

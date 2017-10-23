@@ -18,6 +18,14 @@ def poke_balls(worker):
     return __inv(worker).get(1, 0)
 
 
+def blue_ball(worker):
+    return __inv(worker).get(2, 0)
+
+
+def total_balls(worker):
+    return ultra_balls(worker) + blue_ball(worker) + poke_balls(worker)
+
+
 def total_iventory_count(worker):
     total = 0
     for key, value in __inv(worker).iteritems():
