@@ -258,11 +258,13 @@ def install_thread_excepthook():
 def nice_number(number):
     return str("%.3f" % round(number, 3))
 
+
 def nice_number_1(number):
     return str("%.1f" % round(number, 1))
 
-def percise_nice_number(number):
-    return str("%.4f" % round(number, 4))
+
+def precise_nice_number(number):
+    return str("%.5f" % round(number, 5))
 
 
 def filter_list(full_list, excludes):
@@ -280,14 +282,14 @@ def nice_coordinate_string(pos):
                                 nice_number(pos[1]))
 
 
-def plain_coordinate_string(pos):
+def precise_coordinate_string(pos):
     if len(pos) > 2 and pos[2]:
-        return "{},{},{}".format(percise_nice_number(pos[0]),
-                                 percise_nice_number(pos[1]),
-                                 percise_nice_number(pos[2]))
+        return "{},{},{}".format(precise_nice_number(pos[0]),
+                                 precise_nice_number(pos[1]),
+                                 nice_number(pos[2]))
     else:
-        return "{},{}".format(percise_nice_number(pos[0]),
-                              percise_nice_number(pos[1]))
+        return "{},{}".format(precise_nice_number(pos[0]),
+                              precise_nice_number(pos[1]))
 def action_delay(low, high):
     # Waits for random number of seconds between low & high numbers
     longNum = random.uniform(low, high)

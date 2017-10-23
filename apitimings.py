@@ -27,7 +27,8 @@ api_timings = {
     "encounter": {
         "get_map_objects": 20,
         "use_item_encounter": 20,
-        "catch_pokemon": 20
+        "catch_pokemon": 20,
+        "encounter" :20
     },
     "level_up_rewards": {
         "fort_details": 100,

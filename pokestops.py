@@ -1,20 +1,18 @@
 import logging
 from exceptions import ValueError
-
-from accountdbsql import set_account_db_args
-from dijkstra import Graph, dijkstra, shortest
-from geofence import filter_for_geofence
-from gymdbsql import spawnpoints, spawns, pokestops, altitudes, insert_altitude
-from datetime import datetime, timedelta
-from geopy.distance import vincenty
-from argparser import basic_std_parser,add_geofence
-from gymdbsql import set_args
 from itertools import islice
-from geography import within_fences, step_position, center_geolocation, geo_chunk, geo_chunk_map
-from pogom.fnord_altitude import with_gmaps_altitude, with_random_altitude
+
+from geopy.distance import vincenty
+
+from argparser import basic_std_parser, add_geofence
+from geofence import get_geofences
+from geography import step_position, center_geolocation, lat_routed, as_3d_coord_array
+from gymdbsql import pokestops, altitudes, insert_altitude
+from gymdbsql import set_args
+from pogom.fnord_altitude import with_gmaps_altitude
 from pogom.utils import cellid
 from pokestop_routes import all_routes
-from scannerutil import chunks, nice_coordinate_string, plain_coordinate_string, percise_nice_number, equi_rect_distance
+from scannerutil import precise_coordinate_string, equi_rect_distance, precise_nice_number, nice_number_1
 
 parser = basic_std_parser("pokestops")
 parser.add_argument('-k', '--gmaps-key',
@@ -32,14 +30,23 @@ logging.getLogger("pgoapi").setLevel(logging.WARN)
 logging.getLogger("connectionpool").setLevel(logging.WARN)
 logging.getLogger("Account").setLevel(logging.INFO)
 
+
 class Pokestop:
     def __init__(self, id, latitude, longitude, altitude):
         self.id = id
-        if not altitude:
+        if altitude is None:
             raise ValueError
-        self.coords = ( latitude, longitude, altitude)
+        self.coords = (latitude, longitude, altitude)
         self.twelves = 0
         self.neighbours = []
+
+    def __getitem__(self, key):
+        if key == 0:
+            return self.coords[0]
+        if key == 1:
+            return self.coords[1]
+        if key == 2:
+            return self.coords[2]
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -51,7 +58,7 @@ class Pokestop:
         return hash(self.id)
 
     def add_neighbour(self, pokestop):
-        self.neighbours.append( pokestop)
+        self.neighbours.append(pokestop)
 
     def neightbours_with_self(self):
         neighbours = self.neighbours[:]
@@ -65,7 +72,7 @@ class Pokestop:
         current_result = self.neightbours_with_self()
         copy = current_result[:]
         for neightbour in copy:
-            current_result = neightbour.intersected_with( current_result)
+            current_result = neightbour.intersected_with(current_result)
         return current_result
 
     def is_within_range(self, other, m):
@@ -76,12 +83,13 @@ class Pokestop:
             return
         if self.is_within_range(otherpokestop, distance_requirement):
             self.neighbours.append(otherpokestop)
-            otherpokestop.neighbours.append( self)
+            otherpokestop.neighbours.append(self)
+
 
 def add_altitudes(stops):
     added = 0
     for stop in stops:
-        if not stop["altitude"]:
+        if stop["altitude"] is None:
             pos = (stop["latitude"], stop["longitude"])
             RADIUS = 70.0
             topleft_box = step_position(pos, RADIUS, -RADIUS)
@@ -90,10 +98,12 @@ def add_altitudes(stops):
             if len(altitude_candidates) > 0:
                 stop["altitude"] = altitude_candidates[0]["altitude"]
                 insert_altitude(cellid(pos), pos[0], pos[1], altitude_candidates[0]["altitude"])
-
                 added += 1
+            else:
+                pos = with_gmaps_altitude(pos, args.gmaps_key)
+                insert_altitude(cellid(pos), pos[0], pos[1], pos[2])
         else:
-            log.info("Altitude knwon")
+            log.info("Altitude known")
     log.info("Found {} altitudes by approximating DB data, {} total stops".format(str(added), str(len(stops))))
 
 
@@ -105,7 +115,8 @@ def update_alts_from_gmaps():
     for route in all_routes.values():
         for pos in route:
             if len(pos) == 3:
-                insert_altitude( cellid(pos), pos[0], pos[1], pos[2])
+                insert_altitude(cellid(pos), pos[0], pos[1], pos[2])
+
 
 def create_pokestop(stop):
     latitude_ = stop["latitude"]
@@ -113,12 +124,17 @@ def create_pokestop(stop):
     altitude_ = stop["altitude"]
     return Pokestop(stop["pokestop_id"], latitude_, longitude_, altitude_)
 
+
 points = {}
 point_list = []
 
 print "Loading stops"
-stops_to_check = filter_for_geofence(pokestops(), args.geofence, args.fencename)
+fences_to_use = get_geofences(args.geofence, args.fencename)
+
+stops_to_check = fences_to_use.filter_forts(pokestops())
 log.info("There are {} stops within fence".format(str(len(stops_to_check))))
+add_altitudes(stops_to_check)
+
 
 
 for stop in stops_to_check:
@@ -126,17 +142,18 @@ for stop in stops_to_check:
     points[stop["pokestop_id"]] = pokestop
     point_list.append(pokestop)
 
-res = ""
-for point in point_list:
-    res += str(point.coords[0]) + "," + str(point.coords[1]) + " "
-print res
+
+# print as_3d_coord_array(point_list)
+
+fenced78 = lat_routed(fences_to_use, 120, [x.coords for x in point_list])
+print as_3d_coord_array(fenced78)
 
 DISTANCE = 78.0
 for idx, point in enumerate(point_list):
     if idx % 500 == 0:
         print "Processing point at index " + str(idx)
     cutoff_long = step_position(point.coords, 0, DISTANCE)
-    for point2 in islice(point_list, idx + 1 , None):
+    for point2 in islice(point_list, idx + 1, None):
         point_longitude = point2.coords[1]
         if point_longitude > cutoff_long[1]:
             break
@@ -178,12 +195,12 @@ def print_coordinates():
             print "{},{}".format(str(poke_stop.coords[0]), str(poke_stop.coords[1]))
 
 
-#print_coordinates()
+# print_coordinates()
 
 result_coords = []
 num_stops_found = 0
 max_stop_group = find_largest_stop_group()
-print "Your area has {} stops reachable from a single position".format( str(max_stop_group))
+print "Your area has {} stops reachable from a single position".format(str(max_stop_group))
 for counter in range(max_stop_group, 0, -1):
     for poke_stop in point_list:
         intersected = poke_stop.collected_neighbours()
@@ -201,8 +218,6 @@ for counter in range(max_stop_group, 0, -1):
         log.info("Found {} stops, stopping".format(str(num_stops_found)))
         break
 
-
-
 log.info("Found {} stops".format(str(num_stops_found)))
 
 arranged = [result_coords[0]]
@@ -217,21 +232,16 @@ while len(result_coords) > 0:
             dist = distance
             current = idx
     if isinstance(current, int):
-        arranged.append( result_coords[current])
+        arranged.append(result_coords[current])
         del result_coords[current]
     else:
         log.info("No more found ?")
         break
 
-
-with_alt = [with_gmaps_altitude(x,args.gmaps_key) for x in arranged]
+with_alt = [with_gmaps_altitude(x, args.gmaps_key) for x in arranged]
 
 msg = "["
 for coord in with_alt:
-    msg += "(" + plain_coordinate_string(coord) +"), "
+    msg += "(" + precise_coordinate_string(coord) + "), "
 print "Traversal route for all pokestops"
 print msg + "]"
-
-
-
-

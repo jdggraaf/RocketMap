@@ -203,7 +203,9 @@ def do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
                             log.error("Transfering pokemon {} gave status {}".format(caught, rval))
                         return True
                     else:
-                        log.warning("Did not catch because {}".format(str(caught)))
+                        log.warning("Did not catch {} because {}".format(str(encounter_id), str(caught)))
+                else:
+                    log.warning("Did not catch because too many else blocks {}".format(str(encounter_id)))
             else:
                 log.info("Encounter {} is too hard to catch, skipping".format(str(encounter_id)))
         del catch_list[0]

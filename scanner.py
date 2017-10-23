@@ -6,7 +6,7 @@ from accountdbsql import set_account_db_args
 from accounts import AccountManager
 from argparser import std_config, load_proxies, location, add_geofence, add_search_rest
 from behaviours import beh_safe_do_gym_scan
-from geofence import filter_for_geofence
+from geofence import get_geofences
 from geography import gym_moves_generator, step_position
 from gymdbsql import gymscannercoordinates, set_args
 from scannerutil import *
@@ -93,7 +93,9 @@ def length_of_route(current_route):
 
 
 gym_map = gymscannercoordinates()
-gym_map = filter_for_geofence(gym_map, args.geofence, args.fencename)
+fences_to_use = get_geofences(args.geofence, args.fencename)
+
+gym_map = fences_to_use.filter_forts(gym_map)
 log.info("There are {} gyms in scan with fence {}".format(str(len(gym_map)), str(args.fencename)))
 streams = []
 

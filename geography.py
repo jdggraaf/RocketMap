@@ -3,13 +3,14 @@ import math
 import unittest
 from collections import defaultdict
 from math import cos, sin, atan2, sqrt
-from geopy.distance import vincenty
-from datetime import datetime as dt
 
-from scannerutil import nice_coordinate_string
+from geopy.distance import vincenty, distance
+
+import pokestop_locations
+from geofence import Geofence
+from scannerutil import precise_nice_number, precise_coordinate_string
 
 log = logging.getLogger(__name__)
-
 
 
 def fnords_box_moves_generator(topleft, bottomright, step_distance):
@@ -27,6 +28,66 @@ def fnords_box_moves_generator(topleft, bottomright, step_distance):
                 return
             moving_left = not moving_left
         current_pos = next_pos
+
+
+def lat_routed(fence, radius, coordinate_list):
+    result = []
+    box = fence.box()
+    latitude = lat_offset(box[1][0], radius)
+    forward = True
+    while latitude < box[0][0]:
+        first_row = latitude_filter(latitude, coordinate_list, radius)
+        corrected = centerline_corrected(latitude, first_row, radius)
+        result += corrected if forward else reversed(corrected)
+        latitude = lat_offset(latitude, 2*radius)
+        forward = not forward
+    return result
+
+
+def centerline_corrected(latitude, items, max_distance):
+    result = []
+    for coord in items:
+        centerline_coord = (latitude, coord[1])
+        distance_from_centerline = distance( centerline_coord, coord).m
+        if distance_from_centerline < max_distance:
+            result.append(coord)
+        else:
+            if coord[0] > latitude:
+                lat_to_use = lat_offset(latitude, distance_from_centerline - max_distance)
+            else:
+                lat_to_use = lat_offset(latitude, -(distance_from_centerline - max_distance))
+            result.append((lat_to_use, coord[1]))
+    return result
+
+class LatRoutedTest(unittest.TestCase):
+    def test(self):
+        fences = Geofence("hamburg_test", [(
+            53.54414219372066, 9.9151611328125), (
+            53.55311739655951, 9.897308349609375), (
+            53.57289691644811, 9.9041748046875), (
+            53.58166219857677, 9.918251037597656), (
+            53.59307472540477, 9.941940307617188), (
+            53.62464690109091, 10.009918212890625), (
+            53.63299430337182, 10.085105895996094), (
+            53.61935257085553, 10.081329345703125), (
+            53.61670515669997, 10.056953430175781), (
+            53.60529901298166, 10.055580139160156), (
+            53.60061345418052, 10.093345642089844), (
+            53.589406749307045, 10.054206848144531), (
+            53.549853906662435, 10.068626403808594), (
+            53.53067582037403, 10.050773620605469), (
+            53.52924731742132, 10.040473937988281), (
+            53.53781761239292, 10.008201599121094), (
+            53.544958199905025, 9.963569641113281
+        )])
+
+        routed = lat_routed(fences, 38, pokestop_locations.hamburg)
+        print as_2d_coords_one_per_line(routed)
+
+
+    def test_centerline_corrected(self):
+        corrected = centerline_corrected(59.1, [(59.2, 10), (59.0, 11)], 20)
+        print corrected
 
 
 def box_moves_generator(topleft, bottomright):
@@ -77,6 +138,13 @@ def moves_generator(pos, steps):
         num += 1
 
 
+def latitude_filter(latitude, list, radius):
+    northernly = lat_offset(latitude, radius)
+    southernly = lat_offset(latitude, -radius)
+    res = [x for x in list if northernly >= x[0] >= southernly]
+    return res
+
+
 def width_generator(pos, steps):
     num = 0
     currentpos = pos
@@ -86,12 +154,27 @@ def width_generator(pos, steps):
         num += 1
 
 
+def as_2d_coords_one_per_line(coordinates):
+    result = ""
+    for c in coordinates:
+        result += precise_nice_number(c[0]) + "," + precise_nice_number(c[1]) + "\n"
+    return result
+
+
+def as_3d_coord_array(coordinates):
+    return "[" + ", ".join(["(" + precise_coordinate_string(x) +")" for x in coordinates]) +"]"
+
+
+def lat_offset(latitude, offset):
+    return latitude + (180 / 3.1415929) * (float(offset) / 6378137)
+
+
 def step_position(pos, north, east):
     dy = north
     dx = east
     lat0 = pos[0]
     lon0 = pos[1]
-    lat = lat0 + (180 / 3.1415929) * (dy / 6378137)
+    lat = lat_offset(lat0, dy)
     lon = lon0 + (180 / 3.1415929) * (dx / 6378137) / math.cos(3.1415929 / 180.0 * lat0)
     if len(pos) == 2:
         return lat, lon
@@ -106,6 +189,7 @@ def geo_chunk(coordinates, gridsize=4):
             if is_inside_box(coord, box):
                 yield coord
 
+
 def geo_chunk_map(coordinates, gridsize=4):
     box = geo_box(coordinates)
     log.info("Geo box is {}".format(str(box)))
@@ -116,7 +200,6 @@ def geo_chunk_map(coordinates, gridsize=4):
             if is_inside_box(coord, box):
                 result[box].append(coord)
     return result
-
 
 
 def chunk_box(box, gridsize=4):
@@ -270,6 +353,13 @@ class TestGeo(unittest.TestCase):
         print "center is {}".format(str(center))
         for coord in coords:
             print("dist to {} is {}".format(str(coord), vincenty(center, coord).m))
+
+
+class TestLatFilter(unittest.TestCase):
+    def test(self):
+        hamburg = pokestop_locations.hamburg
+        l = latitude_filter(hamburg[0][0], hamburg, 120)
+        print as_2d_coords_one_per_line(l)
 
 
 class TestGeo2(unittest.TestCase):

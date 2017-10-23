@@ -72,6 +72,9 @@ class Geofences(object):
         else:
             return self
 
+    def filter_forts(self,gyms):
+        return [loc for loc in gyms if self.within_fences(loc["latitude"], loc["longitude"])]
+
 
 class Geofence(object):
     # Expects points to be
@@ -117,17 +120,6 @@ class Geofence(object):
 
     def __str__(self):
         return self.name
-
-
-def filter_for_geofence(gyms, fence_file, fence_name):
-    fences_to_use = get_geofences(fence_file, fence_name)
-    result = []
-
-    for loc in gyms:
-        if fences_to_use.within_fences(loc["latitude"], loc["longitude"]):
-            result.append(loc)
-
-    return result
 
 
 def group_by_geofence(gyms, fence_file, fence_name):
