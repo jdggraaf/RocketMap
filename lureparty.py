@@ -236,7 +236,7 @@ def index(user):
     return app.send_static_file("html/lureparty.html")
 
 
-@app.route('/<user>/lurebomb', methods=['POST'])
+@app.route('/lurebomb/<user>', methods=['POST'])
 def release_accounts(user):
     projectpath = request.form['Position1']
     return lure_bomb_get( user, projectpath, 120)
