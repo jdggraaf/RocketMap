@@ -12,7 +12,7 @@ from gymdbsql import set_args
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogom.utils import cellid
 from pokestop_routes import all_routes
-from scannerutil import precise_coordinate_string, equi_rect_distance, precise_nice_number, nice_number_1
+from scannerutil import precise_coordinate_string, equi_rect_distance
 
 parser = basic_std_parser("pokestops")
 parser.add_argument('-k', '--gmaps-key',
@@ -102,9 +102,8 @@ def add_altitudes(stops):
             else:
                 pos = with_gmaps_altitude(pos, args.gmaps_key)
                 insert_altitude(cellid(pos), pos[0], pos[1], pos[2])
-        else:
-            log.info("Altitude known")
-    log.info("Found {} altitudes by approximating DB data, {} total stops".format(str(added), str(len(stops))))
+    if added > 0:
+        log.info("Found {} altitudes by approximating DB data, {} total stops".format(str(added), str(len(stops))))
 
 
 def approximate_pokestop_alts():
@@ -145,8 +144,14 @@ for stop in stops_to_check:
 
 # print as_3d_coord_array(point_list)
 
-fenced78 = lat_routed(fences_to_use, 120, [x.coords for x in point_list])
+def stop_string(combined):
+    return "((" + precise_coordinate_string(combined[0]) +"),(" + precise_coordinate_string(combined[1].coords) + "," + repr(combined[1].id) + "))"
+
+fenced78 = lat_routed(fences_to_use, 78, [x for x in point_list])
+print "[" + "\n, ".join([stop_string(x) for x in fenced78]) + "]"
+
 print as_3d_coord_array(fenced78)
+
 
 DISTANCE = 78.0
 for idx, point in enumerate(point_list):

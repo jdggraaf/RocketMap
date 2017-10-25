@@ -46,17 +46,17 @@ def lat_routed(fence, radius, coordinate_list):
 
 def centerline_corrected(latitude, items, max_distance):
     result = []
-    for coord in items:
-        centerline_coord = (latitude, coord[1])
-        distance_from_centerline = distance( centerline_coord, coord).m
+    for pokestop in items:
+        centerline_coord = (latitude, pokestop[1], pokestop[2])
+        distance_from_centerline = distance( centerline_coord, pokestop.coords).m
         if distance_from_centerline < max_distance:
-            result.append(coord)
+            result.append((centerline_coord, pokestop))
         else:
-            if coord[0] > latitude:
+            if pokestop[0] > latitude:
                 lat_to_use = lat_offset(latitude, distance_from_centerline - max_distance)
             else:
                 lat_to_use = lat_offset(latitude, -(distance_from_centerline - max_distance))
-            result.append((lat_to_use, coord[1]))
+            result.append((lat_to_use, pokestop[1]), pokestop)
     return result
 
 class LatRoutedTest(unittest.TestCase):

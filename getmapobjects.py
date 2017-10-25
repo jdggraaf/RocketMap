@@ -261,8 +261,13 @@ def s2_cell_ids_from_cells(cells):
 def parse_gyms(map_objects):
     return [candidate for candidate in forts(map_objects) if candidate.type == 0]
 
+
 def parse_pokestops(map_objects):
     return [candidate for candidate in forts(map_objects) if candidate.type == 1]
+
+
+def find_pokestop(map_objects, pokestop_id):
+    return [candidate for candidate in forts(map_objects) if candidate.type == 1 and candidate.id == pokestop_id][0]
 
 def nearest_pokstop(map_objects, pos):
     result = None

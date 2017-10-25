@@ -1110,6 +1110,11 @@ class TravelTime(DelegatingPogoService):
             self.__sleep_for_account_travel(self.account_info(), step_location)
         return super(TravelTime, self).do_encounter_pokemon(encounter_id, spawn_point_id, step_location)
 
+    def do_spin_pokestop(self, fort, step_location):
+        if self.account_info().get_position() is not None:
+            self.__sleep_for_account_travel(self.account_info(), step_location)
+        return super(TravelTime, self).do_spin_pokestop(fort, step_location)
+
     def time_to_location(self, location):
         if not self.account_info().get_position():
             return 0

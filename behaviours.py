@@ -5,10 +5,12 @@ import time
 
 import datetime
 
+from geopy.distance import vincenty
+
 from apiwrapper import EncounterPokemon
 from geography import center_geolocation
 from getmapobjects import inrange_pokstops, forts, \
-    inventory_discardable_pokemon, catchable_pokemon
+    inventory_discardable_pokemon, catchable_pokemon, find_pokestop
 from gymdb import update_gym_from_details
 from accountdbsql import db_set_account_level, db_set_egg_count, db_set_lure_count
 from gymdbsql import do_with_backoff_for_deadlock, create_or_update_gym_from_gmo2
@@ -183,6 +185,25 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position):
                 spun += 1
     return spun
 
+def beh_spin_pokestop(pogoservice, map_objects, player_position, pokestop_id):
+    if map_objects:
+        pokestop = find_pokestop(map_objects, pokestop_id)
+        if pokestop.cooldown_complete_timestamp_ms > 0:
+            cooldown = datetime.datetime.fromtimestamp(pokestop.cooldown_complete_timestamp_ms / 1000)
+            if cooldown > datetime.datetime.now():
+                log.info('Pokestop is in cooldown until {}, ignoring'.format(str(cooldown)))
+                return
+        log.info("Details")
+        pogoservice.do_pokestop_details(pokestop)
+        log.info("Spinning pokestop")
+        spin_response = pogoservice.do_spin_pokestop(pokestop, player_position)
+        result = spin_response['responses']['FORT_SEARCH'].result
+        if result == 2:
+            stop_pos = (pokestop.latitude,pokestop.longitude)
+            dist = vincenty(stop_pos, player_position).m
+            log.error("Too far away from stop, {}m. this should not happen".format(str(dist)))
+        log.info("Spun pokestop")
+        return result
 
 def beh_safe_scanner_bot(pogoservice, moves_generator):
     try:

@@ -12,13 +12,13 @@ from argparser import std_config, load_proxies, add_geofence, add_webhooks, add_
 from argutils import thread_count
 from behaviours import beh_handle_level_up, \
     beh_random_bag_cleaning, beh_spin_nearby_pokestops, PHASE_0_ITEM_LIMITS, L20_ITEM_LIMITS, \
-    beh_aggressive_bag_cleaning, L12_ITEM_LIMITS, beh_catch_encountered_pokemon
+    beh_aggressive_bag_cleaning, L12_ITEM_LIMITS, beh_catch_encountered_pokemon, beh_spin_pokestop
 from geography import *
 from getmapobjects import catchable_pokemon
 from gymdbsql import set_args
 from inventory import has_lucky_egg, poke_balls, egg_count
 from pogom.fnord_altitude import with_gmaps_altitude
-from pokestop_routes import all_routes
+from pokestoproutesv2 import routes_v2
 from scannerutil import install_thread_excepthook, install_forced_update_check, setup_logging, nice_number_1
 from workers import wrap_account_no_replace
 
@@ -81,8 +81,8 @@ nthreads = thread_count(args)
 log.info("Bot using {} threads".format(str(nthreads)))
 
 
-def create_leveler_thread(pos, thread_num, forced_update_check):
-    the_thread = Thread(target=safe_do_work, args=(pos, thread_num, forced_update_check))
+def create_leveler_thread(locations, thread_num, forced_update_check):
+    the_thread = Thread(target=safe_do_work, args=(locations, thread_num, forced_update_check))
     the_thread.start()
     threads.append(the_thread)
     time.sleep(6)
@@ -130,8 +130,11 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
     next_egg = datetime.now() if use_eggs else datetime.now() + timedelta(days=365)
 
     spun = 0
-    for index, pos in enumerate(locations):
-        next_pos = locations[index + 1] if index < len(locations) else None
+    next_gmo = datetime.now()
+    for index, location_tuple in enumerate(locations):
+        player_position = location_tuple[0]
+        pokestop = location_tuple[1]
+        next_pos = locations[index + 1][0] if index < len(locations) else None
         if is_forced_update.isSet():
             log.info("Forced update, qutting")
             return
@@ -141,7 +144,9 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
         if spun > args.max_stops:
             log.info("Reached target spins {}".format(str(spun)))
             break
-        map_objects = worker.do_get_map_objects(pos)
+        if datetime.now() >= next_gmo:
+            map_objects = worker.do_get_map_objects(player_position)
+            next_gmo = datetime.now() + timedelta(seconds=10)
         level = beh_handle_level_up(worker, level)
         if level == args.target_level:
             log.info("Reached target level {}, exiting thread".format(level))
@@ -157,10 +162,13 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
             db_set_egg_count(worker.account_info().username, egg_count(worker))
             phase = 1
 
-        spun += beh_spin_nearby_pokestops(worker, map_objects, pos)
+        spin_pokestop = beh_spin_pokestop(worker, map_objects, player_position, pokestop[3])
+        if spin_pokestop == 1:
+            spun += 1
         if spun % 10 == 0:
             log.info("{} spun {} pokestops".format(worker.name(), str(spun)))
-        seconds_between_locations = time_between_locations(pos, next_pos, 8)
+        seconds_between_locations = time_between_locations(player_position, next_pos, 8)
+        log.info("{} seconds to next position".format(str(seconds_between_locations)))
         limits = PHASE_0_ITEM_LIMITS if phase == 0 else L20_ITEM_LIMITS
         if seconds_between_locations > 20:
             beh_aggressive_bag_cleaning(worker, limits)
@@ -170,10 +178,10 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
         if phase >= 1 and args.catch_pokemon > 0 and pokemon_caught < args.catch_pokemon and seconds_between_locations > 10:
             log.info("Moving while catching for {} seconds until next location".format(
                 str(nice_number_1(seconds_between_locations))))
-            if do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
+            if do_catch(caught_encounters, caught_pokemon_ids, map_objects, player_position, worker):
                 pokemon_caught += 1
             num_steps = seconds_between_locations / 10.0
-            for step in steps_to_point(pos, next_pos, num_steps):
+            for step in steps_to_point(player_position, next_pos, num_steps):
                 map_objects = worker.do_get_map_objects(step)
                 if do_catch(caught_encounters, caught_pokemon_ids, map_objects, step, worker):
                     pokemon_caught += 1
@@ -181,7 +189,7 @@ def do_work(worker, locations, thread_num, is_forced_update, use_eggs=True):
     log.info("Reached end of route with {} spins, going to rest".format(str(spun)))
 
 
-def do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
+def do_catch(caught_encounters, caught_pokemon_ids, map_objects, player_position, worker):
     scan_catchable = catchable_pokemon(map_objects)
     catch_list = prioritize_catchable(caught_pokemon_ids, scan_catchable)
     inital_len = len(catch_list)
@@ -189,12 +197,14 @@ def do_catch(caught_encounters, caught_pokemon_ids, map_objects, pos, worker):
         to_catch = catch_list[0]
         encounter_id = to_catch.encounter_id
         spawn_point_id = to_catch.spawn_point_id
-        if encounter_id not in caught_encounters:
+        if distance(player_position, player_position).m > 70:
+            log.info("Pokemon is too far away, ignoring")
+        elif encounter_id not in caught_encounters:
             caught_encounters.add(encounter_id)  # leaks memory. fix todo
-            encounter_response = worker.do_encounter_pokemon(encounter_id, spawn_point_id, pos)
+            encounter_response = worker.do_encounter_pokemon(encounter_id, spawn_point_id, player_position)
             probability = EncounterPokemon(encounter_response, encounter_id).probability()
             if len(filter(lambda x: x > 0.35, probability.capture_probability)) > 0:
-                caught = beh_catch_encountered_pokemon(worker, pos, encounter_id, spawn_point_id, probability)
+                caught = beh_catch_encountered_pokemon(worker, player_position, encounter_id, spawn_point_id, probability)
                 if caught:
                     caught_pokemon_ids.add(to_catch.pokemon_id)
                     if isinstance(caught, (int, long)):
@@ -245,8 +255,9 @@ def get_level(worker):
 forced_update = Event()
 
 if args.route:
-    locs = all_routes.get(args.route)
+    locs = routes_v2.get(args.route)
     if not locs:
+        log.error("The route {} is not found".format(args.route))
         raise "The route {} is not found".format(args.route)
 else:
     locs = [with_gmaps_altitude(location_parse(x), args.gmaps_key) for x in args.locations.split(' ')]
