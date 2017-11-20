@@ -7,7 +7,7 @@ from argparser import std_config, load_proxies, add_system_id, add_use_account_d
 from behaviours import beh_spin_pokestop, beh_spin_pokestop_raw
 from geography import *
 from getmapobjects import inrange_pokstops, catchable_pokemon_by_distance, catchable_pokemon, \
-    inventory_discardable_pokemon
+    inventory_discardable_pokemon, inrange_gyms
 from gymdbsql import set_args
 from pogoservice import TravelTime
 from pokestoproutesv2 import double_xp_1, double_xp_2
@@ -41,7 +41,7 @@ args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Osl
 '''
 g0g3m3sh89896:&PB&nQ3YH used 31. oc
 g0g3m3sh89912:SaH7QKq@C used 9 nov
-g0g3m3sh89863:kt#9r&MnG
+g0g3m3sh89863:kt#9r&MnG used 20 nov
 g0g3m3sh89910:T!2YAMu2k
 g0g3m3sh89905:uYRST9@Bg
 g0g3m3sh89919:MKG#6s!E3
@@ -59,8 +59,8 @@ for s in x2:
     total += len(s[1])
 
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {}, replace_warned=False)
-#l5account = account_manager.add_account({"username":"g0g3m3sh89425","password":"F93%zg6Ru","provider":"ptc"})
-l5account = account_manager.add_account({"username":"g0g3m3sh89615","password":"x@WtEnv6n","provider":"ptc"})
+l5account = account_manager.add_account({"username":"g0g3m3sh89863","password":"kt#9r&MnG","provider":"ptc"})
+#l5account = account_manager.add_account({"username":"g0g3m3sh89615","password":"x@WtEnv6n","provider":"ptc"})
 #l5account = account_manager.add_account({"username":"g0g3m3sh89912","password":"SaH7QKq@C","provider":"ptc"})
 # l5account = account_manager.add_account({"username":"g0g3m3sh89896","password":"&PB&nQ3YH","provider":"ptc"})
 worker = wrap_account_no_replace(l5account, account_manager, 25)
@@ -74,7 +74,14 @@ stop_6_3km=(((59.907326, 10.7853680), "09abf40d1abf413990a4ff12f81734fb.16"),((5
 
 #travel_time = worker.getlayer(TravelTime)
 
-worker.do_get_map_objects((53.530086, 10.041104, 5.8033))
+pos = (59.899319, 10.836807, 50)
+map_objects = worker.do_get_map_objects(pos)
+pokestops = inrange_pokstops(map_objects, pos)
+gyms = inrange_gyms(map_objects, pos)
+
+gym = gyms[0]
+worker.do_spin_pokestop(gym ,pos)
+
 pokemons = inventory_discardable_pokemon(worker)
 worker.do_transfer_pokemon(pokemons)
 
@@ -90,8 +97,6 @@ fort = FortData()
 fort.latitude = end[0][0]
 fort.longitude = end[0][1]
 fort.id = end[1]
-
-travel_time.use_fast_speed()
 
 beh_spin_pokestop(worker, l5obj, player_position, start[1])
 # l5obj = worker.do_get_map_objects(end[0])

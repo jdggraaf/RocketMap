@@ -252,7 +252,7 @@ def do_work_just_stops(worker, is_forced_update):
     feeder = PositionFeeder(double_xp_1.get(args.route), is_forced_update)
     do_just_stops(feeder, feeder, sm, wm, travel_time, 1, 2)
     feeder = PositionFeeder(double_xp_2.get(args.route), is_forced_update)
-    do_just_stops(feeder, feeder, sm, wm, travel_time, 2, 2)
+    do_just_stops(feeder, feeder, sm, wm, travel_time, 2, 3)
 
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 

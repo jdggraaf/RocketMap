@@ -281,8 +281,9 @@ def s2_cell_ids_from_cells(cells):
 def parse_gyms(map_objects):
     return [candidate for candidate in forts(map_objects) if candidate.type == 0]
 
+
 def parse_pokestops(map_objects):
-    return [candidate for candidate in forts(map_objects) if candidate.type == 1]
+    return [candidate for candidate in forts(map_objects) if candidate.type == 1 or candidate.type == 0]
 
 
 def find_pokestop(map_objects, pokestop_id):

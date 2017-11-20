@@ -158,7 +158,7 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position, range_m=39, bl
                 log.debug('Pokestop is in cooldown, ignoring')
             else:
                 if idx > 0:
-                    idx_ = idx * 300
+                    idx_ = min(idx,2) * 150
                     log.info("Random sleeping at least {}ms for additional stops".format(idx_))
                     random_sleep_z(idx_, idx_ + 100, "pokestop_details")  # Do not let Niantic throttle
                     travel_time.use_slow_speed()

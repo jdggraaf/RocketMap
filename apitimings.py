@@ -27,7 +27,7 @@ api_timings = {
         "get_map_objects": 100,
         "recycle_inventory_item": 250,
         "encounter": 80,
-        "fort_search" : 20,
+        "fort_search" : 100,
         "fort_details": 20,
         "use_item_xp_boost" : 200
     },

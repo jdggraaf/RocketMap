@@ -6,7 +6,7 @@ from accountdbsql import set_account_db_args
 from argparser import basic_std_parser, add_geofence
 from geofence import get_geofences
 from geography import lat_routed
-from gymdbsql import pokestops_in_box
+from gymdbsql import pokestops_in_box, pokestops_in_box_2
 from levelup_tools import stop_string, xp_stop_string, find_xp_route, write_gpx_route
 from pokestopModel import create_pokestops, update_distances, find_optimal_location
 from pokestops import add_altitudes
@@ -26,8 +26,11 @@ setup_logging()
 log = logging.getLogger(__name__)
 
 num_locs = 0
+
+
 def create_one(fence, gpx_filename, target_positions=190):
-    stops = fence.filter_forts(pokestops_in_box(fence.box()))
+    box_stops = pokestops_in_box(fence.box())
+    stops = fence.filter_forts(box_stops)
     add_altitudes(stops)
 
     point_list_hl = create_pokestops(stops)
@@ -48,6 +51,10 @@ def create_one(fence, gpx_filename, target_positions=190):
     return xp_route_1, with_spawns
 
 
+big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "big_route_hl.gpx", 330)
+
+big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]), "big_route_hr.gpx", 330)
+
 xp_route_initial, spawns_initial = create_one(get_geofences(dirname + "/levelup_fences.txt", ["InitialHamburg"]),
                                           "route_init.gpx")
 
@@ -56,10 +63,7 @@ xp_route_left, spawns_left = create_one(get_geofences(dirname + "/levelup_fences
 xp_route_right, spawns_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
                                           "route_hr.gpx")
 
-big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "big_route_hl.gpx", 330)
 
-big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
-                                          "big_route_hr.gpx", 330)
 
 hbg_grind = """
 hamburg_grind = [(53.477084, 10.259286, 50.22897338867188), (53.478151, 10.238244, 5.319664478302002),
