@@ -118,7 +118,7 @@ def safe_do_work(thread_num, global_catch_feed, forced_update_):
 
 def next_worker():
     account = account_manager.get_account(False)
-    worker = wrap_account_no_replace(account, account_manager, args.fast_speed)
+    worker = wrap_account_no_replace(account, account_manager, int(args.fast_speed))
     return worker
 
 
