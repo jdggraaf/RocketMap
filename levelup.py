@@ -123,12 +123,7 @@ def next_worker():
 def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eggs):
     first_loc = locations[0][0]
     map_objects = wm.move_to_with_gmo(first_loc)
-    did_map_objects = True
-
-    excluded_stops = exclusion_pokestops(xp_route_1 + xp_route_2)
-    use_fast = True
     travel_time.set_fast_speed(True)
-
     for route_element, next_route_element in pairwise(locations):
         if sm.reached_limits():
             return
@@ -149,9 +144,7 @@ def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eg
 
         sm.log_status(egg_active, wm.has_egg, location_feeder.index(), phase)
 
-        did_map_objects = datetime.now() + timedelta(seconds=(travel_time.time_to_location(next_pos))) > wm.next_gmo
-        if did_map_objects:
-            map_objects = wm.move_to_with_gmo(next_pos)
+        map_objects = wm.move_to_with_gmo(next_pos)
         log.info("Complieted one route element")
 
 
