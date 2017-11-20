@@ -54,6 +54,8 @@ parser.add_argument('-pokemon', '--catch-pokemon', default=0,
                     help='If the levelup should catch pokemon (not recommended)')
 parser.add_argument('-egg', '--use-eggs', default=True,
                     help='True to use lucky eggs')
+parser.add_argument('-fs', '--fast-speed', default=25,
+                    help='Fast speed in m/s')
 parser.add_argument('-xp2', '--double-xp', default=False, action='store_true',
                     help='True to use stop-only double XP mode')
 parser.add_argument('-iegg', '--use-initial-egg', default=True, action='store_true',
@@ -116,7 +118,7 @@ def safe_do_work(thread_num, global_catch_feed, forced_update_):
 
 def next_worker():
     account = account_manager.get_account(False)
-    worker = wrap_account_no_replace(account, account_manager, 25)
+    worker = wrap_account_no_replace(account, account_manager, args.fast_speed)
     return worker
 
 
