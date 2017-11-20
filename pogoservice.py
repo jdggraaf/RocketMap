@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, datetime as dt
 from pgoapi import PGoApi
 from pgoapi import utilities as util
 from pgoapi.exceptions import HashingOfflineException, NianticThrottlingException, BannedAccountException, \
-    BadHashRequestException, HashingTimeoutException
+    BadHashRequestException, HashingTimeoutException, UnexpectedHashResponseException
 from pgoapi.exceptions import HashingQuotaExceededException, NianticOfflineException
 from requests.exceptions import ChunkedEncodingError
 
@@ -1529,6 +1529,9 @@ class NetworkIssueRetryer(DelegatingPogoService):
                 self.__log_warning("HashingTimeoutException")
                 time.sleep(30)  # block main thread for a few seconds.
                 break
+            except UnexpectedHashResponseException:
+                self.__log_warning("UnexpectedHashResponseException")
+                time.sleep(30)  # block main thread for a few seconds.
             except BadHashRequestException:
                 self.__log_warning("BadHashRequestException")
                 time.sleep(30)  # block main thread for a few seconds.
