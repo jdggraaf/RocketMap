@@ -1285,9 +1285,11 @@ class TravelTime(DelegatingPogoService):
             return
         distance, delay, fast = self.__priv_time_to_location(next_location)
         if fast and delay > 0.1:
-            self.add_log(("FastMovement {}m, {}s, {} m/s, prev={} at {}".format(str(distance), str(delay), str(float(distance)/delay), str(self.prev_position), str(self.positioned_at))))
+            self.add_log(("FastMovement {}m, {}s, {} m/s".format(str(distance), str(delay), str(float(distance)/delay))))
+            # self.add_log(("FastMovement {}m, {}s, {} m/s, prev={} at {}".format(str(distance), str(delay), str(float(distance)/delay), str(self.prev_position), str(self.positioned_at))))
         elif delay > 0.1:
-            self.add_log(("Movement {}m, {}s, {} m/s, pos={} prev={} at {}".format(str(distance), str(delay), str(float(distance)/delay), str(next_location), str(self.prev_position), str(self.positioned_at))))
+            # self.add_log(("Movement {}m, {}s, {} m/s, pos={} prev={} at {}".format(str(distance), str(delay), str(float(distance)/delay), str(next_location), str(self.prev_position), str(self.positioned_at))))
+            self.add_log(("Movement {}m, {}s, {} m/s, pos={}".format(str(distance), str(delay), str(float(distance) / delay), str(next_location))))
         time.sleep(delay)
 
 

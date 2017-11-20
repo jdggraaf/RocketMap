@@ -76,9 +76,18 @@ def as_coordinate(global_feed_map_pokemon, fallback_altitude):
     return global_feed_map_pokemon.latitude, global_feed_map_pokemon.longitude, fallback_altitude
 
 
-def gpx_string(combined):
+def gpx_string(combined, pos=None):
     """  <trkpt lat="47.644548" lon="-122.326897">"""
-    return "<trkpt lat='" + str(combined[0][0]) + "' lon='" + str(combined[0][1]) + "'/>"
+    combined_ = "<trkpt lat='" + str(combined[0][0]) + "' lon='" + str(combined[0][1]) +"'"
+    if pos:
+        return combined_ + "><name>" + str(pos) +"</name><trkpt>"
+    else:
+        return combined_ + "/>"
+
+
+def gpx_route(route):
+    return "\n".join([gpx_string(x, idx) for idx, x in enumerate(route)])
+
 
 def stop_string(combined):
     return "((" + precise_coordinate_string(combined[0]) +"),(" + full_precision_coordinate_string(combined[1].coords) + "," + repr(combined[1].id) + ")," + str(combined[2]) +")"
@@ -95,7 +104,7 @@ def location_string(pos):
     return "(" + precise_coordinate_string(pos) +")"
 
 def as_gpx(route):
-    return initial_gpx + "\n".join([gpx_string(x) for x in route]) + post_gpx
+    return initial_gpx + gpx_route(route) + post_gpx
 
 def write_gpx_route(filename, xp_route):
     with open(filename, "w") as text_file:
