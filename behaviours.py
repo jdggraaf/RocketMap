@@ -13,6 +13,7 @@ from gymdb import update_gym_from_details
 from gymdbsql import do_with_backoff_for_deadlock, create_or_update_gym_from_gmo2
 from inventory import total_iventory_count, egg_count, lure_count
 from management_errors import GaveUpApiAction
+from pogoservice import TravelTime
 from pokemon_catch_worker import PokemonCatchWorker, WorkerResult
 from pokemon_data import pokemon_name
 from scannerutil import equi_rect_distance_m, distance_to_fort, fort_as_coordinate
@@ -144,6 +145,8 @@ def random_sleep_z(lower, upper, client):
 def beh_spin_nearby_pokestops(pogoservice, map_objects, position, range_m=39, blacklist=None, exclusions = {}):
     spun = []
     spinning_distance_m = 39
+    travel_time = pogoservice.getlayer(TravelTime)
+    old_speed = travel_time.get_speed()
     if map_objects:
         pokestops = inrange_pokstops(map_objects, position, range_m)
         for idx, pokestop in enumerate(pokestops):
@@ -158,13 +161,17 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position, range_m=39, bl
                     idx_ = idx * 300
                     log.info("Random sleeping at least {}ms for additional stops".format(idx_))
                     random_sleep_z(idx_, idx_ + 100, "pokestop_details")  # Do not let Niantic throttle
+                    travel_time.use_slow_speed()
 
                 dist_to_stop = distance_to_fort( position, pokestop )
                 if dist_to_stop > spinning_distance_m:
-                    position = move_towards(position, fort_as_coordinate(pokestop), dist_to_stop - spinning_distance_m)
+                    m_to_move = dist_to_stop - spinning_distance_m
+                    log.info("Stop is {}m away, moving {}m closer".format(str(dist_to_stop), str(m_to_move)))
+                    position = move_towards(position, fort_as_coordinate(pokestop), m_to_move)
                 res = beh_spin_pokestop_raw(pogoservice, pokestop, position)
                 if res == 1:
                     spun.append(pokestop.id)
+    travel_time.set_fast_speed(old_speed)
     return spun
 
 

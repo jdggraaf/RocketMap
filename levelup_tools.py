@@ -102,7 +102,7 @@ def write_gpx_route(filename, xp_route):
         text_file.write(as_gpx(xp_route))
 
 
-def find_xp_route(point_list, fence_box):
+def find_xp_route(point_list, fence_box, target_positions=190):
     result_coords = find_largest_groups(point_list, min_size=2)
 
     goodies = [x for x in result_coords if len(x[1]) > 2]
@@ -110,7 +110,7 @@ def find_xp_route(point_list, fence_box):
 
     eastwest = sorted(goodies, key=lambda item: x[0][1])
 
-    xp_route = make_optimal_route(fence_box, eastwest, notgoodies, 190)
+    xp_route = make_optimal_route(fence_box, eastwest, notgoodies, target_positions)
     return xp_route
 
 def exclusion_pokestops(list):

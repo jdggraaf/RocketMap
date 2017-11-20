@@ -92,11 +92,14 @@ class WorkerManager(object):
     def can_do_more_eggs_before_L30(self):
         return has_lucky_egg(self.worker) or self.level < 25
 
+    def has_lucky_egg(self):
+        return has_lucky_egg(self.worker)
+
     def use_egg_if_ready(self, cm):
-        has_egg = has_lucky_egg(self.worker)
+        has_egg = self.has_lucky_egg()
         egg_active = self.has_active_lucky_egg()
         after_egg = datetime.now() > self.next_egg
-        evolving_possible = cm.can_start_evolving()
+        evolving_possible = not cm or cm.can_start_evolving()
         log.info(
             "UseEgg: Egg_active={},after_egg={},has_egg={},can_start_evolving{}, next_egg={}".format(str(egg_active), str(after_egg),
                                                                                 str(has_egg), str(evolving_possible), str(self.next_egg)))

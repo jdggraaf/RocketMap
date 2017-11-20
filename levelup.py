@@ -18,7 +18,8 @@ from inventory import has_lucky_egg
 from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogoservice import TravelTime
-from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2
+from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2, double_xp_1, \
+    double_xp_2
 from scannerutil import install_thread_excepthook, setup_logging, \
     create_forced_update_check
 from stopmanager import StopManager
@@ -53,6 +54,8 @@ parser.add_argument('-pokemon', '--catch-pokemon', default=0,
                     help='If the levelup should catch pokemon (not recommended)')
 parser.add_argument('-egg', '--use-eggs', default=True,
                     help='True to use lucky eggs')
+parser.add_argument('-xp2', '--double-xp', default=False, action='store_true',
+                    help='True to use stop-only double XP mode')
 parser.add_argument('-iegg', '--use-initial-egg', default=True, action='store_true',
                     help='True to use lucky eggs')
 parser.add_argument('-ca', '--catch-all', default=False, action='store_true',
@@ -97,7 +100,10 @@ def safe_do_work(thread_num, global_catch_feed, forced_update_):
     try:
         worker = next_worker()
         if worker:
-            do_work(thread_num, worker, global_catch_feed, forced_update_)
+            if args.double_xp:
+                do_work_just_stops(worker, forced_update_)
+            else:
+                do_work(thread_num, worker, global_catch_feed, forced_update_)
     except OutOfAccounts:
         logging.info("No more accounts, exiting worker thread")
         return
@@ -112,6 +118,41 @@ def next_worker():
     account = account_manager.get_account(False)
     worker = wrap_account_no_replace(account, account_manager, 25)
     return worker
+
+
+def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eggs):
+    first_loc = locations[0][0]
+    map_objects = wm.move_to_with_gmo(first_loc)
+    did_map_objects = True
+
+    excluded_stops = exclusion_pokestops(xp_route_1 + xp_route_2)
+    use_fast = True
+    travel_time.set_fast_speed(True)
+
+    for route_element, next_route_element in pairwise(locations):
+        if sm.reached_limits():
+            return
+
+        has_egg = wm.has_lucky_egg()
+        egg_active = wm.has_active_lucky_egg()
+        if has_egg and not egg_active and num_eggs > 0:
+            num_eggs -= 1
+            wm.use_egg(force=True)
+
+        player_location = route_element[0]
+        next_pos = next_route_element[0]
+
+        num_spun = sm.spin_all_stops(map_objects, player_location, range_m=50, exclusion={})
+        expected_spins = len(route_element[1])
+        if num_spun != expected_spins:
+            log.info("{} pokestops spun, expected {}".format(str(num_spun),str(expected_spins)))
+
+        sm.log_status(egg_active, wm.has_egg, location_feeder.index(), phase)
+
+        did_map_objects = datetime.now() + timedelta(seconds=(travel_time.time_to_location(next_pos))) > wm.next_gmo
+        if did_map_objects:
+            map_objects = wm.move_to_with_gmo(next_pos)
+        log.info("Complieted one route element")
 
 
 def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase, spin_evolve_with_egg, catch_feed, cm, sm, wm, thread_num, travel_time, worker, phase, catch_anything, only_unseen, candy, candy12,
@@ -204,6 +245,22 @@ def initial_stuff(feeder, wm, cm, worker):
         cm.process_evolve_transfer_item(p_id, pokemon_id)
     log.info("Evolve-map {}".format(str(cm.evolve_map)))
     cm.do_transfers()
+
+
+def do_work_just_stops(worker, is_forced_update):
+    travel_time = worker.getlayer(TravelTime)
+
+    wm = WorkerManager(worker, True, args.target_level)
+    cm = CatchManager(worker, args.catch_pokemon, NoOpFeed())
+    sm = StopManager(worker, cm, wm, args.max_stops)
+
+    feeder = PositionFeeder(double_xp_1.get(args.route), is_forced_update)
+    do_just_stops(feeder, feeder, sm, wm, travel_time, 1, 1)
+    feeder = PositionFeeder(double_xp_2.get(args.route), is_forced_update)
+    do_just_stops(feeder, feeder, sm, wm, travel_time, 2, 1)
+
+    log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
+
 
 
 def do_work(thread_num, worker, global_catch_feed, is_forced_update, use_eggs=True):

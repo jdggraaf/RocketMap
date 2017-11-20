@@ -26,14 +26,14 @@ setup_logging()
 log = logging.getLogger(__name__)
 
 num_locs = 0
-def create_one(fence, gpx_filename):
+def create_one(fence, gpx_filename, target_positions=190):
     stops = fence.filter_forts(pokestops_in_box(fence.box()))
     add_altitudes(stops)
 
     point_list_hl = create_pokestops(stops)
     update_distances(point_list_hl, radius=50)
 
-    xp_route_1 = find_xp_route(point_list_hl, fence.box())
+    xp_route_1 = find_xp_route(point_list_hl, fence.box(), target_positions)
     write_gpx_route( gpx_filename, xp_route_1)
 
     def loc_find_optimal_location(stop_coords):
@@ -56,6 +56,11 @@ xp_route_left, spawns_left = create_one(get_geofences(dirname + "/levelup_fences
 xp_route_right, spawns_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
                                           "route_hr.gpx")
 
+big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "big_route_hl.gpx", 330)
+
+big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
+                                          "big_route_hr.gpx", 330)
+
 hbg_grind = """
 hamburg_grind = [(53.477084, 10.259286, 50.22897338867188), (53.478151, 10.238244, 5.319664478302002),
                  (53.479974, 10.225083, 2.908063411712646), (53.483188, 10.213013, 4.66163969039917),
@@ -69,3 +74,5 @@ with open("rm/hamburg.py", "w") as text_file:
     text_file.write("stop_route_1 = [" + "\n, ".join([stop_string(x) for x in spawns_left]) + "]\n")
     text_file.write("xp_route_2 = [" + "\n, ".join([xp_stop_string(x) for x in xp_route_right]) + "]\n")
     text_file.write("stop_route_2 = [" + "\n, ".join([stop_string(x) for x in spawns_right]) + "]\n")
+    text_file.write("big_xp_route_1 = [" + "\n, ".join([xp_stop_string(x) for x in big_xp_route_left]) + "]\n")
+    text_file.write("big_xp_route_2 = [" + "\n, ".join([xp_stop_string(x) for x in big_xp_route_right]) + "]\n")

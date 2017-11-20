@@ -40,6 +40,7 @@ class StopManager(object):
             self.spun_stops.add(stop)
         if len(spuns) > 0:
             self.log_inventory()
+        return len(spuns)
 
     def spin_single_stop(self, map_objects, player_position, pokestop_id, exclusions):
         if pokestop_id in exclusions:

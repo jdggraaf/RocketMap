@@ -1192,6 +1192,9 @@ class TravelTime(DelegatingPogoService):
     def use_slow_speed(self):
         self.is_fast = False
 
+    def get_speed(self):
+        return self.is_fast
+
     def use_fast_speed(self):
         self.is_fast = True
 

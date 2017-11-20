@@ -10,6 +10,7 @@ from getmapobjects import inrange_pokstops, catchable_pokemon_by_distance, catch
     inventory_discardable_pokemon
 from gymdbsql import set_args
 from pogoservice import TravelTime
+from pokestoproutesv2 import double_xp_1, double_xp_2
 from scannerutil import install_thread_excepthook, setup_logging, equi_rect_distance
 from workers import wrap_account_no_replace
 import s2sphere
@@ -47,6 +48,16 @@ g0g3m3sh89919:MKG#6s!E3
 g0g3m3sh89890:#MBYk6uAa
 g0g3m3sh89864:3&mjdpE^s
 '''
+
+
+x1 = double_xp_1.get("hamburg")
+x2 = double_xp_2.get("hamburg")
+total = 0
+for s in x1:
+    total += len(s[1])
+for s in x2:
+    total += len(s[1])
+
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {}, replace_warned=False)
 #l5account = account_manager.add_account({"username":"g0g3m3sh89425","password":"F93%zg6Ru","provider":"ptc"})
 l5account = account_manager.add_account({"username":"g0g3m3sh89615","password":"x@WtEnv6n","provider":"ptc"})
