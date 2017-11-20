@@ -844,6 +844,9 @@ class Account2(PogoService):
         elif spin_result is 5:
             log.warn('Maximum number of Pokestops spun for this day.')
             raise GaveUpApiAction("Poekstop limit reached")
+        elif spin_result is 6:
+            log.warn('POI_INACCESSIBLE for spin pokestop')
+            return spin_response
         else:
             log.warn('Failed to spin a Pokestop. Unknown result %d.', spin_result)
 
