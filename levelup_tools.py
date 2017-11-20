@@ -80,7 +80,7 @@ def gpx_string(combined, pos=None):
     """  <trkpt lat="47.644548" lon="-122.326897">"""
     combined_ = "<trkpt lat='" + str(combined[0][0]) + "' lon='" + str(combined[0][1]) +"'"
     if pos:
-        return combined_ + "><name>" + str(pos) +"</name><trkpt>"
+        return combined_ + "><name>" + str(pos) +"</name></trkpt>"
     else:
         return combined_ + "/>"
 

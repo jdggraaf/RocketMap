@@ -12,4 +12,4 @@ xp_p2 = {"hamburg": xp_route_2}
 
 
 double_xp_1 = {"hamburg" : big_xp_route_1}
-double_xp_2 = {"hamburg" : big_xp_route_2}
+double_xp_2 = {"hamburg" : list(reversed(big_xp_route_2))}
