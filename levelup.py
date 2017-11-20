@@ -162,7 +162,7 @@ def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase
 
         if cm.is_first_at_location(location_feeder.pos):  # do a little extra to avoid running ahead of ourself
             temp_pos = move_towards(player_location, next_pos, 40)
-            map_objects = worker.get_map_objects(temp_pos)
+            map_objects = worker.do_get_map_objects(temp_pos)
             cm.do_catch_moving(map_objects, temp_pos, next_pos, location_feeder.pos,
                                catch_anything=catch_anything,
                                only_unseen=only_unseen, only_candy=candy, only_candy_12=candy12)
