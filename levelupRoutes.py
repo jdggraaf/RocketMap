@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
 num_locs = 0
 
 
-def create_one(fence, gpx_filename, target_positions=190):
-    box_stops = pokestops_in_box(fence.box())
+def create_one(fence, gpx_filename, target_positions=190, xp_route=False):
+    box_stops = pokestops_in_box_2(fence.box())
     stops = fence.filter_forts(box_stops)
     add_altitudes(stops)
 
@@ -47,13 +47,16 @@ def create_one(fence, gpx_filename, target_positions=190):
         return find_optimal_location(stop_coords)
 
     fenced78 = lat_routed(fence, 120, 39, point_list_hl)
-    with_spawns = [x + (loc_find_optimal_location(x[1].coords),) for x in fenced78]
+    if xp_route:
+        with_spawns = [x + ((),) for x in fenced78]
+    else:
+        with_spawns = [x + (loc_find_optimal_location(x[1].coords),) for x in fenced78]
     return xp_route_1, with_spawns
 
 
-big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "big_route_hl.gpx", 330)
+big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "big_route_hl.gpx", 330, xp_route=True)
 
-big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]), "big_route_hr.gpx", 330)
+big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]), "big_route_hr.gpx", 330, xp_route=True)
 
 xp_route_initial, spawns_initial = create_one(get_geofences(dirname + "/levelup_fences.txt", ["InitialHamburg"]),
                                           "route_init.gpx")
