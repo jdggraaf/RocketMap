@@ -14,8 +14,8 @@ def pmdata():
 pokemons = pmdata()
 
 candy12 = {10, 13, 16}
-candy25 = {19, 29, 32, 41, 43, 60, 63, 66, 69, 74, 92, 116, 133, 147, 152, 155, 158, 161, 183, 187}  # 63 abra avoided due to flee rate
-candy50 = {21, 161, 163, 165, 167, 177, 194, 220, 353}
+candy25 = {19, 29, 32, 41, 43, 60, 63, 66, 69, 74, 92, 116, 133, 147, 152, 155, 158, 161, 165, 183, 187}
+candy50 = {21, 161, 163, 167, 177, 194, 220, 353}
 
 def pokemon_name(pid):
     return pokemons[str(pid)].get("name", str(pid)).encode('utf-8')
