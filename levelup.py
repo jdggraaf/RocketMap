@@ -225,7 +225,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
                 if not enc_id:
                     break
                 log.info("Dealing with nested location {}".format(str(enc_pos)))
-                do_iterable_point_list([encs[enc_id][0]], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
+                do_iterable_point_list([encs[enc_id][0],encs[enc_id][0]], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
                                        wm, None, travel_time, worker, phase, catch_condition, outer=False,
                                        pos_index=pos_index)
                 cm.processed_encounters.add(enc_id)  # this must be done in case there is nothing at the location
