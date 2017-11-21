@@ -270,7 +270,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
 
     cm.catch_feed = candy_12_feed
     initial_pokestops = initial_130_stops.get(args.route)
-    feeder = PositionFeeder(list(reversed(initial_pokestops))[:136], is_forced_update)
+    num_items = max(136, len(initial_pokestops) - thread_num)
+    feeder = PositionFeeder(list(reversed(initial_pokestops))[:num_items], is_forced_update)
     started_at_0 = wm.player_level() < 1
     if wm.player_level() < 8:
         log.info("Doing initial pokestops PHASE")
