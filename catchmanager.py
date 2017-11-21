@@ -14,6 +14,44 @@ setup_logging()
 log = logging.getLogger("catchmgr")
 log.setLevel(logging.DEBUG)
 
+class CatchConditions:
+    catch_anything = False
+    only_unseen = False
+    only_candy = False,
+    only_candy_12 = False
+
+    @staticmethod
+    def initial_condition():
+        result = CatchConditions()
+        result.only_unseen = True
+        result.only_candy = True
+        result.only_candy_12 = True
+        return result
+
+    @staticmethod
+    def grind_condition():
+        result = CatchConditions()
+        result.only_candy = True
+        result.only_candy_12 = True
+        return result
+
+    def is_candy_pokemon(self, pokemon_id):
+        return pokemon_id in pokemon_data.candy12 or pokemon_id in pokemon_data.candy25
+
+
+    def is_candy_12_catch(self, pokemon_id):
+        return self.only_candy_12 and pokemon_id in pokemon_data.candy12
+
+    def is_candy_catch(self, pokemon_id):
+        candy_12 = pokemon_id in pokemon_data.candy12
+        candy_25 = pokemon_id in pokemon_data.candy25
+        return self.only_candy and (candy_12 or candy_25)
+
+    def log_description(self, phase):
+        log.info(
+            "Catch conditions for phase {}: catch_anything={}, unseen_catch={}, candy_catch={}, candy12_catch={}".format(
+                str(phase), str(self.catch_anything), str(self.only_unseen), str(self.only_candy), str(self.only_candy_12)))
+
 
 class CatchManager(object):
     preferred = {10, 13, 16, 19, 29, 32, 41, 69, 74, 92, 183}
@@ -31,7 +69,7 @@ class CatchManager(object):
         self.transfers = []
         self.evolve_map = {}
         self.caught_pokemon_ids = set()
-        self.caught_encounters = set()
+        self.processed_encounters = set()
         self.pokemon_caught = 0
         self.evolves = 0
         self.location_visited = set()
@@ -45,33 +83,27 @@ class CatchManager(object):
         encounter_id = location.encounter_id
         return self.is_encountered_previously(encounter_id)
 
-    def do_catch_moving(self, map_objects, player_pos, next_pos, pos_idx, catch_anything=False, only_unseen=False, only_candy=False,
-                        only_candy_12=False):
+    def do_catch_moving(self, map_objects, player_pos, next_pos, pos_idx, catch_condition):
         all_caught = {}
         catch_list = catchable_pokemon_by_distance(map_objects, next_pos)
         log.info("{} pokemon in map_objects: {}".format(str(len(catch_list)), pokemon_names([x[1] for x in catch_list])))
-        log.info(
-            "Evaluating: catch_anything={}, unseen_catch={}, candy_catch={}, candy12_catch={}".format(
-                str(catch_anything), str(only_unseen),
-                str(only_candy), str(only_candy_12)))
         while len(catch_list) > 0:
             to_catch = catch_list[0][1]
             encounter_id = to_catch.encounter_id
             pokemon_id = to_catch.pokemon_id
-            unseen_catch = only_unseen and (pokemon_id not in self.caught_pokemon_ids)
-            candy_12 = pokemon_id in self.candy12
-            good_stuff = candy_12 or pokemon_id in self.candy25
-            candy_catch = only_candy and (good_stuff)
-            candy_12_catch = only_candy_12 and candy_12
+
+            unseen_catch = catch_condition.only_unseen and (pokemon_id not in self.caught_pokemon_ids)
+            candy_catch = catch_condition.is_candy_catch(pokemon_id)
+            candy_12_catch = catch_condition.is_candy_12_catch(pokemon_id)
             encountered_previously = self.is_encountered_previously(encounter_id)
 
-            will_catch = (catch_anything or unseen_catch or candy_catch or candy_12_catch)
-            if good_stuff and will_catch:
-                self.catch_feed.append(player_pos, to_catch, pos_idx)
+            will_catch = (catch_condition.catch_anything or unseen_catch or candy_catch or candy_12_catch)
 
             if encountered_previously:
                 log.info("{} {} encountered previously".format(str(pokemon_name(pokemon_id)), str(encounter_id)))
             elif will_catch:
+                if catch_condition.is_candy_pokemon(pokemon_id):
+                    self.catch_feed.append(player_pos, to_catch, pos_idx)
                 # log.debug("To_catch={}".format(str(to_catch)))
                 pokemon_distance_to_next_position = catch_list[0][0]
                 player_distance_to_next_position = equi_rect_distance_m(player_pos, next_pos)
@@ -80,7 +112,7 @@ class CatchManager(object):
                 if on_other_side:
                     available_mobility = self.travel_time.meters_available_right_now()
                     actual_meters = min(available_mobility, player_distance_to_next_position)
-                    log.info("Moving to next position {} meters. {} meters_available right now".format(str(actual_meters),
+                    log.info("Moving closer {} metres. {} meters_available right now".format(str(actual_meters),
                                                                                              str(available_mobility)))
                     player_pos = move_towards(player_pos, next_pos, actual_meters)
                 if pokemon_distance_to_next_position < player_distance_to_next_position:
@@ -96,9 +128,9 @@ class CatchManager(object):
                 if self.travel_time.must_gmo():
                     self.worker.do_get_map_objects(player_pos)
 
-                self.caught_encounters.add(encounter_id)  # leaks memory. fix todo
+                self.processed_encounters.add(encounter_id)  # leaks memory. fix todo
                 log.info("Catching {} because catch_all={} unseen={} candy_catch={} candy_12_catch={}".format(
-                    pokemon_name(pokemon_id), str(catch_anything), str(unseen_catch), str(candy_catch),
+                    pokemon_name(pokemon_id), str(catch_condition.catch_anything), str(unseen_catch), str(candy_catch),
                     str(candy_12_catch)))
                 caught = self.catch_it(player_pos, to_catch)
                 if caught:
@@ -109,7 +141,7 @@ class CatchManager(object):
                     else:
                         log.warning("Did not caEtch because {}".format(str(caught)))
             else:
-                log.info("{} {} will not catch, catch_anything={}, unseen_catch={}, candy_catch={}, candy12_catch={}".format(str(pokemon_name(pokemon_id)), str(encounter_id), str(catch_anything), str(unseen_catch), str(candy_catch), str(candy_12_catch)))
+                log.info("{} {} will not catch, catch_anything={}, unseen_catch={}, candy_catch={}, candy12_catch={}".format(str(pokemon_name(pokemon_id)), str(encounter_id), str(catch_condition.catch_anything), str(unseen_catch), str(candy_catch), str(candy_12_catch)))
             del catch_list[0]
 
         self.pokemon_caught += len(all_caught)
@@ -118,7 +150,7 @@ class CatchManager(object):
         return player_pos
 
     def is_encountered_previously(self, encounter_id):
-        return encounter_id in self.caught_encounters
+        return encounter_id in self.processed_encounters
 
     def synchronize_pokemon_inventory(self):
         discard_all_pokemon(self.worker)  # really simple algo :)
@@ -185,7 +217,6 @@ class CatchManager(object):
     def process_evolve_transfer_item(self, pid, pokemon_id):
         candy_ = self.worker.account_info()["candy"]
         candy = candy_.get(pokemon_id, 0)
-        log.info("{} candy availble for {}".format(str(candy), pokemon_name(pokemon_id)))
         current_items = self.evolve_map.get(pokemon_id, [])
         next_candy = len(current_items) + 1
         if pokemon_id in self.candy12 and candy >= (11 * next_candy + 1):

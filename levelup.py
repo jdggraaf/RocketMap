@@ -8,7 +8,7 @@ from accounts import *
 from argparser import std_config, load_proxies, add_geofence, add_webhooks, add_search_rest, parse_unicode, \
     add_threads_per_proxy, add_use_account_db_true
 from argutils import thread_count
-from catchmanager import CatchManager, CatchFeed, OneOfEachCatchFeed, Candy12Feed, NoOpFeed
+from catchmanager import CatchManager, CatchFeed, OneOfEachCatchFeed, Candy12Feed, NoOpFeed, CatchConditions
 from geography import *
 from getmapobjects import is_discardable, is_starter_pokemon
 from gymdbsql import set_args
@@ -153,8 +153,9 @@ def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eg
         log.info("Complieted one route element")
 
 
-def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase, spin_evolve_with_egg, catch_feed, cm, sm, wm, thread_num, travel_time, worker, phase, catch_anything, only_unseen, candy, candy12,
-                           first_time=None, outer=True):
+def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_with_egg, catch_feed, cm, sm, wm,
+                           thread_num, travel_time, worker, phase, catch_condition, first_time=None, outer=True,
+                           pos_index=0):
     first_loc = get_pos_to_use(locations[0], None, thread_num)
     fallback_altitude = first_loc[2]
     log.info("First lof {}".format(str(first_loc)))
@@ -164,6 +165,8 @@ def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase
     excluded_stops = exclusion_pokestops(xp_route_1 + xp_route_2)
     if first_time:
         first_time()
+    catch_condition.log_description(phase)
+
     for route_element, next_route_element in pairwise(locations):
         if cm.is_caught_already(route_element):
             continue
@@ -171,9 +174,8 @@ def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase
             return
         wm.use_incense_if_ready()
         if cm.can_start_evolving() and xp_feeder:
-            do_iterable_point_list(xp_feeder, xp_feeder, None, True, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm,
-                                   None, travel_time, worker, phase, catch_anything, only_unseen, candy, candy12,
-                                   first_time, outer=False)
+            do_iterable_point_list(xp_feeder, None, True, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None,
+                                   travel_time, worker, phase, catch_condition, outer=False)
 
         egg_active = wm.use_egg_if_ready(cm)
         emergency_catch_out_of_evolves = egg_active and cm.empty_evolve_map()
@@ -189,22 +191,19 @@ def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase
             sm.spin_all_stops(map_objects, player_location, range_m=50 if xp_boost_phase else 39.8, exclusion=excluded_stops)
         else:
             pokestop = route_element[1]
-            sm.spin_stops(map_objects, pokestop[3], player_location, location_feeder.index_str(), excluded_stops)
+            sm.spin_stops(map_objects, pokestop[3], player_location, pos_index, excluded_stops)
 
-        sm.log_status(egg_active, wm.has_egg, location_feeder.index(), phase)
+        sm.log_status(egg_active, wm.has_egg, pos_index, phase)
         if did_map_objects:
             if cm.is_within_catch_limit() and not use_fast:
                 if not egg_active or emergency_catch_out_of_evolves:
-                    cm.do_catch_moving(map_objects, player_location, next_pos, location_feeder.pos, catch_anything=catch_anything,
-                                       only_unseen=only_unseen, only_candy=candy, only_candy_12=candy12)
+                    cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
                 cm.do_bulk_transfers()
 
-        if cm.is_first_at_location(location_feeder.pos):  # do a little extra to avoid running ahead of ourself
+        if cm.is_first_at_location(pos_index):  # do a little extra to avoid running ahead of ourself
             temp_pos = move_towards(player_location, next_pos, 40)
             map_objects = worker.do_get_map_objects(temp_pos)
-            cm.do_catch_moving(map_objects, temp_pos, next_pos, location_feeder.pos,
-                               catch_anything=catch_anything,
-                               only_unseen=only_unseen, only_candy=candy, only_candy_12=candy12)
+            cm.do_catch_moving(map_objects, temp_pos, next_pos, pos_index, catch_condition)
 
         time_to_location = travel_time.time_to_location(next_pos)
         out_of_eggs = wm.is_out_of_eggs_before_l30()
@@ -215,21 +214,23 @@ def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase
                 cm.evolve_one(candy_)
 
         if outer:
-            encs = catch_feed.items[location_feeder.pos]
-            to_do = set()
-            for encounter_id in encs:
-                if encounter_id not in cm.caught_encounters:
-                    to_do.add( encs[encounter_id][0])
-            inner_locs = list(to_do)
-            log.info("There are {} nested locations to deal with@{}: {}".format(len(inner_locs), str(location_feeder.pos), str(inner_locs)))
-            if len(inner_locs) > 0:
-                do_iterable_point_list(inner_locs, location_feeder, xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None, travel_time, worker, phase, catch_anything, only_unseen, candy, candy12, first_time, outer=False)
-            else:
-                log.info("No feed locations at pos {}".format(str(location_feeder.pos)))
+            while True:
+                encs = catch_feed.items[pos_index]
+                enc_pos = None
+                for encounter_id in encs:
+                    if encounter_id not in cm.processed_encounters:
+                        enc_pos = encs[encounter_id][0]
+                if not enc_pos:
+                    break
+                log.info("Dealing with nested location {}".format(str(enc_pos)))
+                do_iterable_point_list([enc_pos], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
+                                       wm, None, travel_time, worker, phase, catch_condition, outer=False,
+                                       pos_index=pos_index)
 
         did_map_objects = datetime.now() + timedelta(seconds=(travel_time.time_to_location(next_pos))) > wm.next_gmo
         if did_map_objects:
             map_objects = wm.move_to_with_gmo(next_pos)
+        pos_index += 1
 
 
 def initial_stuff(feeder, wm, cm, worker):
@@ -276,7 +277,9 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     started_at_0 = wm.player_level() < 1
     if wm.player_level() < 8:
         log.info("Doing initial pokestops PHASE")
-        do_iterable_point_list(feeder, feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time, worker, 1, catch_anything=False, only_unseen=True, candy=True, candy12=True)
+
+        do_iterable_point_list(feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
+                               worker, 1, CatchConditions.initial_condition())
 
     if False and (started_at_0 or wm.player_level() < 22):
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
@@ -297,7 +300,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         #        log.error("Has no egg for initial catches. Initial phase did not produce egg or bot was restarted")
         #    wm.use_incense()
         #    wm.use_egg(force=True)
-        do_iterable_point_list(feeder, feeder, None, False,False, one_of_each_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 2, catch_anything=False, only_unseen=True, candy=True, candy12=True)
+        do_iterable_point_list(feeder, None, False, False, one_of_each_catch_feed, cm, sm, wm, thread_num,
+                               travel_time, worker, 2, CatchConditions.initial_condition())
 
     log.info("Main grind PHASE 1")
     wm.explain()
@@ -310,7 +314,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     log.info("Waiting for other workers to join here")
     latch.await()
 
-    do_iterable_point_list(feeder, feeder, xp_feeder, False,True, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 3, catch_anything=False, only_unseen=False, candy=True, candy12=True)
+    do_iterable_point_list(feeder, xp_feeder, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
+                           worker, 3, CatchConditions.grind_condition())
 
     log.info("Main grind PHASE 2")
     wm.explain()
@@ -318,7 +323,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     feeder = PositionFeeder(routes_p2[args.route], is_forced_update)
     xp_feeder2 = PositionFeeder(xp_p2[args.route], is_forced_update)
     initial_stuff(feeder, wm, cm, worker)
-    do_iterable_point_list(feeder, feeder, xp_feeder2, False,True, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 3, catch_anything=False, only_unseen=False, candy=True, candy12=True)
+    do_iterable_point_list(feeder, xp_feeder2, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
+                           worker, 3, CatchConditions.grind_condition())
 
     if args.final_system_id:
         db_set_system_id(worker.name(), args.final_system_id)
