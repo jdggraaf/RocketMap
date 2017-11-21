@@ -270,6 +270,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     cm.catch_feed = candy_12_feed
     initial_pokestops = initial_130_stops.get(args.route)
     feeder = PositionFeeder(list(reversed(initial_pokestops)), is_forced_update)
+    started_at_0 = wm.player_level() < 1
 
     if wm.player_level() < 8:
         log.info("Doing initial pokestops PHASE")
@@ -279,7 +280,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     log.info("Waiting for other workers to join here")
     latch.await()
 
-    if wm.player_level() < 18:
+    if started_at_0 or wm.player_level() < 18:
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
         grind_points = initial_grind.get(args.route)
         grind_locs = [with_gmaps_altitude(x, args.gmaps_key) for x in grind_points]
