@@ -265,7 +265,7 @@ class CatchManager(object):
 
 
 class CatchFeed(object):
-    items = defaultdict(map)
+    items = defaultdict(dict)
 
     def append(self, player_postion, item, pos_idx):
         if item.encounter_id not in self.items[pos_idx]:
@@ -276,7 +276,7 @@ class CatchFeed(object):
 
 
 class OneOfEachCatchFeed(object):
-    items = defaultdict(map)
+    items = defaultdict(dict)
     seen = set()
 
     def append(self, player_postion, item, pos_idx):
@@ -288,7 +288,7 @@ class OneOfEachCatchFeed(object):
 
 
 class Candy12Feed(object):
-    items = defaultdict(map)
+    items = defaultdict(dict)
 
     def append(self, player_postion, item, pos_idx):
         if item.pokemon_id in candy12 and item.encounter_id not in self.items[pos_idx]:
@@ -301,7 +301,7 @@ class Candy12Feed(object):
 
 
 class PlainFeed(object):
-    items = defaultdict(map)
+    items = defaultdict(dict)
 
     def append(self, player_postion, item, pos_idx):
         self.items[pos_idx][item.encounter_id] = (player_postion, item)
