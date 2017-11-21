@@ -215,14 +215,15 @@ def do_iterable_point_list(locations, location_feeder, xp_feeder, xp_boost_phase
                 cm.evolve_one(candy_)
 
         if outer:
-            if location_feeder.pos in catch_feed.items:
-                inner_locs = list(catch_feed.items[location_feeder.pos])
-                if player_location in inner_locs:
-                    log.info("Removing current location from nested list")
-                    inner_locs.remove(player_location)
-                log.info("There are {} nested locations to deal with@{}: {}".format(len(inner_locs), str(location_feeder.pos), str(inner_locs)))
-                if len(inner_locs) > 0:
-                    do_iterable_point_list(inner_locs, location_feeder, xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None, travel_time, worker, phase, catch_anything, only_unseen, candy, candy12, first_time, outer=False)
+            encs = catch_feed.items[location_feeder.pos]
+            to_do = set()
+            for encounter_id in encs:
+                if encounter_id not in cm.caught_encounters:
+                    to_do.add( encs[encounter_id][0])
+            inner_locs = list(to_do)
+            log.info("There are {} nested locations to deal with@{}: {}".format(len(inner_locs), str(location_feeder.pos), str(inner_locs)))
+            if len(inner_locs) > 0:
+                do_iterable_point_list(inner_locs, location_feeder, xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None, travel_time, worker, phase, catch_anything, only_unseen, candy, candy12, first_time, outer=False)
             else:
                 log.info("No feed locations at pos {}".format(str(location_feeder.pos)))
 

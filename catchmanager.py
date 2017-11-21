@@ -45,7 +45,7 @@ class CatchManager(object):
         encounter_id = location.encounter_id
         return self.is_encountered_previously(encounter_id)
 
-    def do_catch_moving(self, map_objects, pos, next_pos, pos_idx, catch_anything=False, only_unseen=False, only_candy=False,
+    def do_catch_moving(self, map_objects, player_pos, next_pos, pos_idx, catch_anything=False, only_unseen=False, only_candy=False,
                         only_candy_12=False):
         all_caught = {}
         catch_list = catchable_pokemon_by_distance(map_objects, next_pos)
@@ -67,22 +67,22 @@ class CatchManager(object):
 
             will_catch = (catch_anything or unseen_catch or candy_catch or candy_12_catch)
             if good_stuff and will_catch:
-                self.catch_feed.append(pos, to_catch, pos_idx)
+                self.catch_feed.append(player_pos, to_catch, pos_idx)
 
             if encountered_previously:
                 log.info("{} {} encountered previously".format(str(pokemon_name(pokemon_id)), str(encounter_id)))
             elif will_catch:
                 # log.debug("To_catch={}".format(str(to_catch)))
                 pokemon_distance_to_next_position = catch_list[0][0]
-                player_distance_to_next_position = equi_rect_distance_m(pos, next_pos)
-                on_other_side = (pos[1] < next_pos[1] < catch_list[0][1]) or (pos[1] > next_pos[1] > catch_list[0][1])
+                player_distance_to_next_position = equi_rect_distance_m(player_pos, next_pos)
+                on_other_side = (player_pos[1] < next_pos[1] < catch_list[0][1]) or (player_pos[1] > next_pos[1] > catch_list[0][1])
 
                 if on_other_side:
                     available_mobility = self.travel_time.meters_available_right_now()
                     actual_meters = min(available_mobility, player_distance_to_next_position)
                     log.info("Moving to next position {} meters. {} meters_available right now".format(str(actual_meters),
                                                                                              str(available_mobility)))
-                    pos = move_towards(pos, next_pos, actual_meters)
+                    player_pos = move_towards(player_pos, next_pos, actual_meters)
                 if pokemon_distance_to_next_position < player_distance_to_next_position:
                     m_to_move = player_distance_to_next_position - pokemon_distance_to_next_position
                     available_mobility = self.travel_time.meters_available_right_now()
@@ -91,16 +91,16 @@ class CatchManager(object):
                         str(player_distance_to_next_position), str(pokemon_distance_to_next_position)))
                     log.info("Could move towards next position {} meters. {} meters_available, {}m by pokemon!".format(
                         str(actual_meters), str(available_mobility), str(m_to_move)))
-                    pos = move_towards(pos, next_pos, actual_meters)
+                    player_pos = move_towards(player_pos, next_pos, actual_meters)
 
                 if self.travel_time.must_gmo():
-                    self.worker.do_get_map_objects(pos)
+                    self.worker.do_get_map_objects(player_pos)
 
                 self.caught_encounters.add(encounter_id)  # leaks memory. fix todo
                 log.info("Catching {} because catch_all={} unseen={} candy_catch={} candy_12_catch={}".format(
                     pokemon_name(pokemon_id), str(catch_anything), str(unseen_catch), str(candy_catch),
                     str(candy_12_catch)))
-                caught = self.catch_it(pos, to_catch)
+                caught = self.catch_it(player_pos, to_catch)
                 if caught:
                     found_new = pokemon_id not in self.caught_pokemon_ids
                     self.caught_pokemon_ids.add(pokemon_id)
@@ -115,7 +115,7 @@ class CatchManager(object):
         self.pokemon_caught += len(all_caught)
         self.process_evolve_transfer_list(all_caught)
 
-        return pos
+        return player_pos
 
     def is_encountered_previously(self, encounter_id):
         return encounter_id in self.caught_encounters
@@ -265,66 +265,50 @@ class CatchManager(object):
 
 
 class CatchFeed(object):
-    items = {}
-    seen = set()
+    items = defaultdict(map)
 
-    def append(self, player_postion, item, pos):
-        if item.encounter_id not in self.seen:
+    def append(self, player_postion, item, pos_idx):
+        if item.encounter_id not in self.items[pos_idx]:
             log.info("CatchFeed Broadcasting {} encounter {} to other workers at pos {}".format(pokemon_name(item.pokemon_id),
-                                                                            str(item.encounter_id),str(pos)))
+                                                                            str(item.encounter_id),str(pos_idx)))
 
-            self.seen.add(item.encounter_id)
-            items = self.items.get(pos)
-            if not items:
-                items = set()
-                self.items[pos] = items
-            items.add(player_postion)
+            self.items[pos_idx][item.encounter_id] = (player_postion, item)
 
 
 class OneOfEachCatchFeed(object):
-    items = {}
+    items = defaultdict(map)
     seen = set()
 
-    def append(self, player_postion, item, idx):
+    def append(self, player_postion, item, pos_idx):
         if item.pokemon_id not in self.seen:
             log.info("OneofEachfeed Broadcasting {} encounter {} to other workers at pos {}".format(pokemon_name(item.pokemon_id),
-                                                                                                    str(item.encounter_id), str(idx)))
+                                                                                                    str(item.encounter_id), str(pos_idx)))
             self.seen.add(item.pokemon_id)
-            items = self.items.get(idx)
-            if not items:
-                items = set()
-                self.items[idx] = items
-            items.add(player_postion)
+            self.items[pos_idx][item.encounter_id] = (player_postion, item)
 
 
 class Candy12Feed(object):
-    items = {}
-    seen = set()
+    items = defaultdict(map)
 
-    def append(self, player_postion, item, idx):
-        if item.pokemon_id in candy12 and item.encounter_id not in self.seen:
+    def append(self, player_postion, item, pos_idx):
+        if item.pokemon_id in candy12 and item.encounter_id not in self.items[pos_idx]:
 
             log.info("Candy12Broadcasting {} encounter {}@{} to other workers at pos {}".format(pokemon_name(item.pokemon_id),
-                                                                                             str(item.encounter_id),
+                                                                                                str(item.encounter_id),
                                                                                                 str((item.latitude,item.longitude)),
-                                                                                                str(idx)))
-            self.seen.add(item.encounter_id)
-            items = self.items.get(idx)
-            if not items:
-                items = set()
-                self.items[idx] = items
-            items.add(player_postion)
+                                                                                                str(pos_idx)))
+            self.items[pos_idx][item.encounter_id] = (player_postion, item)
 
 
 class PlainFeed(object):
-    items = defaultdict(list)
+    items = defaultdict(map)
 
-    def append(self, player_postion, item, idx):
-        self.items[idx].append(item)
+    def append(self, player_postion, item, pos_idx):
+        self.items[pos_idx][item.encounter_id] = (player_postion, item)
 
 
 class NoOpFeed(object):
-    items = []
+    items = {}
 
     def append(self, player_postion, item, idx):
         pass
