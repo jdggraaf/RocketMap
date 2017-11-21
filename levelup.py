@@ -276,10 +276,6 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         log.info("Doing initial pokestops PHASE")
         do_iterable_point_list(feeder, feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time, worker, 1, catch_anything=False, only_unseen=True, candy=True, candy12=True)
 
-    latch.count_down()
-    log.info("Waiting for other workers to join here")
-    latch.await()
-
     if started_at_0 or wm.player_level() < 22:
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
         grind_points = initial_grind.get(args.route)
@@ -290,6 +286,11 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         feeder = PositionFeeder(grind_route, is_forced_update)
         initial_stuff(feeder, wm, cm, worker)
         wm.move_to_with_gmo(get_pos_to_use(feeder.peek(), None, None))
+
+        latch.count_down()
+        log.info("Waiting for other workers to join here")
+        latch.await()
+
         if args.use_initial_egg:  # ensure this is done after GMO so we are in position
             if not has_lucky_egg(worker):
                 log.error("Has no egg for initial catches. Initial phase did not produce egg or bot was restarted")
