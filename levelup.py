@@ -228,7 +228,12 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
                 do_iterable_point_list([encs[enc_id][0],encs[enc_id][0]], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
                                        wm, None, travel_time, worker, phase, catch_condition, outer=False,
                                        pos_index=pos_index)
+                # i dont like these heuristics one damn bit
                 cm.processed_encounters.add(enc_id)  # this must be done in case there is nothing at the location
+                for encounter_id in encs:  # dump all other stuff reported from this location too, we'v been here.
+                    if encs[encounter_id][0] == enc_pos:
+                        cm.processed_encounters.add(encounter_id)
+
 
         did_map_objects = datetime.now() + timedelta(seconds=(travel_time.time_to_location(next_pos))) > wm.next_gmo
         if did_map_objects:

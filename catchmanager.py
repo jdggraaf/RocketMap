@@ -141,7 +141,7 @@ class CatchManager(object):
                     else:
                         log.warning("Did not caEtch because {}".format(str(caught)))
             else:
-                log.info("{} {} will not catch, catch_anything={}, unseen_catch={}, candy_catch={}, candy12_catch={}".format(str(pokemon_name(pokemon_id)), str(encounter_id), str(catch_condition.catch_anything), str(unseen_catch), str(candy_catch), str(candy_12_catch)))
+                log.info("{} {} will not catch, is_catch_anything={}, is_unseen_catch={}, is_candy_catch={}, is_candy12_catch={}".format(str(pokemon_name(pokemon_id)), str(encounter_id), str(catch_condition.catch_anything), str(unseen_catch), str(candy_catch), str(candy_12_catch)))
             del catch_list[0]
 
         self.pokemon_caught += len(all_caught)
