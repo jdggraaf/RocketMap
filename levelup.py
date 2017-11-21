@@ -270,14 +270,13 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
 
     cm.catch_feed = candy_12_feed
     initial_pokestops = initial_130_stops.get(args.route)
-    feeder = PositionFeeder(list(reversed(initial_pokestops)), is_forced_update)
+    feeder = PositionFeeder(list(reversed(initial_pokestops))[:136], is_forced_update)
     started_at_0 = wm.player_level() < 1
-
     if wm.player_level() < 8:
         log.info("Doing initial pokestops PHASE")
         do_iterable_point_list(feeder, feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time, worker, 1, catch_anything=False, only_unseen=True, candy=True, candy12=True)
 
-    if started_at_0 or wm.player_level() < 22:
+    if False and (started_at_0 or wm.player_level() < 22):
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
         grind_points = initial_grind.get(args.route)
         grind_locs = [with_gmaps_altitude(x, args.gmaps_key) for x in grind_points]
@@ -286,7 +285,6 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         cm.catch_feed = one_of_each_catch_feed
         feeder = PositionFeeder(grind_route, is_forced_update)
         initial_stuff(feeder, wm, cm, worker)
-        wm.move_to_with_gmo(get_pos_to_use(feeder.peek(), None, None))
 
         latch.count_down()
         log.info("Waiting for other workers to join here")
@@ -305,6 +303,11 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     feeder = PositionFeeder(routes_p1[args.route], is_forced_update)
     xp_feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
     initial_stuff(feeder, wm, cm, worker)
+
+    latch.count_down()
+    log.info("Waiting for other workers to join here")
+    latch.await()
+
     do_iterable_point_list(feeder, feeder, xp_feeder, False,True, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 3, catch_anything=False, only_unseen=False, candy=True, candy12=True)
 
     log.info("Main grind PHASE 2")
