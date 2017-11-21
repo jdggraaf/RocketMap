@@ -283,8 +283,10 @@ def parse_gyms(map_objects):
 
 
 def parse_pokestops(map_objects):
-    return [candidate for candidate in forts(map_objects) if candidate.type == 1 or candidate.type == 0]
+    return [candidate for candidate in forts(map_objects) if candidate.type == 1]
 
+def parse_pokestops_and_gyms(map_objects):
+    return [candidate for candidate in forts(map_objects) if candidate.type == 1 or candidate.type == 0]
 
 def find_pokestop(map_objects, pokestop_id):
     id_ = [candidate for candidate in forts(map_objects) if candidate.type == 1 and candidate.id == pokestop_id]
@@ -313,6 +315,8 @@ def inrange_gyms(map_objects, pos):
 def inrange_pokstops(map_objects, pos, range_m=39):
     return fort_within_distance(parse_pokestops(map_objects), pos, range_m)
 
+def inrange_pokstops_and_gyms(map_objects, pos, range_m=39):
+    return fort_within_distance(parse_pokestops_and_gyms(map_objects), pos, range_m)
 
 def pokstops_within_distance(map_objects, pos, m):
     return fort_within_distance(parse_pokestops(map_objects), pos, m)

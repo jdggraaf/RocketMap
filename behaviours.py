@@ -8,7 +8,7 @@ from geopy.distance import vincenty
 from accountdbsql import db_set_account_level, db_set_egg_count, db_set_lure_count
 from geography import move_towards
 from getmapobjects import inrange_pokstops, forts, \
-    inventory_discardable_pokemon, catchable_pokemon, find_pokestop
+    inventory_discardable_pokemon, catchable_pokemon, find_pokestop, inrange_pokstops_and_gyms
 from gymdb import update_gym_from_details
 from gymdbsql import do_with_backoff_for_deadlock, create_or_update_gym_from_gmo2
 from inventory import total_iventory_count, egg_count, lure_count
@@ -16,7 +16,7 @@ from management_errors import GaveUpApiAction
 from pogoservice import TravelTime
 from pokemon_catch_worker import PokemonCatchWorker, WorkerResult
 from pokemon_data import pokemon_name
-from scannerutil import equi_rect_distance_m, distance_to_fort, fort_as_coordinate
+from scannerutil import distance_to_fort, fort_as_coordinate
 
 log = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position, range_m=39, bl
     travel_time = pogoservice.getlayer(TravelTime)
     old_speed = travel_time.get_speed()
     if map_objects:
-        pokestops = inrange_pokstops(map_objects, position, range_m)
+        pokestops = inrange_pokstops_and_gyms(map_objects, position, range_m)
         for idx, pokestop in enumerate(pokestops):
             if blacklist and pokestop.id in blacklist:
                 pass

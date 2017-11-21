@@ -1,5 +1,4 @@
 import inspect
-from datetime import datetime, timedelta
 from random import random
 from threading import Thread, Event
 
@@ -11,15 +10,13 @@ from accounts import *
 from argparser import std_config, load_proxies, add_geofence, add_webhooks, location
 from behaviours import beh_handle_level_up, \
     determine_behaviour, is_pokestop, is_aggressive_pokestop, is_aggressive_pokemon, beh_random_bag_cleaning, \
-    discard_random_pokemon, \
     beh_spin_nearby_pokestops, L20_ITEM_LIMITS
 from geofence import get_geofences
 from geography import *
 from getmapobjects import nearest_pokstop, \
-    can_not_be_seen, cells_with_pokemon_data, inrange_gyms, raid_gyms, pokemons, pokstops_within_distance
-from gymdb import update_missing_s2_ids, cell_spawnpoints, update_missing_altitudes, gym_map
+    can_not_be_seen, cells_with_pokemon_data, inrange_gyms, raid_gyms, pokemons
+from gymdb import gym_map
 from gymdbsql import set_args
-from lureworker import LureWorker
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogom.transform import jitter_location
 from pogom.utils import gmaps_reverse_geolocate
