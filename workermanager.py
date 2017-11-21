@@ -89,8 +89,9 @@ class WorkerManager(object):
     def has_egg(self):
         return has_lucky_egg(self.worker)
 
-    def can_do_more_eggs_before_L30(self):
-        return has_lucky_egg(self.worker) or self.level < 25
+
+    def is_out_of_eggs_before_l30(self):
+        return not has_lucky_egg(self.worker) and self.level > 25
 
     def has_lucky_egg(self):
         return has_lucky_egg(self.worker)
