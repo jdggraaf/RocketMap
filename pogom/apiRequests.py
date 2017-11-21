@@ -20,20 +20,28 @@ class AccountBannedException(Exception):
 
 def req_call_with_hash_retries(req):
     attempts = 0
-    while attempts < 5:
+    while True:
         try:
             return req.call(False)
         except HashingTimeoutException:
             log.warning("HashingTimeoutException")
+            if attempts > 5:
+                raise
             time.sleep(10 * attempts)
         except UnexpectedHashResponseException:
             log.warning("UnexpectedHashResponseException")
+            if attempts > 5:
+                raise
             time.sleep(10 * attempts)
         except HashingOfflineException:
             log.warning("Hashing offline")
+            if attempts > 5:
+                raise
             time.sleep(10 * attempts)
         except HashingQuotaExceededException:
             log.warn("Hashing quota exceeded, waiting 20 seconds")
+            if attempts > 5:
+                raise
             time.sleep(15 * attempts)
         attempts += 1
 
