@@ -29,7 +29,7 @@ num_locs = 0
 
 
 def create_one(fence, gpx_filename, target_positions=190, xp_route=False):
-    box_stops = pokestops_in_box_2(fence.box())
+    box_stops = pokestops_in_box(fence.box())
     stops = fence.filter_forts(box_stops)
     add_altitudes(stops)
 
@@ -65,7 +65,6 @@ xp_route_left, spawns_left = create_one(get_geofences(dirname + "/levelup_fences
 
 xp_route_right, spawns_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
                                           "route_hr.gpx")
-
 
 
 hbg_grind = """

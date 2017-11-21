@@ -129,10 +129,11 @@ def exclusion_pokestops(list):
             result.append(y[3])
     return set(result)
 
+
 def make_optimal_route(fece_nox, requireds, optionals, target):
     result = []
     grid_size=5
-    items_per_box = (float(target)/ (grid_size*grid_size)) + 20
+    items_per_box = (float(target)/ (grid_size*grid_size))
     for chunk_num, chunk in enumerate(chunk_box(fece_nox, grid_size)):
         chunk_stuff = []
         for req in requireds:
