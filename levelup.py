@@ -217,15 +217,18 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             while True:
                 encs = catch_feed.items[pos_index]
                 enc_pos = None
+                enc_id = None
                 for encounter_id in encs:
                     if encounter_id not in cm.processed_encounters:
-                        enc_pos = encs[encounter_id][0]
-                if not enc_pos:
+                        enc_id = encounter_id
+                        enc_pos = encs[enc_id][0]
+                if not enc_id:
                     break
                 log.info("Dealing with nested location {}".format(str(enc_pos)))
-                do_iterable_point_list([enc_pos], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
+                do_iterable_point_list([encs[enc_id][0]], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
                                        wm, None, travel_time, worker, phase, catch_condition, outer=False,
                                        pos_index=pos_index)
+                cm.processed_encounters.add(enc_id)  # this must be done in case there is nothing at the location
 
         did_map_objects = datetime.now() + timedelta(seconds=(travel_time.time_to_location(next_pos))) > wm.next_gmo
         if did_map_objects:
