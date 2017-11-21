@@ -15,7 +15,7 @@ from gymdbsql import set_args
 from hamburg import xp_route_1
 from hamburg import xp_route_2
 from inventory import has_lucky_egg
-from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops
+from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops, CountDownLatch
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogoservice import TravelTime
 from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2, double_xp_1, \
@@ -96,7 +96,7 @@ one_of_each_catch_feed = OneOfEachCatchFeed()
 candy_12_feed = Candy12Feed()
 
 
-def safe_do_work(thread_num, global_catch_feed, forced_update_):
+def safe_do_work(thread_num, global_catch_feed, latch , forced_update_):
     # while not forced_update_.isSet():
     # noinspection PyBroadException
     try:
@@ -105,7 +105,7 @@ def safe_do_work(thread_num, global_catch_feed, forced_update_):
             if args.double_xp:
                 do_work_just_stops(worker, forced_update_)
             else:
-                do_work(thread_num, worker, global_catch_feed, forced_update_)
+                do_work(thread_num, worker, global_catch_feed, latch, forced_update_)
     except OutOfAccounts:
         logging.info("No more accounts, exiting worker thread")
         return
@@ -114,6 +114,9 @@ def safe_do_work(thread_num, global_catch_feed, forced_update_):
         return
     except:
         logging.exception("Outer worker catch block caught exception")
+    finally:
+        latch.count_down()
+
 
 
 def next_worker():
@@ -257,11 +260,8 @@ def do_work_just_stops(worker, is_forced_update):
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 
 
-
-def do_work(thread_num, worker, global_catch_feed, is_forced_update, use_eggs=True):
+def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_eggs=True):
     travel_time = worker.getlayer(TravelTime)
-
-
 
     wm = WorkerManager(worker, use_eggs, args.target_level)
     cm = CatchManager(worker, args.catch_pokemon, global_catch_feed)
@@ -275,11 +275,15 @@ def do_work(thread_num, worker, global_catch_feed, is_forced_update, use_eggs=Tr
         log.info("Doing initial pokestops PHASE")
         do_iterable_point_list(feeder, feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time, worker, 1, catch_anything=False, only_unseen=True, candy=True, candy12=True)
 
+    latch.count_down()
+    log.info("Waiting for other workers to join here")
+    latch.await()
+
     if wm.player_level() < 18:
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
         grind_points = initial_grind.get(args.route)
         grind_locs = [with_gmaps_altitude(x, args.gmaps_key) for x in grind_points]
-        grind_route = create_route(grind_locs, 80, (thread_num % 8) * 80, 0)
+        grind_route = create_route(grind_locs, 3*35, (thread_num % 3) * 35, int(thread_num / 3) * 35)  # cover 3x3
 
         cm.catch_feed = one_of_each_catch_feed
         feeder = PositionFeeder(grind_route, is_forced_update)
@@ -320,8 +324,9 @@ forced_update = create_forced_update_check(args)
 
 nthreads = thread_count(args)
 log.info("Bot using {} threads".format(str(nthreads)))
+latch = CountDownLatch(nthreads)
 for i in range(nthreads):
-    the_thread = Thread(target=safe_do_work, args=(i, global_catch_feed, forced_update))
+    the_thread = Thread(target=safe_do_work, args=(i, global_catch_feed, latch, forced_update))
     the_thread.start()
     threads.append(the_thread)
     time.sleep(6)
