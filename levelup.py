@@ -280,7 +280,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     log.info("Waiting for other workers to join here")
     latch.await()
 
-    if started_at_0 or wm.player_level() < 18:
+    if started_at_0 or wm.player_level() < 22:
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
         grind_points = initial_grind.get(args.route)
         grind_locs = [with_gmaps_altitude(x, args.gmaps_key) for x in grind_points]
