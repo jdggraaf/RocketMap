@@ -4,6 +4,8 @@
 import logging
 import time
 import datetime
+
+from pgoapi.exceptions import HashingQuotaExceededException, HashingTimeoutException, UnexpectedHashResponseException
 from pgoapi.utilities import f2i, get_cell_ids
 from pgoapi.hash_server import BadHashRequestException, HashingOfflineException
 
@@ -14,6 +16,26 @@ log = logging.getLogger(__name__)
 
 class AccountBannedException(Exception):
     pass
+
+
+def req_call_with_hash_retries(req):
+    attempts = 0
+    while attempts < 5:
+        try:
+            return req.call(False)
+        except HashingTimeoutException:
+            log.warning("HashingTimeoutException")
+            time.sleep(10 * attempts)
+        except UnexpectedHashResponseException:
+            log.warning("UnexpectedHashResponseException")
+            time.sleep(10 * attempts)
+        except HashingOfflineException:
+            log.warning("Hashing offline")
+            time.sleep(10 * attempts)
+        except HashingQuotaExceededException:
+            log.warn("Hashing quota exceeded, waiting 20 seconds")
+            time.sleep(15 * attempts)
+        attempts += 1
 
 
 def send_generic_request(req, account, settings=False, buddy=True, inbox=True):

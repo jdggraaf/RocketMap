@@ -17,7 +17,8 @@ from .utils import in_radius, generate_device_info, distance
 from .proxy import get_new_proxy
 from .apiRequests import (send_generic_request, fort_details,
                           recycle_inventory_item, use_item_egg_incubator,
-                          release_pokemon, level_up_rewards, fort_search, AccountBannedException)
+                          release_pokemon, level_up_rewards, fort_search, AccountBannedException,
+                          req_call_with_hash_retries)
 
 log = logging.getLogger(__name__)
 
@@ -150,18 +151,12 @@ def rpc_login_sequence(args, api, account, proceed):
     # 1 - Make an empty request to mimick real app behavior.
     log.debug('Starting RPC login sequence...')
 
-    def inner_login():
-        req = api.create_request()
-        req.call(False)
-        time.sleep(random.uniform(.43, .97))
-
     try:
-        inner_login()
+        req = api.create_request()
+        req_call_with_hash_retries(req)
+
         total_req += 1
-    except HashingQuotaExceededException as e:
-        log.warn("Hashing quota exceeded during login, waiting 30 seconds")
-        time.sleep(30)
-        inner_login()
+        time.sleep(random.uniform(.43, .97))
     except Exception as e:
         log.exception('Login for account %s failed.'
                       + ' Exception in call request: %s.',
@@ -177,7 +172,7 @@ def rpc_login_sequence(args, api, account, proceed):
     try:
         req = api.create_request()
         req.get_player(player_locale=args.player_locale)
-        resp = req.call(False)
+        resp = req_call_with_hash_retries(req)
         parse_get_player(account, resp)
         warning_ = account['warning']
 
