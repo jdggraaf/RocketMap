@@ -292,13 +292,12 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         log.info("Waiting for other workers to join here")
         latch.await()
 
-        if args.use_initial_egg:  # ensure this is done after GMO so we are in position
-            if not has_lucky_egg(worker):
-                log.error("Has no egg for initial catches. Initial phase did not produce egg or bot was restarted")
-            wm.use_incense()
-            wm.use_egg(force=True)
-        do_iterable_point_list(feeder, feeder, None, False,False, one_of_each_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 2, catch_anything=False, only_unseen=True, candy=True, candy12=True,
-                           )
+        #if args.use_initial_egg:  # ensure this is done after GMO so we are in position
+        #    if not has_lucky_egg(worker):
+        #        log.error("Has no egg for initial catches. Initial phase did not produce egg or bot was restarted")
+        #    wm.use_incense()
+        #    wm.use_egg(force=True)
+        do_iterable_point_list(feeder, feeder, None, False,False, one_of_each_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 2, catch_anything=False, only_unseen=True, candy=True, candy12=True)
 
     log.info("Main grind PHASE 1")
     wm.explain()
