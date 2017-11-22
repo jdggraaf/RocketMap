@@ -267,7 +267,7 @@ def do_fast25(thread_num, worker, is_forced_update):
 
     feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
     do_iterable_point_list(feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
-                           worker, 1, CatchConditions.initial_condition())
+                           worker, 1, CatchConditions.everything_condition())
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 
 

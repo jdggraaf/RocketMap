@@ -29,6 +29,16 @@ class CatchConditions:
         return result
 
     @staticmethod
+    def everything_condition():
+        result = CatchConditions()
+        result.catch_anything = True
+        result.only_unseen = True
+        result.only_candy = True
+        result.only_candy_12 = True
+        return result
+
+
+    @staticmethod
     def grind_condition():
         result = CatchConditions()
         result.only_candy = True
