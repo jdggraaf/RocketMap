@@ -293,6 +293,7 @@ else:
     geofence_stops = defaultdict(list)
 
 if args.json_locations:
+    log.info("Geofences are: {}".format(str(geofence_stops)))
     with open(args.json_locations) as data_file:
         json_config = json.load(data_file)
 
