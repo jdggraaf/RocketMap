@@ -189,10 +189,11 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
         next_pos = get_pos_to_use(next_route_element, fallback_altitude, thread_num if outer else None)
 
         if is_encounter_to(route_element) or is_plain_coordinate(route_element) or xp_boost_phase or is_array_pokestops(route_element):
-            sm.spin_all_stops(map_objects, player_location, range_m=50 if xp_boost_phase else 39.8, exclusion=excluded_stops)
+            sm.spin_all_stops(map_objects, player_location, range_m=50 if xp_boost_phase else 39.8, exclusion={} if xp_boost_phase else excluded_stops )
         else:
             pokestop = route_element[1]
-            sm.spin_stops(map_objects, pokestop[3], player_location, pos_index, excluded_stops)
+            pokestop_id = pokestop[3]
+            sm.spin_stops(map_objects, pokestop_id, player_location, pos_index, excluded_stops)
 
         sm.log_status(egg_active, wm.has_egg, pos_index, phase)
         if did_map_objects:
@@ -266,7 +267,7 @@ def do_fast25(thread_num, worker, is_forced_update):
     sm = StopManager(worker, cm, wm, args.max_stops)
 
     feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
-    do_iterable_point_list(feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
+    do_iterable_point_list(feeder, None, True, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
                            worker, 1, CatchConditions.everything_condition())
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 
