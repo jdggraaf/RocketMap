@@ -15,7 +15,8 @@ from gymdbsql import set_args
 from hamburg import xp_route_1
 from hamburg import xp_route_2
 from inventory import has_lucky_egg
-from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops, CountDownLatch
+from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops, CountDownLatch, \
+    is_array_pokestops
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogoservice import TravelTime
 from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2, double_xp_1, \
@@ -187,7 +188,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
         fallback_altitude = player_location[2]
         next_pos = get_pos_to_use(next_route_element, fallback_altitude, thread_num if outer else None)
 
-        if is_encounter_to(route_element) or is_plain_coordinate(route_element) or xp_boost_phase:
+        if is_encounter_to(route_element) or is_plain_coordinate(route_element) or xp_boost_phase or is_array_pokestops(route_element):
             sm.spin_all_stops(map_objects, player_location, range_m=50 if xp_boost_phase else 39.8, exclusion=excluded_stops)
         else:
             pokestop = route_element[1]

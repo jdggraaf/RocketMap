@@ -37,7 +37,7 @@ def get_pos_to_use(tuple_to_use, fallback_altitude, worker_role):
     if len(tuple_to_use) == 3 and isinstance(tuple_to_use[0], numbers.Number):  # direct cordinate
         return tuple_to_use
     second_part = tuple_to_use[1]
-    if isinstance(second_part, list):
+    if is_array_pokestops(tuple_to_use):
         return tuple_to_use[0]
 
     '''
@@ -96,6 +96,10 @@ def __get_cluster_pos(pokestop_position, spawn_cluster, worker_role):
 
 def is_encounter_to(tuple_to_use):
     return type(tuple_to_use) is not tuple
+
+def is_array_pokestops(tuple_to_use):
+    return isinstance(tuple_to_use[1], list)
+
 
 
 def is_plain_coordinate(tuple_to_use):
