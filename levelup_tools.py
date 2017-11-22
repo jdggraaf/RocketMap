@@ -3,6 +3,7 @@ import numbers
 
 from geography import step_position, chunk_box, is_inside_box, move_in_direction_of
 from pokestopModel import find_largest_groups
+from pokestoproutesv2 import routes_p1
 from scannerutil import setup_logging, precise_coordinate_string, full_precision_coordinate_string, equi_rect_distance_m
 
 setup_logging()
@@ -118,6 +119,8 @@ def gpx_string(combined, pos=None):
     else:
         return combined_ + "/>"
 
+def distance_route_locs_m(loc1, loc2):
+    return equi_rect_distance_m(loc1[0], loc2[0])
 
 def gpx_route(route):
     return "\n".join([gpx_string(x, idx) for idx, x in enumerate(route)])
@@ -194,3 +197,8 @@ post_gpx = """
 	</trkseg></trk>
 </gpx>
 """
+
+if __name__ == "__main__":
+    hbg = routes_p1.get("hamburg")
+    for route_elem in hbg:
+        print str(precise_coordinate_string(route_elem[0]))

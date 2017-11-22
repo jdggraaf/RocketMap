@@ -7,7 +7,7 @@ from argparser import basic_std_parser, add_geofence
 from geofence import get_geofences
 from geography import lat_routed
 from gymdbsql import pokestops_in_box, pokestops_in_box_2
-from levelup_tools import stop_string, xp_stop_string, find_xp_route, write_gpx_route
+from levelup_tools import stop_string, xp_stop_string, find_xp_route, write_gpx_route, distance_route_locs_m
 from pokestopModel import create_pokestops, update_distances, find_optimal_location
 from pokestops import add_altitudes
 from scannerutil import setup_logging
@@ -27,6 +27,18 @@ log = logging.getLogger(__name__)
 
 num_locs = 0
 
+def filter_too_close(points):
+    result = []
+    idx = 0
+    current = points[idx]
+    idx+=1
+    i = len(points) -1
+    while idx < i:
+        while distance_route_locs_m( current, points[idx]) < 120 and idx < i:
+            idx+=1
+        result.append( points[idx])
+        current = points[idx]
+    return result
 
 def create_one(fence, gpx_filename, target_positions=190, xp_route=False):
     box_stops = pokestops_in_box(fence.box())
@@ -47,11 +59,16 @@ def create_one(fence, gpx_filename, target_positions=190, xp_route=False):
         return find_optimal_location(stop_coords)
 
     fenced78 = lat_routed(fence, 120, 39, point_list_hl)
+
+    spaced = filter_too_close(fenced78)
     if xp_route:
-        with_spawns = [x + ((),) for x in fenced78]
+        with_spawns = [x + ((),) for x in spaced]
     else:
-        with_spawns = [x + (loc_find_optimal_location(x[1].coords),) for x in fenced78]
+        with_spawns = [x + (loc_find_optimal_location(x[1].coords),) for x in spaced]
+
     return xp_route_1, with_spawns
+
+xp_route_left, spawns_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "route_hl.gpx")
 
 big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]), "big_route_hr.gpx", 600, xp_route=True)
 
@@ -60,8 +77,6 @@ big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fen
 
 xp_route_initial, spawns_initial = create_one(get_geofences(dirname + "/levelup_fences.txt", ["InitialHamburg"]),
                                           "route_init.gpx")
-
-xp_route_left, spawns_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "route_hl.gpx")
 
 xp_route_right, spawns_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
                                           "route_hr.gpx")
