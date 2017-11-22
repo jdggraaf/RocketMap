@@ -25,6 +25,7 @@ class WorkerManager(object):
         self.target_level = target_level
         self.xp_log = []
         self.next_gmo = datetime.now()
+        self.fast_egg = False
 
     def player_level(self):
         level_ = self.worker.account_info()["level"]
@@ -99,15 +100,21 @@ class WorkerManager(object):
     def use_egg_if_ready(self, cm):
         has_egg = self.has_lucky_egg()
         egg_active = self.has_active_lucky_egg()
-        after_egg = datetime.now() > self.next_egg
         evolving_possible = not cm or cm.can_start_evolving()
         log.info(
-            "UseEgg: Egg_active={},after_egg={},has_egg={},can_start_evolving{}, next_egg={}".format(str(egg_active), str(after_egg),
-                                                                                str(has_egg), str(evolving_possible), str(self.next_egg)))
-        if not egg_active and has_egg and evolving_possible:
-            self.worker.do_use_lucky_egg()
-            self.next_egg = datetime.now() + timedelta(minutes=90)
-            db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
+            "UseEgg: Egg_active={},has_egg={},can_start_evolving{}, next_egg={}".format(str(egg_active), str(has_egg),
+                                                                                        str(evolving_possible),
+                                                                                        str(self.next_egg)))
+
+        if not egg_active and has_egg:
+            if evolving_possible:
+                self.worker.do_use_lucky_egg()
+                self.next_egg = datetime.now() + timedelta(minutes=90)
+                db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
+            elif self.fast_egg:
+                self.worker.do_use_lucky_egg()
+                self.next_egg = datetime.now() + timedelta(minutes=30)
+                db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
         return egg_active
 
     def explain(self):

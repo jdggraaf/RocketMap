@@ -56,7 +56,7 @@ parser.add_argument('-egg', '--use-eggs', default=True,
                     help='True to use lucky eggs')
 parser.add_argument('-fs', '--fast-speed', default=25,
                     help='Fast speed in m/s')
-parser.add_argument('-xp2', '--double-xp', default=False, action='store_true',
+parser.add_argument('-f25', '--fast-25', default=False, action='store_true',
                     help='True to use stop-only double XP mode')
 parser.add_argument('-iegg', '--use-initial-egg', default=True, action='store_true',
                     help='True to use lucky eggs')
@@ -102,8 +102,8 @@ def safe_do_work(thread_num, global_catch_feed, latch , forced_update_):
     try:
         worker = next_worker()
         if worker:
-            if args.double_xp:
-                do_work_just_stops(worker, forced_update_)
+            if args.fast_25:
+                do_fast25(thread_num, worker, forced_update_)
             else:
                 do_work(thread_num, worker, global_catch_feed, latch, forced_update_)
     except OutOfAccounts:
@@ -256,18 +256,17 @@ def initial_stuff(feeder, wm, cm, worker):
     cm.do_transfers()
 
 
-def do_work_just_stops(worker, is_forced_update):
+def do_fast25(thread_num, worker, is_forced_update):
     travel_time = worker.getlayer(TravelTime)
 
     wm = WorkerManager(worker, True, args.target_level)
+    wm.fast_egg = True
     cm = CatchManager(worker, args.catch_pokemon, NoOpFeed())
     sm = StopManager(worker, cm, wm, args.max_stops)
 
-    feeder = PositionFeeder(double_xp_1.get(args.route), is_forced_update)
-    do_just_stops(feeder, feeder, sm, wm, travel_time, 1, 2)
-    feeder = PositionFeeder(double_xp_2.get(args.route), is_forced_update)
-    do_just_stops(feeder, feeder, sm, wm, travel_time, 2, 4)
-
+    feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
+    do_iterable_point_list(feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
+                           worker, 1, CatchConditions.initial_condition())
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 
 
