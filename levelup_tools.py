@@ -1,4 +1,5 @@
 import logging
+import numbers
 
 from geography import step_position, chunk_box, is_inside_box, move_in_direction_of
 from pokestopModel import find_largest_groups
@@ -33,17 +34,22 @@ def get_pos_to_use(tuple_to_use, fallback_altitude, worker_role):
         return
     if type(tuple_to_use) is not tuple:
         return as_coordinate(tuple_to_use, fallback_altitude)
-    if len(tuple_to_use) == 3 and type(tuple_to_use[1]) is not tuple:  # direct cordinate
+    if len(tuple_to_use) == 3 and isinstance(tuple_to_use[0], numbers.Number):  # direct cordinate
         return tuple_to_use
+    second_part = tuple_to_use[1]
+    if isinstance(second_part, list):
+        return tuple_to_use[0]
+
     '''
      Legal formats:
      to_catch
      (lat,lng,alt)
     ((53.48523,10.26412,44.1),(53.485582,10.264123,44.0852546692,u'652b606bade04bc2a519d401106c1223.16'),())
+    ((53.57963,9.93268,21.4), [(53.579451,9.932695,21.3703, 'f7020b4411514891b998e448b7d60ef8.16'), (53.579817,9.932672,21.3703, '85fe37d7381446dbac73f67d5c8d8a2c.16')])
     '''
     try:
-        if len(tuple_to_use[1]) < 4:
-            log.error("Incorrect pokestop definition {}".format(str(tuple_to_use[1])))
+        if len(second_part) < 4:
+            log.error("Incorrect pokestop definition {}".format(str(second_part)))
     except TypeError:
         log.exception("Corrupt pokestop {}".format(str(tuple_to_use)))
         raise
@@ -53,7 +59,7 @@ def get_pos_to_use(tuple_to_use, fallback_altitude, worker_role):
             log.info("There is no spawn cluster {}".format(str(tuple_to_use)))
         spawn_cluster = tuple_to_use[2] if len(tuple_to_use) > 2 else []
 
-        next_cluster_pos = __get_cluster_pos(tuple_to_use[1], spawn_cluster, worker_role)
+        next_cluster_pos = __get_cluster_pos(second_part, spawn_cluster, worker_role)
         return next_cluster_pos if next_cluster_pos else tuple_to_use[0]
     except TypeError:
         log.exception("Corrupt pokestop {}".format(str(tuple_to_use)))
