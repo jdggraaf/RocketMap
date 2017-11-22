@@ -57,7 +57,7 @@ parser.add_argument('-egg', '--use-eggs', default=True,
                     help='True to use lucky eggs')
 parser.add_argument('-fs', '--fast-speed', default=25,
                     help='Fast speed in m/s')
-parser.add_argument('-f25', '--fast-25', default=False, action='store_true',
+parser.add_argument('-fast-levlup', '--fast-levelup', default=False, action='store_true',
                     help='True to use stop-only double XP mode')
 parser.add_argument('-iegg', '--use-initial-egg', default=True, action='store_true',
                     help='True to use lucky eggs')
@@ -103,7 +103,7 @@ def safe_do_work(thread_num, global_catch_feed, latch , forced_update_):
     try:
         worker = next_worker()
         if worker:
-            if args.fast_25:
+            if args.fast_levelup:
                 do_fast25(thread_num, worker, forced_update_)
             else:
                 do_work(thread_num, worker, global_catch_feed, latch, forced_update_)
