@@ -49,7 +49,11 @@ def get_pos_to_use(tuple_to_use, fallback_altitude, worker_role):
         raise
 
     try:
-        next_cluster_pos = __get_cluster_pos(tuple_to_use[1], tuple_to_use[2], worker_role)
+        if len(tuple_to_use) < 3:
+            log.info("There is no spawn cluster {}".format(str(tuple_to_use)))
+        spawn_cluster = tuple_to_use[2] if len(tuple_to_use) > 2 else []
+
+        next_cluster_pos = __get_cluster_pos(tuple_to_use[1], spawn_cluster, worker_role)
         return next_cluster_pos if next_cluster_pos else tuple_to_use[0]
     except TypeError:
         log.exception("Corrupt pokestop {}".format(str(tuple_to_use)))
