@@ -73,6 +73,7 @@ class CatchManager(object):
         self.pokemon_caught = 0
         self.evolves = 0
         self.location_visited = set()
+        self.evolve_requirement = 180
 
     def is_map_pokemon(self, location):
         return "MapPokemon" in str(type(location))
@@ -171,7 +172,7 @@ class CatchManager(object):
         return True
 
     def can_start_evolving(self):
-        return self.num_evolve_candidates() > 180
+        return self.num_evolve_candidates() > self.evolve_requirement
 
     def num_evolve_candidates(self):
         ctr = 0

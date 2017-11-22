@@ -325,6 +325,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     do_iterable_point_list(feeder, xp_feeder, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
                            worker, 3, CatchConditions.grind_condition())
 
+    cm.evolve_requirement = 90
     log.info("Main grind PHASE 2")
     wm.explain()
     cm.catch_feed = global_catch_feed
