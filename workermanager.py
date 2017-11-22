@@ -101,10 +101,10 @@ class WorkerManager(object):
         has_egg = self.has_lucky_egg()
         egg_active = self.has_active_lucky_egg()
         evolving_possible = not cm or cm.can_start_evolving()
-        log.info(
-            "UseEgg: Egg_active={},has_egg={},can_start_evolving{}, next_egg={}".format(str(egg_active), str(has_egg),
-                                                                                        str(evolving_possible),
-                                                                                        str(self.next_egg)))
+        # log.info(
+        #    "UseEgg: Egg_active={},has_egg={},can_start_evolving{}, next_egg={}".format(str(egg_active), str(has_egg),
+        #                                                                                str(evolving_possible),
+        #                                                                                str(self.next_egg)))
 
         if not egg_active and has_egg:
             if evolving_possible:

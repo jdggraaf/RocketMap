@@ -307,7 +307,7 @@ if args.json_locations:
                     worker_route = geofence_stops[route_name]
                 else:
                     worker_route = routes[route_name]
-                for route in chunks(worker_route, 6):
+                for route in chunks(worker_route, 5):
                     name = json_loc["name"][:14] + "-" + str(worker_idx)
                     worker_idx += 1
                     the_thread = Thread(name=name, target=lambda: safe_lure_one_json_worker(json_loc, route, counter))
