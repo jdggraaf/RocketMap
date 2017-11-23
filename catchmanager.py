@@ -18,7 +18,8 @@ class CatchConditions:
     catch_anything = False
     only_unseen = False
     only_candy = False,
-    only_candy_12 = False
+    only_candy_12 = False,
+    catch_50 = False
 
     @staticmethod
     def initial_condition():
@@ -43,11 +44,15 @@ class CatchConditions:
         result = CatchConditions()
         result.only_candy = True
         result.only_candy_12 = True
+        result.only_unseen = True
+        result.catch_50 = True
         return result
 
     def is_candy_pokemon(self, pokemon_id):
         return pokemon_id in pokemon_data.candy12 or pokemon_id in pokemon_data.candy25
 
+    def is_candy_50_catch(self, pokemon_id):
+        return self.catch_50 and pokemon_id in pokemon_data.candy50
 
     def is_candy_12_catch(self, pokemon_id):
         return self.only_candy_12 and pokemon_id in pokemon_data.candy12
@@ -107,8 +112,9 @@ class CatchManager(object):
             candy_catch = catch_condition.is_candy_catch(pokemon_id)
             candy_12_catch = catch_condition.is_candy_12_catch(pokemon_id)
             encountered_previously = self.is_encountered_previously(encounter_id)
+            candy_50_catch = catch_condition.is_candy_50_catch(pokemon_id)
 
-            will_catch = (catch_condition.catch_anything or unseen_catch or candy_catch or candy_12_catch)
+            will_catch = (catch_condition.catch_anything or unseen_catch or candy_catch or candy_12_catch or candy_50_catch)
 
             if encountered_previously:
                 log.info("{} {} encountered previously".format(str(pokemon_name(pokemon_id)), str(encounter_id)))
