@@ -41,7 +41,7 @@ parser.add_argument('-ps', '--pokestops', default=None, action='append',
                     help='Pokestops to lure')
 parser.add_argument('-jlo', '--json-locations', type=parse_unicode,
                     help='Json file with luring descriptions')
-parser.add_argument('-rl', '--route-length', type=parse_unicode, default=5,
+parser.add_argument('-rl', '--route-length', default=5,
                     help='Length of the luring routes to use')
 parser.add_argument('-ow', '--system-id', type=parse_unicode,
                     help='Database owner of lures')
