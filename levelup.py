@@ -300,6 +300,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         do_iterable_point_list(feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
                                worker, 1, CatchConditions.initial_condition())
 
+    sm.clear_state()
     if False and (started_at_0 or wm.player_level() < 22):
         log.info("Doing initial catches PHASE, player level is {}".format(str(wm.player_level())))
         grind_points = initial_grind.get(args.route)
@@ -336,6 +337,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     do_iterable_point_list(feeder, xp_feeder, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
                            worker, 3, CatchConditions.grind_condition())
 
+    sm.clear_state()
     cm.evolve_requirement = 90
     log.info("Main grind PHASE 2")
     wm.explain()

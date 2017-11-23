@@ -66,8 +66,12 @@ class StopManager(object):
             log.info("Spinning failed {}".format(str(spin_pokestop)))
 
     def num_spins_last_30_minutes(self):
+        self.__trim_to30_minutes()
+        return len(self.spin_timestamps)
+
+    def __trim_to30_minutes(self):
         thirty_minutes_ago = datetime.now() - timedelta(minutes=30)
-        return sum(1 for x in self.spin_timestamps if x > thirty_minutes_ago)
+        self.spin_timestamps = [x for x in self.spin_timestamps if x > thirty_minutes_ago]
 
     def log_status(self, egg_active, has_egg, index, phase):
         if datetime.now() > self.log_xp_at:
@@ -97,3 +101,6 @@ class StopManager(object):
 
     def log_inventory(self):
         log.info("Inventory:{}".format(str(inventory(self.worker))))
+
+    def clear_state(self):
+        self.spun_stops = set()
