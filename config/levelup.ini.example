@@ -18,4 +18,7 @@ threads-per-proxy: 7
 # default level is 5
 target-level: 20
 final-system-id: lures
-
+# run levelup in fast mode to reach 20/25 as quickly as possible
+#fast-levelup
+# run until we're out of fresh accounts withthe non-stop flag
+#non-stop

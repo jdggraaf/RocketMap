@@ -21,5 +21,8 @@ accountcsv=accounts.txt
 # Uncomment host/port to expost on-demand lure service.
 #host=0.0.0.0
 #port=8701
+# the number of pokestops served by a single thread. Increasing number will reduce hash usage
+# but also increase delay between lures. Default is 5
+route-length: 10
 
 
