@@ -274,6 +274,9 @@ def do_fast25(thread_num, worker, is_forced_update):
     feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
     do_iterable_point_list(feeder, None, True, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
                            worker, 1, CatchConditions.everything_condition())
+    if args.final_system_id:
+        db_set_system_id(worker.name(), args.final_system_id)
+        log.info("Transferred account {} to system-id {}".format(worker.name(), args.final_system_id))
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 
 
