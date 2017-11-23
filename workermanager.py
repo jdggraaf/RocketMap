@@ -97,7 +97,7 @@ class WorkerManager(object):
     def has_lucky_egg(self):
         return has_lucky_egg(self.worker)
 
-    def use_egg_if_ready(self, cm):
+    def use_egg_if_ready(self, cm, force=False):
         has_egg = self.has_lucky_egg()
         egg_active = self.has_active_lucky_egg()
         evolving_possible = not cm or cm.can_start_evolving()
@@ -107,6 +107,10 @@ class WorkerManager(object):
         #                                                                                str(self.next_egg)))
 
         if not egg_active and has_egg:
+            if force:
+                self.worker.do_use_lucky_egg()
+                self.next_egg = datetime.now() + timedelta(minutes=30)
+                db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
             if evolving_possible:
                 self.worker.do_use_lucky_egg()
                 self.next_egg = datetime.now() + timedelta(minutes=90)
