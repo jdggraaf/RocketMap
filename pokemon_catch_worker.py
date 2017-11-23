@@ -45,7 +45,7 @@ DEBUG_ON = False
 
 
 class PokemonCatchWorker:
-    def __init__(self, position, spawn_point_id, pogoservice):
+    def __init__(self, position, spawn_point_id, pogoservice, fast):
         self.position = position
         self.pogoservice = pogoservice
         self.spawn_point_guid = spawn_point_id
@@ -54,6 +54,7 @@ class PokemonCatchWorker:
         self.rest_completed = False
         self.caught_last_24 = 0
         self.softban = False
+        self.fast = fast
 
         # Config
         self.consecutive_vanishes_so_far = 0
@@ -196,7 +197,7 @@ class PokemonCatchWorker:
                     used_berry = True
 
             # If we change ball then wait to simulate user selecting it
-            if changed_ball:
+            if changed_ball and not self.fast:
                 action_delay(self.catchsim_changeball_wait_min, self.catchsim_changeball_wait_max)
 
             # Randomize the quality of the throw
@@ -213,7 +214,8 @@ class PokemonCatchWorker:
             inventory[current_ball] = inventory.get(current_ball) - 1
 
             # Take some time to throw the ball from config options
-            action_delay(self.catchsim_catch_wait_min, self.catchsim_catch_wait_max)
+            if not self.fast:
+                action_delay(self.catchsim_catch_wait_min, self.catchsim_catch_wait_max)
 
             hit_pokemon = 1
             if random() >= self.catch_throw_parameters_hit_rate and not is_vip:
@@ -269,7 +271,8 @@ class PokemonCatchWorker:
                 return pokemon_unique_id
             elif catch_pokemon_status == CATCH_STATUS_MISSED:
                 # Take some time to throw the ball from config options
-                action_delay(self.catchsim_catch_wait_min, self.catchsim_catch_wait_max)
+                if not self.fast:
+                    action_delay(self.catchsim_catch_wait_min, self.catchsim_catch_wait_max)
                 continue
 
             break

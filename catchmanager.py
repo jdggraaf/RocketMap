@@ -153,7 +153,7 @@ class CatchManager(object):
                 log.info("Catching {} because catch_all={} unseen={} candy_catch={} candy_12_catch={}".format(
                     pokemon_name(pokemon_id), str(catch_condition.catch_anything), str(unseen_catch), str(candy_catch),
                     str(candy_12_catch)))
-                caught = self.catch_it(player_pos, to_catch)
+                caught = self.catch_it(player_pos, to_catch, fast=True)
                 if caught:
                     found_new = pokemon_id not in self.caught_pokemon_ids
                     self.caught_pokemon_ids.add(pokemon_id)
@@ -278,7 +278,7 @@ class CatchManager(object):
         time.sleep(17)
         return evo.evolved_pokemon_data.id
 
-    def catch_it(self, pos, to_catch):
+    def catch_it(self, pos, to_catch, fast=False):
         encounter_id = to_catch.encounter_id
         spawn_point_id = to_catch.spawn_point_id
         pokemon_id = to_catch.pokemon_id
@@ -288,7 +288,7 @@ class CatchManager(object):
         is_vip = pokemon_id in self.candy12 or pokemon_id in self.candy25
         if probability and len([x for x in probability.capture_probability if x > 0.38]) > 0:
             caught = beh_catch_encountered_pokemon(self.worker, pos, encounter_id, spawn_point_id, probability,
-                                                   pokemon_id, is_vip)
+                                                   pokemon_id, is_vip, fast)
             return caught
         else:
             if probability:

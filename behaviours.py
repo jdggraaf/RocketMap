@@ -117,7 +117,7 @@ def beh_clean_bag_with_limits(pogoservice, limits, aggressive=False):
     log.info("Bag cleaning Removed {} items".format(str(removed)))
 
 
-def beh_catch_encountered_pokemon(pogoservice, position, encounter_id, spawn_point_id, probablity, pokemon_id, is_vip=False):
+def beh_catch_encountered_pokemon(pogoservice, position, encounter_id, spawn_point_id, probablity, pokemon_id, is_vip=False, fast=False):
     start_catch_at = datetime.datetime.now()
 
     if probablity:
@@ -160,7 +160,7 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position, range_m=39, bl
                 log.debug('Pokestop is in cooldown, ignoring')
             else:
                 if idx > 0:
-                    idx_ = min(idx,2) * 150
+                    idx_ = min(idx,2) * 200
                     log.info("Random sleeping at least {}ms for additional stops".format(idx_))
                     random_sleep_z(idx_, idx_ + 100, "pokestop_details")  # Do not let Niantic throttle
                     travel_time.use_slow_speed()
