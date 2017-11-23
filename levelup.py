@@ -370,7 +370,7 @@ for i in range(nthreads):
     the_thread.start()
     threads.append(the_thread)
     if i % len(args.proxy) == 0:
-        time.sleep(5)
+        time.sleep(10)
 
 for thread in threads:
     thread.join()
