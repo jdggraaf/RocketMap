@@ -362,7 +362,8 @@ for i in range(nthreads):
     the_thread = Thread(target=safe_do_work, args=(i, global_catch_feed, latch, forced_update))
     the_thread.start()
     threads.append(the_thread)
-    time.sleep(6)
+    if i % len(args.proxy) == 0:
+        time.sleep(5)
 
 for thread in threads:
     thread.join()
