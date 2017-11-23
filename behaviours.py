@@ -126,7 +126,7 @@ def beh_catch_encountered_pokemon(pogoservice, position, encounter_id, spawn_poi
         level = pogoservice.account_info()["level"]
 
         pogoservice.add_log(name)
-        pcw = PokemonCatchWorker(position, spawn_point_id, pogoservice)
+        pcw = PokemonCatchWorker(position, spawn_point_id, pogoservice, fast)
         elements = pogoservice.account_info()["items"]
         catch = pcw.do_catch(encounter_id, catch_rate_by_ball, elements, is_vip)
         if catch == WorkerResult.ERROR_NO_BALLS:
