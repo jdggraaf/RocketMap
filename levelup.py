@@ -65,6 +65,8 @@ parser.add_argument('-ca', '--catch-all', default=False, action='store_true',
                     help='Catch all eligible')
 parser.add_argument('-am', '--alt-mode', default=False, action='store_true',
                     help='Alt mode')
+parser.add_argument('-ns', '--non-stop', default=False, action='store_true',
+                    help='Run without stop')
 add_webhooks(parser)
 add_geofence(parser)
 
@@ -100,23 +102,26 @@ candy_12_feed = Candy12Feed()
 def safe_do_work(thread_num, global_catch_feed, latch , forced_update_):
     # while not forced_update_.isSet():
     # noinspection PyBroadException
-    try:
-        worker = next_worker()
-        if worker:
-            if args.fast_levelup:
-                do_fast25(thread_num, worker, forced_update_)
-            else:
-                do_work(thread_num, worker, global_catch_feed, latch, forced_update_)
-    except OutOfAccounts:
-        logging.info("No more accounts, exiting worker thread")
-        return
-    except GaveUp:
-        logging.info("Gave UP, exiting")
-        return
-    except:
-        logging.exception("Outer worker catch block caught exception")
-    finally:
-        latch.count_down()
+    while True:
+        try:
+            worker = next_worker()
+            if worker:
+                if args.fast_levelup:
+                    do_fast25(thread_num, worker, forced_update_)
+                else:
+                    do_work(thread_num, worker, global_catch_feed, latch, forced_update_)
+        except OutOfAccounts:
+            logging.info("No more accounts, exiting worker thread")
+            return
+        except GaveUp:
+            logging.info("Gave UP, exiting")
+            return
+        except:
+            logging.exception("Outer worker catch block caught exception")
+        finally:
+            latch.count_down()
+        if not args.non_stop:  # latch does not work in non-stop mode
+            break
 
 
 
