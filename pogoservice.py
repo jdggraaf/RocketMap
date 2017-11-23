@@ -1149,6 +1149,7 @@ class ApplicationBehaviour(DelegatingPogoService):
         DelegatingPogoService.__init__(self, pogoservice)
         self.pogoservice = pogoservice
         self.new_pokemon_caught = False
+        self.behave_properly=True
 
     def do_catch_pokemon(self, encounter_id, pokeball, normalized_reticle_size, spawn_point_id, hit_pokemon,
                          spin_modifier, normalized_hit_position):
@@ -1161,7 +1162,7 @@ class ApplicationBehaviour(DelegatingPogoService):
         '''
         xp = catch_pokemon.get("capture_award", {}).get("xp", [])
         self.new_pokemon_caught = len(xp) > 2 and (xp[1] == 500 or xp[1] == 1000 or xp[1] == 2000)  # 2000 for double xp
-        if self.new_pokemon_caught:
+        if self.new_pokemon_caught and self.behave_properly:
             log.info("Initial catch animation delay")
             time.sleep(19)  # pokedex animation 7,5 seconds + catch anim. verify this rly 12 seconds catch
         return pokemon

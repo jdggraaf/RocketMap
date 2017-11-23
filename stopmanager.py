@@ -38,8 +38,6 @@ class StopManager(object):
         spuns = beh_spin_nearby_pokestops(self.worker, map_objects, player_position, range_m, self.spun_stops, exclusion)
         for stop in spuns:
             self.spun_stops.add(stop)
-        if len(spuns) > 0:
-            self.log_inventory()
         return len(spuns)
 
     def spin_single_stop(self, map_objects, player_position, pokestop_id, exclusions):
@@ -50,11 +48,7 @@ class StopManager(object):
             log.info("Skipping stop {}, already spun".format(pokestop_id))
         spin_pokestop = beh_spin_pokestop(self.worker, map_objects, player_position, pokestop_id)
         if spin_pokestop == 4:
-            level = int(self.worker.account_info()["level"])
-
-            limits = PHASE_0_ITEM_LIMITS if level < 12 else L12_ITEM_LIMITS if (
-                12 < level < 21) else L20_ITEM_LIMITS
-            beh_aggressive_bag_cleaning(self.worker, limits)
+            beh_aggressive_bag_cleaning(self.worker)
             spin_pokestop = beh_spin_pokestop(self.worker, map_objects, player_position, pokestop_id)
 
         if spin_pokestop == 1:

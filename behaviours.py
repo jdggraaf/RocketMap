@@ -11,7 +11,7 @@ from getmapobjects import inrange_pokstops, forts, \
     inventory_discardable_pokemon, catchable_pokemon, find_pokestop, inrange_pokstops_and_gyms
 from gymdb import update_gym_from_details
 from gymdbsql import do_with_backoff_for_deadlock, create_or_update_gym_from_gmo2
-from inventory import total_iventory_count, egg_count, lure_count
+from inventory import total_iventory_count, egg_count, lure_count, inventory
 from management_errors import GaveUpApiAction
 from pogoservice import TravelTime
 from pokemon_catch_worker import PokemonCatchWorker, WorkerResult
@@ -91,17 +91,19 @@ def random_zleep(lower, upper):
     time.sleep(float(ms) / 1000)
 
 
-def beh_clean_bag(pogoservice):
-    beh_clean_bag_with_limits(pogoservice, L20_ITEM_LIMITS)
+
+'''
+2017-11-23 15:45:13,293 [    Thread-7][  stopmanager][    INFO][29419378] Inventory:
+{1105: 0, 1: 9, 2: 12, 3: 0, 101: 23, 902: 6, 103: 53, 104: 20, 201: 72, 301: 5, 401: 9, 102: 6, 501: 6, 901: 1, 1401: 1, 705: 0, 701: 0, 703: 72}
+'''
 
 
-def beh_clean_bag_with_limits(pogoservice, limits):
+def beh_clean_bag_with_limits(pogoservice, limits, aggressive=False):
     rec_items = {}
-    log.info("Bag cleaning started")
     for item, count in pogoservice.account_info()["items"].items():
         if item in limits and count > limits[item]:
             discard = count - limits[item]
-            if discard > 50:
+            if discard > 50 and not aggressive:
                 rec_items[item] = int(random.uniform(50, discard))
             else:
                 rec_items[item] = discard
@@ -197,9 +199,7 @@ def beh_spin_pokestop_raw(pogoservice, pokestop, player_position):
     result = spin_response['responses']['FORT_SEARCH'].result
     attempt = 0
     if result == 4:
-        level = pogoservice.account_info()["level"]
-        limits = PHASE_0_ITEM_LIMITS if level < 12 else L12_ITEM_LIMITS if (12 < level < 21) else L20_ITEM_LIMITS
-        beh_aggressive_bag_cleaning(pogoservice, limits)
+        beh_aggressive_bag_cleaning(pogoservice)
         spin_response = pogoservice.do_spin_pokestop(pokestop, player_position)
         result = spin_response['responses']['FORT_SEARCH'].result
 
@@ -211,7 +211,7 @@ def beh_spin_pokestop_raw(pogoservice, pokestop, player_position):
             return result  # give up
         if attempt == 0:
             if player_position != stop_pos:
-                player_position = move_towards(player_position, stop_pos, 2)
+                player_position = move_towards(player_position, stop_pos, 1)
         if attempt == 2:
             objs = pogoservice.do_get_map_objects(player_position)
             log.info ("Extra gmo gave catchanble {}".format(str(len(catchable_pokemon(objs)))))
@@ -355,11 +355,14 @@ def beh_random_bag_cleaning(worker, item_limits):
         beh_clean_bag_with_limits(worker, item_limits)
 
 
-def beh_aggressive_bag_cleaning(worker, item_limits):
+def beh_aggressive_bag_cleaning(worker):
+    level = worker.account_info()["level"]
+    item_limits = PHASE_0_ITEM_LIMITS if level < 12 else L12_ITEM_LIMITS if (12 < level < 21) else L20_ITEM_LIMITS
+
     total = total_iventory_count(worker)
     if total > 300:
-        log.info("Aggressive bag cleaning with inventory {}".format(str(total)))
-        beh_clean_bag_with_limits(worker, item_limits)
+        log.info("Aggressive bag cleaning with {} items in inventory: {}".format(str(total), str(inventory(worker))))
+        beh_clean_bag_with_limits(worker, item_limits, aggressive=True)
 
 
 def discard_random_pokemon(worker):

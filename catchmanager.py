@@ -218,8 +218,6 @@ class CatchManager(object):
 
         pokemon_id, pids = self.evolve_map.popitem()
         if len(pids) > 0:
-            log.info(
-                "{} of pokemon {} in evolve map".format(str(len(pids)), str(pokemon_id)))
             pid = pids[0]
             del pids[0]
             to_transfer = self.do_evolve(candy, pid, pokemon_id, self.worker)
@@ -228,8 +226,6 @@ class CatchManager(object):
                 self.evolves += 1
             if len(pids) > 0:
                 self.evolve_map[pokemon_id] = pids
-                log.info("Putting back {} of pokemon {} in evolve map".format(
-                    str(len(self.evolve_map[pokemon_id])), str(pokemon_id)))
 
     def process_evolve_transfer_list(self, caught):
         for pid, pokemon_id in caught.items():

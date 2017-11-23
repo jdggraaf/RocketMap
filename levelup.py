@@ -8,19 +8,18 @@ from accounts import *
 from argparser import std_config, load_proxies, add_geofence, add_webhooks, add_search_rest, parse_unicode, \
     add_threads_per_proxy, add_use_account_db_true
 from argutils import thread_count
+from behaviours import beh_aggressive_bag_cleaning
 from catchmanager import CatchManager, CatchFeed, OneOfEachCatchFeed, Candy12Feed, NoOpFeed, CatchConditions
 from geography import *
 from getmapobjects import is_discardable, is_starter_pokemon
 from gymdbsql import set_args
 from hamburg import xp_route_1
 from hamburg import xp_route_2
-from inventory import has_lucky_egg
 from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops, CountDownLatch, \
     is_array_pokestops
 from pogom.fnord_altitude import with_gmaps_altitude
-from pogoservice import TravelTime
-from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2, double_xp_1, \
-    double_xp_2
+from pogoservice import TravelTime, ApplicationBehaviour
+from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2
 from scannerutil import install_thread_excepthook, setup_logging, \
     create_forced_update_check
 from stopmanager import StopManager
@@ -180,6 +179,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             return
         wm.use_incense_if_ready()
         if cm.can_start_evolving() and xp_feeder:
+            beh_aggressive_bag_cleaning(worker)
             do_iterable_point_list(xp_feeder, None, True, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None,
                                    travel_time, worker, phase, catch_condition, outer=False)
 
@@ -199,6 +199,8 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             pokestop = route_element[1]
             pokestop_id = pokestop[3]
             sm.spin_stops(map_objects, pokestop_id, player_location, pos_index, excluded_stops)
+        if pos_index % 10 == 0:
+            sm.log_inventory()
 
         sm.log_status(egg_active, wm.has_egg, pos_index, phase)
         if did_map_objects:
@@ -272,6 +274,9 @@ def do_fast25(thread_num, worker, is_forced_update):
     wm.fast_egg = True
     cm = CatchManager(worker, args.catch_pokemon, NoOpFeed())
     sm = StopManager(worker, cm, wm, args.max_stops)
+
+    app_behaviour = worker.getlayer(ApplicationBehaviour)
+    app_behaviour.behave_properly = False
 
     feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
     do_iterable_point_list(feeder, None, True, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
@@ -369,3 +374,5 @@ for i in range(nthreads):
 
 for thread in threads:
     thread.join()
+
+

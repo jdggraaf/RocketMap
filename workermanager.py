@@ -52,7 +52,8 @@ class WorkerManager(object):
                 remaining_distance = equi_rect_distance_m(player_position, next_pos)
             self.travel_time.use_slow_speed()
         else:
-            log.info("{} seconds to next position {}".format(str(seconds_between_locations), str(next_pos)))
+            if seconds_between_locations > 0.1:
+                log.info("{} seconds to next position {}".format(str(seconds_between_locations), str(next_pos)))
             map_objects = self.get_map_objects(next_pos)
         return map_objects
 
