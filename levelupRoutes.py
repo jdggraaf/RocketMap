@@ -68,6 +68,9 @@ def create_one(fence, gpx_filename, target_positions=190, xp_route=False):
 
     return xp_route_1, with_spawns
 
+xp_route_initial, spawns_initial = create_one(get_geofences(dirname + "/levelup_fences.txt", ["InitialHamburg"]),
+                                          "route_init.gpx")
+
 xp_route_left, spawns_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "route_hl.gpx")
 
 big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]), "big_route_hr.gpx", 600, xp_route=True)
@@ -75,8 +78,6 @@ big_xp_route_right, ditche_right = create_one(get_geofences(dirname + "/levelup_
 big_xp_route_left, ditch_left = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgLeft"]), "big_route_hl.gpx", 360, xp_route=True)
 
 
-xp_route_initial, spawns_initial = create_one(get_geofences(dirname + "/levelup_fences.txt", ["InitialHamburg"]),
-                                          "route_init.gpx")
 
 xp_route_right, spawns_right = create_one(get_geofences(dirname + "/levelup_fences.txt", ["HamburgRight"]),
                                           "route_hr.gpx")

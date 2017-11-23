@@ -11,7 +11,7 @@ from getmapobjects import inrange_pokstops, catchable_pokemon_by_distance, catch
     inventory_discardable_pokemon, inrange_gyms
 from gymdbsql import set_args
 from pogoservice import TravelTime
-from pokestoproutesv2 import double_xp_1, double_xp_2
+from pokestoproutesv2 import double_xp_1, double_xp_2, routes_p1, xp_p1, initial_130_stops
 from gymdbsql import pokestops
 from scannerutil import install_thread_excepthook, setup_logging, equi_rect_distance
 from workers import wrap_account_no_replace
@@ -51,13 +51,13 @@ g0g3m3sh89890:#MBYk6uAa
 g0g3m3sh89864:3&mjdpE^s
 '''
 
-fences_to_use = get_geofences("geofence.txt", ["Oslo"])
-oslo = fences_to_use.fences[0]
-ctr = 0
-for stop in pokestops():
-    if oslo.contains_fort(stop):
-        ctr +=1
 
+start = initial_130_stops.get("hamburg")
+x1 = routes_p1.get("hamburg")
+
+print precise_coordinate_string(start[0][0])
+print precise_coordinate_string(start[-1][0])
+print precise_coordinate_string(x1[-1][0])
 x1 = double_xp_1.get("hamburg")
 x2 = double_xp_2.get("hamburg")
 total = 0
