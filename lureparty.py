@@ -41,6 +41,8 @@ parser.add_argument('-ps', '--pokestops', default=None, action='append',
                     help='Pokestops to lure')
 parser.add_argument('-jlo', '--json-locations', type=parse_unicode,
                     help='Json file with luring descriptions')
+parser.add_argument('-rl', '--route-length', type=parse_unicode, default=5,
+                    help='Length of the luring routes to use')
 parser.add_argument('-ow', '--system-id', type=parse_unicode,
                     help='Database owner of lures')
 parser.add_argument('-bn', '--base-name', default=None, action='append',
@@ -308,7 +310,7 @@ if args.json_locations:
                     worker_route = geofence_stops[route_name]
                 else:
                     worker_route = routes[route_name]
-                for route in chunks(worker_route, 5):
+                for route in chunks(worker_route, args.route_length):
                     name = json_loc["name"][:14] + "-" + str(worker_idx)
                     worker_idx += 1
                     the_thread = Thread(name=name, target=lambda: safe_lure_one_json_worker(json_loc, route, counter))

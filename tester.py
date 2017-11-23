@@ -5,12 +5,14 @@ from accountdbsql import set_account_db_args
 from accounts import *
 from argparser import std_config, load_proxies, add_system_id, add_use_account_db
 from behaviours import beh_spin_pokestop, beh_spin_pokestop_raw
+from geofence import get_geofences
 from geography import *
 from getmapobjects import inrange_pokstops, catchable_pokemon_by_distance, catchable_pokemon, \
     inventory_discardable_pokemon, inrange_gyms
 from gymdbsql import set_args
 from pogoservice import TravelTime
 from pokestoproutesv2 import double_xp_1, double_xp_2
+from gymdbsql import pokestops
 from scannerutil import install_thread_excepthook, setup_logging, equi_rect_distance
 from workers import wrap_account_no_replace
 import s2sphere
@@ -49,6 +51,12 @@ g0g3m3sh89890:#MBYk6uAa
 g0g3m3sh89864:3&mjdpE^s
 '''
 
+fences_to_use = get_geofences("geofence.txt", ["Oslo"])
+oslo = fences_to_use.fences[0]
+ctr = 0
+for stop in pokestops():
+    if oslo.contains_fort(stop):
+        ctr +=1
 
 x1 = double_xp_1.get("hamburg")
 x2 = double_xp_2.get("hamburg")

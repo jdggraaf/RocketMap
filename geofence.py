@@ -117,6 +117,12 @@ class Geofence(object):
             p1x, p1y = p2x, p2y
         return inside
 
+    def contains_fort(self, fort):
+        if isinstance(fort, dict):
+            return self.contains(fort["latitude"],fort["longitude"])
+        else:
+            return self.contains(fort.latitude, fort.longitude)
+
     def get_name(self):
         return self.name
 
