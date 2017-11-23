@@ -220,7 +220,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             log.info("Evolvewindow {},egg_active={}, out_of_eggs={}".format(str(time_to_location), str(egg_active), str(out_of_eggs)))
             candy_ = worker.account_info()["candy"]
             for evo in range(0, int(math.ceil(time_to_location / 15))):
-                cm.evolve_one(candy_)
+                cm.evolve_one(candy_, fast=True)
 
         if outer:
             while True:

@@ -76,7 +76,7 @@ class CatchManager(object):
     candy25 = pokemon_data.candy25
     candy50 = pokemon_data.candy50
 
-    def __init__(self, worker, catch_limit, catch_feed_):
+    def __init__(self, worker, catch_limit, catch_feed_, fast=False):
         self.catch_feed = catch_feed_
         self.worker = worker
         self.travel_time = worker.getlayer(TravelTime)
@@ -90,6 +90,7 @@ class CatchManager(object):
         self.pokemon_caught = 0
         self.evolves = 0
         self.evolve_requirement = 180
+        self.fast = fast
 
     def clear_state(self):
         self.processed_encounters = set()
@@ -211,7 +212,7 @@ class CatchManager(object):
         if len(self.transfers) > 40:
             self.do_transfers()
 
-    def evolve_one(self, candy):
+    def evolve_one(self, candy, fast):
         if self.empty_evolve_map():
             log.warn("Nothing more to evolve. Bad for business")
             return
@@ -220,7 +221,7 @@ class CatchManager(object):
         if len(pids) > 0:
             pid = pids[0]
             del pids[0]
-            to_transfer = self.do_evolve(candy, pid, pokemon_id, self.worker)
+            to_transfer = self.do_evolve(candy, pid, pokemon_id, self.worker, fast)
             if to_transfer > 0:
                 self.transfers.append(to_transfer)
                 self.evolves += 1
@@ -256,18 +257,18 @@ class CatchManager(object):
             candy = candy_.get(pokemon_id, 0)
             log.info("{} candy availble for {}".format(str(candy), str(pokemon_id)))
             if pokemon_id in self.candy12 and candy >= 12:
-                this_evolves += self.do_evolve(candy_, pid, pokemon_id, self.worker)
+                this_evolves += self.do_evolve(candy_, pid, pokemon_id, self.worker, self.fast)
             elif pokemon_id in self.candy25 and candy >= 25:
-                this_evolves += self.do_evolve(candy_, pid, pokemon_id, self.worker)
+                this_evolves += self.do_evolve(candy_, pid, pokemon_id, self.worker, self.fast)
             elif pokemon_id in self.candy50 and candy >= 50:
-                this_evolves += self.do_evolve(candy_, pid, pokemon_id, self.worker)
+                this_evolves += self.do_evolve(candy_, pid, pokemon_id, self.worker, self.fast)
             else:
                 transfers.append(pid)
         self.do_transfers()
         return this_evolves
 
     @staticmethod
-    def do_evolve(candy_, pid, pokemon_id, worker):
+    def do_evolve(candy_, pid, pokemon_id, worker, fast):
         evo = worker.do_evolve_pokemon(pid)
         candy = candy_.get(pokemon_id, 0)
         if evo.result != 1:
@@ -275,7 +276,8 @@ class CatchManager(object):
                                                                                  str(pokemon_id)))
         log.info(
             "Enqueing evolved {} for transfer, candy post-evolve {}".format(evo.evolved_pokemon_data.id, str(candy)))
-        time.sleep(17)
+        if not fast:
+            time.sleep(17)
         return evo.evolved_pokemon_data.id
 
     def catch_it(self, pos, to_catch, fast=False):
