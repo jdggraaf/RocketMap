@@ -45,7 +45,7 @@ class CatchConditions:
         result.only_candy = True
         result.only_candy_12 = True
         result.only_unseen = True
-        result.catch_50 = True
+        result.catch_50 = False
         return result
 
     def is_candy_pokemon(self, pokemon_id):
