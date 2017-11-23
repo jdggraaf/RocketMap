@@ -1191,6 +1191,7 @@ class TravelTime(DelegatingPogoService):
         self.use_fast = False
         self.prev_position = None
         self.positioned_at = None
+        self.latency = None
 
     def use_slow_speed(self):
         self.is_fast = False
@@ -1214,6 +1215,7 @@ class TravelTime(DelegatingPogoService):
             return super(TravelTime, self).do_get_map_objects(position)
         finally:
             self.__set_position(position)
+
 
     def do_spin_pokestop(self, fort, step_location):
         self.__sleep_for_account_travel(step_location)
@@ -1283,6 +1285,16 @@ class TravelTime(DelegatingPogoService):
     '''
     Movement 180.310226106m, 16.0884855674s, 11.2074082642 m/s,
     '''
+
+    def do_pokestop_details(self, fort):
+        now = datetime.now()
+        try:
+            return super(TravelTime, self).do_pokestop_details(fort)
+        finally:
+            if not self.latency:
+                self.latency = ((datetime.now() - now).microseconds) / 2
+                log.info("Network latency measured to {} microseonds".format(self.latency))
+
     def __sleep_for_account_travel(self, next_location):
         if not self.prev_position:
             return
