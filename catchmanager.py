@@ -67,6 +67,8 @@ class CatchConditions:
             "Catch conditions for phase {}: catch_anything={}, unseen_catch={}, candy_catch={}, candy12_catch={}".format(
                 str(phase), str(self.catch_anything), str(self.only_unseen), str(self.only_candy), str(self.only_candy_12)))
 
+location_visited = set()  # global state with a minor memory lea
+
 
 class CatchManager(object):
     preferred = {10, 13, 16, 19, 29, 32, 41, 69, 74, 92, 183}
@@ -87,8 +89,10 @@ class CatchManager(object):
         self.processed_encounters = set()
         self.pokemon_caught = 0
         self.evolves = 0
-        self.location_visited = set()
         self.evolve_requirement = 180
+
+    def clear_state(self):
+        self.processed_encounters = set()
 
     def is_map_pokemon(self, location):
         return "MapPokemon" in str(type(location))
@@ -173,9 +177,9 @@ class CatchManager(object):
         discard_all_pokemon(self.worker)  # really simple algo :)
 
     def is_first_at_location(self, pos):
-        if pos in self.location_visited:
+        if pos in location_visited:
             return False
-        self.location_visited.add( pos)
+        location_visited.add( pos)
         return True
 
     def is_within_catch_limit(self):

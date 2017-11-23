@@ -242,7 +242,9 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
                         cm.processed_encounters.add(encounter_id)
 
 
-        did_map_objects = datetime.now() + timedelta(seconds=(travel_time.time_to_location(next_pos))) > wm.next_gmo
+        if time_to_location > 20:
+            cm.clear_state()
+        did_map_objects = datetime.now() + timedelta(seconds=(time_to_location)) > wm.next_gmo
         if did_map_objects:
             map_objects = wm.move_to_with_gmo(next_pos)
         pos_index += 1
