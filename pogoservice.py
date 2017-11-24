@@ -18,7 +18,7 @@ from apiwrapper import ReleasePokemon
 from getmapobjects import cells_with_pokemon_data, can_not_be_seen, nearby_pokemon_from_cell, \
     catchable_pokemon_from_cell, catchable_pokemon
 from management_errors import GaveUpApiAction
-from pogom.account import check_login, TooManyLoginAttempts, LoginSequenceFail
+from pogom.account import check_login, TooManyLoginAttempts, LoginSequenceFail, is_login_required
 from pogom.apiRequests import add_lure, claim_codename, fort_details, fort_search, level_up_rewards, release_pokemon, \
     recycle_inventory_item, set_favourite, gym_get_info, encounter, get_map_objects, use_item_xp_boost, \
     AccountBannedException, evolve_pokemon, use_item_incense
@@ -225,12 +225,11 @@ class Account2(PogoService):
 
     # noinspection PyMissingConstructor
     def __init__(self, username, password, auth_service, args, search_interval,
-                 rest_interval, hash_generator, login_hash_generator, proxy_supplier, db_data, account_manager):
-        self.proxySupplier = proxy_supplier
-        if proxy_supplier is not None:
-            self.current_proxy = proxy_supplier(None)
-        else:
-            self.current_proxy = None
+                 rest_interval, hash_generator, login_hash_generator, ptc_proxy_supplier, niantic_proxy_supplier, db_data, account_manager):
+        self.ptc_proxy_supplier = ptc_proxy_supplier
+        self.niantic_proxy_supplier = niantic_proxy_supplier
+        self.current_ptc_proxy = None
+        self.current_niantic_proxy = None
         self.account_manager = account_manager
         self.most_recent_get_map_objects = None
         self.lures = db_data.get("lures", None)
@@ -335,20 +334,35 @@ class Account2(PogoService):
     def is_banned(self):
         return self.banned
 
+    def __setup_proxy(self):
+        if self.ptc_proxy_supplier is not None:
+            self.current_ptc_proxy = self.ptc_proxy_supplier(None)
+        else:
+            self.current_ptc_proxy = None
+        if self.niantic_proxy_supplier is not None:
+            self.current_niantic_proxy = self.niantic_proxy_supplier(None)
+        else:
+            self.current_niantic_proxy = None
+        log.info("Account {} ptc proxy {} nia proxy {}".format(self.username, self.current_ptc_proxy, self.current_niantic_proxy))
+
+
     def tryallocate(self):
         if not self.allocated and not self.is_resting() and not self.is_banned():  # currently this is guarded by the lock in account manager
             self.allocated = True
             self.allocated_at = datetime.now()
+            self.__setup_proxy()
             return True
-
-    def is_within_existing_alloc_window(self):
-        return self.last_login and datetime.now() < (self.last_login + timedelta(seconds=self.search_interval))
 
     def try_reallocate(self):
         if not self.allocated and not self.is_banned() and self.is_within_existing_alloc_window():  # currently this is guarded by the lock in account manager
             self.allocated = True
+            self.__setup_proxy()
             return True
         return False
+
+    def is_within_existing_alloc_window(self):
+        return self.last_login and datetime.now() < (self.last_login + timedelta(seconds=self.search_interval))
+
 
     def free(self):
         if not self.allocated:
@@ -359,11 +373,14 @@ class Account2(PogoService):
         return not self.is_resting() and not self.is_allocated()
 
     def login(self, position, proceeed=lambda account: True):
+        if not is_login_required(self.pgoApi):
+            return True
+
         self.__update_proxies()
         self.__update_position(position)
         # Activate hashing server
         self.__update_proxies(login=True)
-        result = check_login(self.args, self, self.pgoApi, self.current_proxy, proceeed)
+        result = check_login(self.args, self, self.pgoApi, self.current_ptc_proxy, proceeed)
         if self.warning:
             if self.fail_eager:
                 raise WarnedAccount()
@@ -412,13 +429,16 @@ class Account2(PogoService):
         else:
             self.pgoApi.activate_hash_server(next(self.hash_generator))
 
-        if self.proxySupplier is not None:
-            self.current_proxy = self.proxySupplier(self.current_proxy)
+        if self.ptc_proxy_supplier is not None:
+            self.current_ptc_proxy = self.ptc_proxy_supplier(self.current_ptc_proxy)
 
-            if self.current_proxy is not None:
-                log.debug("Using proxy " + self.current_proxy)
+        if self.niantic_proxy_supplier is not None:
+            self.current_niantic_proxy = self.niantic_proxy_supplier(self.current_niantic_proxy)
+
+            if self.current_niantic_proxy is not None:
+                # log.info("Using NIANTIC proxy " + self.current_niantic_proxy)
                 self.pgoApi.set_proxy(
-                    {'http': self.current_proxy, 'https': self.current_proxy})
+                    {'http': self.current_ptc_proxy, 'https': self.current_ptc_proxy})
 
     @staticmethod
     def timestamp_ms():
@@ -592,6 +612,8 @@ class Account2(PogoService):
                 (self.timestamp_ms() + 3000) + random.random() * 1000
 
     def game_api_event(self, the_lambda, msg):
+        if is_login_required(self.pgoApi):
+            self.login()
         time1 = time.time()
         try:
             return the_lambda()
@@ -669,7 +691,7 @@ class Account2(PogoService):
             'captcha': 0,
             'username': self.username,
             'proxy_display': '',
-            'proxy_url': self.current_proxy,
+            'proxy_url': self.current_ptc_proxy,
         }
 
     def get(self, key, default):

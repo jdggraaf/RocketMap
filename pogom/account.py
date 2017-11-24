@@ -88,17 +88,22 @@ def setup_api(args, status, account):
     return api
 
 
-# Use API to check the login status, and retry the login if possible.
-def check_login(args, account, api, proxy_url, proceed=lambda worker: True):
-    # Logged in? Enough time left? Cool!
+def is_login_required(api):
     if api._auth_provider and api._auth_provider._access_token:
         remaining_time = api._auth_provider._access_token_expiry - time.time()
 
         if remaining_time > 60:
-            log.debug(
-                'Credentials remain valid for another %f seconds.',
-                remaining_time)
-            return True
+            log.debug('Credentials remain valid for another %f seconds.', remaining_time)
+            return False
+    return True
+
+
+
+# Use API to check the login status, and retry the login if possible.
+def check_login(args, account, api, proxy_url, proceed=lambda worker: True):
+    # Logged in? Enough time left? Cool!
+    if not is_login_required(api):
+        return True
 
     # Try to login. Repeat a few times, but don't get stuck here.
     num_tries = 0
@@ -110,6 +115,7 @@ def check_login(args, account, api, proxy_url, proceed=lambda worker: True):
     while num_tries < (args.login_retries + 1):
         try:
             if proxy_url:
+                log.info("Using proxy {} for login".format(str(proxy_url)))
                 api.set_authentication(
                     provider=account['auth_service'],
                     username=account['username'],

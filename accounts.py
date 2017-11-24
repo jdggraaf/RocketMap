@@ -38,11 +38,18 @@ class AccountManager:
         self.name = name
         self.apiHashGenerator = cycle(args.hash_key)
         self.apiLoginHashGenerator = cycle(args.login_hash_key) if args.login_hash_key else None
-        if "proxy" in self.args and self.args.proxy is not None:
-            self.currentproxies = len(self.args.proxy)
-            self.current_cycler = cycle(self.args.proxy)
+        if "proxy" in self.args and (self.args.proxy is not None or self.args.niantic_banned_proxy is not None):
+            self.current_ptc_proxies = self.args.proxy + self.args.niantic_banned_proxy
+            log.info("PTC proxies are {}".format(str(self.current_ptc_proxies)))
+            self.current_ptc_cycler = cycle(self.current_ptc_proxies)
         else:
-            self.currentproxies = None
+            self.current_ptc_proxies = None
+        if "proxy" in self.args and (self.args.proxy is not None or self.args.ptc_banned_proxy is not None):
+            self.current_niantic_proxies = self.args.proxy + self.args.ptc_banned_proxy
+            log.info("NIANTIC proxies are {}".format(str(self.current_niantic_proxies)))
+            self.current_niantic_cycler = cycle(self.current_niantic_proxies)
+        else:
+            self.current_niantic_proxies = None
         self.usingdb = using_db
         self.pos = 0
         self.running = True
@@ -101,7 +108,7 @@ class AccountManager:
         auth = auth_service(account)
 
         created = Account2(username, password, auth, self.args, self.search_interval, self.rest_interval,
-                           self.apiHashGenerator, self.apiLoginHashGenerator, self.proxy_supplier_to_use(), account,
+                           self.apiHashGenerator, self.apiLoginHashGenerator, self.__ptc_proxy_supplier_to_use(), self.__niantic_proxy_supplier_to_use(), account,
                            self)
         return created
 
@@ -110,7 +117,7 @@ class AccountManager:
         for account in accts:
             account = Account2(account["username"], account["password"], auth_service(account), self.args,
                                self.search_interval, self.rest_interval,
-                               self.apiHashGenerator, self.apiLoginHashGenerator, self.proxy_supplier_to_use(), {},
+                               self.apiHashGenerator, self.apiLoginHashGenerator, self.__ptc_proxy_supplier_to_use(), self.__niantic_proxy_supplier_to_use(),  {},
                                self)
             result.append(account)
         return result
@@ -136,16 +143,41 @@ class AccountManager:
         with self.failureLock:
             return self.consecutive_failures > 20
 
-    def proxy_cycler(self):
-        if len(self.args.proxy) != self.currentproxies:
-            self.current_cycler = cycle(self.args.proxy)
-        return self.current_cycler
+    def ptc_proxy_cycler(self):
+        # if len(self.args.proxy) != self.current_ptc_proxies:
+        #    self.current_ptc_cycler = cycle(self.args.proxy)
+        return self.current_ptc_cycler
 
-    def proxy_supplier_to_use(self):
-        if self.currentproxies is None:
+    def niantic_proxy_cycler(self):
+        # if len(self.args.proxy) != self.current_ptc_proxies:
+        #    self.current_ptc_cycler = cycle(self.args.proxy)
+        return self.current_niantic_cycler
+
+    def __ptc_proxy_supplier_to_use(self):
+        if self.current_ptc_proxies is None:
             return None
         else:
-            return self.proxy_supplier
+            return self.ptc_proxy_supplier
+
+    def ptc_proxy_supplier(self, current_proxy):
+        if self.current_ptc_proxies is None:
+            return None
+        if current_proxy not in self.current_ptc_proxies:
+            current_proxy = next(self.ptc_proxy_cycler())
+        return current_proxy
+
+    def __niantic_proxy_supplier_to_use(self):
+        if self.current_niantic_proxies is None:
+            return None
+        else:
+            return self.niantic_proxy_supplier
+
+    def niantic_proxy_supplier(self, current_proxy):
+        if self.current_niantic_proxies is None:
+            return None
+        if current_proxy not in self.current_niantic_proxies:
+            current_proxy = next(self.niantic_proxy_cycler())
+        return current_proxy
 
     def handle_warned(self, pogoservice):
         if self.usingdb:
@@ -163,12 +195,6 @@ class AccountManager:
     def free_count(self):
         return len([s for s in self.accounts if s.is_available()])
 
-    def proxy_supplier(self, current_proxy):
-        if self.currentproxies is None:
-            return None
-        if current_proxy not in self.args.proxy:
-            current_proxy = next(self.proxy_cycler())
-        return current_proxy
 
     def update_initial_inventory(self, account):
         level = account["level"]

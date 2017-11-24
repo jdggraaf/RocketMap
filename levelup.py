@@ -6,7 +6,7 @@ import pokemonhandler
 from accountdbsql import set_account_db_args
 from accounts import *
 from argparser import std_config, load_proxies, add_geofence, add_webhooks, add_search_rest, parse_unicode, \
-    add_threads_per_proxy, add_use_account_db_true
+    add_threads_per_proxy, add_use_account_db_true, setup_proxies
 from argutils import thread_count
 from behaviours import beh_aggressive_bag_cleaning
 from catchmanager import CatchManager, CatchFeed, OneOfEachCatchFeed, Candy12Feed, NoOpFeed, CatchConditions
@@ -17,7 +17,9 @@ from hamburg import xp_route_1
 from hamburg import xp_route_2
 from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops, CountDownLatch, \
     is_array_pokestops
+from pogom.apiRequests import set_goman_hash_endpoint
 from pogom.fnord_altitude import with_gmaps_altitude
+from pogom.proxy import check_proxies
 from pogoservice import TravelTime, ApplicationBehaviour
 from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2
 from scannerutil import install_thread_excepthook, setup_logging, \
@@ -50,6 +52,8 @@ parser.add_argument('-lvl', '--target-level', default=5,
 add_threads_per_proxy(parser)
 parser.add_argument('-st', '--max-stops', default=999,
                     help='Max pokestops for a single session')
+parser.add_argument('-tc', '--thread-count', default=5,
+                    help='Number of threads to use')
 parser.add_argument('-pokemon', '--catch-pokemon', default=0,
                     help='If the levelup should catch pokemon (not recommended)')
 parser.add_argument('-egg', '--use-eggs', default=True,
@@ -66,6 +70,9 @@ parser.add_argument('-am', '--alt-mode', default=False, action='store_true',
                     help='Alt mode')
 parser.add_argument('-ns', '--non-stop', default=False, action='store_true',
                     help='Run without stop')
+parser.add_argument('-rhk', '--overflow-hash-key', default=None,
+                    help='Key for hash server to use when capacity on first is exceeded. May be on the form http://endpoint/key')
+
 add_webhooks(parser)
 add_geofence(parser)
 
@@ -74,9 +81,12 @@ args = parser.parse_args()
 args.player_locale = {'country': 'DE', 'language': 'de', 'timezone': 'Europe/Berlin'}
 args.status_name = args.system_id
 
-load_proxies(args)
+setup_proxies(args)
+
 set_args(args)
 set_account_db_args(args)
+if args.overflow_hash_key:
+    set_goman_hash_endpoint(args.overflow_hash_key)
 
 pokemonhandler.set_args(args)
 
@@ -285,9 +295,9 @@ def do_fast25(thread_num, worker, is_forced_update):
         db_set_system_id(worker.name(), args.final_system_id)
         log.info("Transferred account {} to system-id {}".format(worker.name(), args.final_system_id))
 
-    feeder = PositionFeeder(routes_p2[args.route], is_forced_update)
-    xp_feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
-    do_iterable_point_list(feeder, xp_feeder, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
+    xp_feeder2 = PositionFeeder(xp_p2[args.route], is_forced_update)
+
+    do_iterable_point_list(xp_feeder2, None, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
                            worker, 3, CatchConditions.grind_condition())
 
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
@@ -368,7 +378,7 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
 
 forced_update = create_forced_update_check(args)
 
-nthreads = thread_count(args)
+nthreads = int(args.thread_count)
 log.info("Bot using {} threads".format(str(nthreads)))
 latch = CountDownLatch(nthreads)
 for i in range(nthreads):

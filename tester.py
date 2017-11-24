@@ -3,7 +3,7 @@ from queue import Queue
 
 from accountdbsql import set_account_db_args
 from accounts import *
-from argparser import std_config, load_proxies, add_system_id, add_use_account_db
+from argparser import std_config, load_proxies, add_system_id, add_use_account_db, setup_proxies
 from behaviours import beh_spin_pokestop, beh_spin_pokestop_raw
 from geofence import get_geofences
 from geography import *
@@ -29,7 +29,9 @@ parser = std_config("gymscanner")
 add_system_id(parser)
 add_use_account_db(parser)
 args = parser.parse_args()
-load_proxies(args)
+setup_proxies(args)
+
+
 set_args(args)
 set_account_db_args(args)
 

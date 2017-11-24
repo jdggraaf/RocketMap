@@ -9,13 +9,15 @@ from accountdbsql import set_account_db_args, load_accounts_for_lures
 from accounts import *
 from apiwrapper import CodenameResult
 from argparser import std_config, load_proxies, parse_unicode, add_search_rest, add_webhooks, location_parse, \
-    add_geofence
+    add_geofence, setup_proxies
 from geofence import group_by_geofence
 from geography import *
 from gymdbsql import set_args, pokestops
 from luredbsql import set_lure_db_args, lures, db_move_to_levelup, db_move_to_trash
 from lureworker import LureWorker, FileLureCounter, DbLureCounter
+from pogom.apiRequests import set_goman_hash_endpoint
 from pogom.fnord_altitude import with_gmaps_altitude
+from pogom.proxy import check_proxies
 from scannerutil import install_thread_excepthook, chunks, stop_at_datetime, start_at_datetime, is_blank
 
 logging.basicConfig(
@@ -57,6 +59,8 @@ parser.add_argument('-host', '--host', default="127.0.0.1",
                     help='port for lure dump server')
 parser.add_argument('-p', '--port', default=None,
                     help='port for lure dump server')
+parser.add_argument('-rhk', '--overflow-hash-key', default=None,
+                    help='Key for hash server to use when capacity on first is exceeded. May be on the form http://endpoint/key')
 
 
 app = Flask(__name__, static_url_path='')
@@ -64,7 +68,10 @@ app = Flask(__name__, static_url_path='')
 
 args = parser.parse_args()
 args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Oslo'}
-load_proxies(args)
+setup_proxies(args)
+if args.overflow_hash_key:
+    set_goman_hash_endpoint(args.overflow_hash_key)
+
 set_args(args)
 set_account_db_args(args)
 set_lure_db_args(args)

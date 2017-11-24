@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
 import time
-import datetime
 
 from pgoapi.exceptions import HashingQuotaExceededException, HashingTimeoutException, UnexpectedHashResponseException
-from pgoapi.utilities import f2i, get_cell_ids
 from pgoapi.hash_server import BadHashRequestException, HashingOfflineException
+from pgoapi.utilities import f2i, get_cell_ids
 
 from .transform import jitter_location
 
@@ -16,6 +16,13 @@ log = logging.getLogger(__name__)
 
 class AccountBannedException(Exception):
     pass
+
+goman_endpoint = None
+
+
+def set_goman_hash_endpoint(endpoint):
+    global goman_endpoint
+    goman_endpoint = endpoint
 
 
 def req_call_with_hash_retries(req):
@@ -39,10 +46,14 @@ def req_call_with_hash_retries(req):
                 raise
             time.sleep(10 * attempts)
         except HashingQuotaExceededException:
-            log.warn("Hashing quota exceeded, waiting 20 seconds")
-            if attempts > 5:
-                raise
-            time.sleep(15 * attempts)
+            if goman_endpoint:
+                log.info("using goman endpoint for this operation")
+                req.__parent__.activate_hash_server(goman_endpoint)
+            else:
+                log.warn("Hashing quota exceeded, waiting 20 seconds")
+                if attempts > 5:
+                    raise
+                time.sleep(15 * attempts)
         attempts += 1
 
 
@@ -67,9 +78,9 @@ def send_generic_request(req, account, settings=False, buddy=True, inbox=True):
     hash_attempts = 0
     while True:
         try:
-            resp = req.call(False)
+            resp = req_call_with_hash_retries(req)
             break
-        except HashingOfflineException:
+        except HashingOfflineException:  # todo: port logic  properly
             if hash_attempts > 5:
                 log.error('Hashing server is unreachable, {} attempts, it might be offline.'.format(str(hash_attempts)))
             hash_attempts += 1

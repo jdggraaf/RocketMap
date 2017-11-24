@@ -12,10 +12,17 @@ from accounts import AccountManager
 from argparser import location_parse, load_proxies
 from argutils import thread_count
 from common_blindcheck import check_worker_for_future
+from pogom.proxy import check_proxies
 
 log = logging.getLogger(__name__)
 
 load_proxies(args)
+if args.proxy and not args.proxy_skip_check:
+    fully_ok, ptc_banned_proxies, niantic_banned_proxies = check_proxies(args, args.proxy)
+    args.proxy = fully_ok
+    args.ptc_banned_proxy = ptc_banned_proxies
+    args.niantic_banned_proxy = niantic_banned_proxies
+
 
 
 args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Oslo'}

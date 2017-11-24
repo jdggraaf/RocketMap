@@ -13,6 +13,7 @@ from argutils import thread_count
 from inventory import egg_count, lure_count
 from pogom.account import LoginSequenceFail, TooManyLoginAttempts
 from pogom.apiRequests import AccountBannedException
+from pogom.proxy import check_proxies
 from scannerutil import setup_logging
 from workers import wrap_accounts_minimal
 
@@ -22,6 +23,12 @@ from accountmanager import args
 
 set_account_db_args(args)
 load_proxies(args)
+if args.proxy and not args.proxy_skip_check:
+    fully_ok, ptc_banned_proxies, niantic_banned_proxies = check_proxies(args, args.proxy)
+    args.proxy = fully_ok
+    args.ptc_banned_proxy = ptc_banned_proxies
+    args.niantic_banned_proxy = niantic_banned_proxies
+
 
 
 def set_account_level_from_args(accounts):

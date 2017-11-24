@@ -4,6 +4,8 @@ import configargparse
 import logging
 import re
 
+from pogom.proxy import check_proxies
+
 log = logging.getLogger(__name__)
 
 
@@ -33,6 +35,23 @@ def std_config(name):
     parser.add_argument('-px', '--proxy',
                         help='Proxy url (e.g. socks5://127.0.0.1:9050)',
                         action='append')
+    parser.add_argument('-pxsc', '--proxy-skip-check',
+                        help='Disable checking of proxies before start.',
+                        action='store_true', default=False)
+    parser.add_argument('-pxt', '--proxy-test-timeout',
+                        help='Timeout settings for proxy checker in seconds.',
+                        type=int, default=5)
+    parser.add_argument('-pxc', '--proxy-test-concurrency',
+                        help=('Async requests pool size.'), type=int,
+                        default=0)
+    parser.add_argument('-pxre', '--proxy-test-retries',
+                        help=('Number of times to retry sending proxy ' +
+                              'test requests on failure.'),
+                        type=int, default=0)
+    parser.add_argument('-pxbf', '--proxy-test-backoff-factor',
+                        help=('Factor (in seconds) by which the delay ' +
+                              'until next retry will increase.'),
+                        type=float, default=0.25)
     parser.add_argument('-pxf', '--proxy-file',
                         help=('Load proxy list from text file (one proxy ' +
                               'per line), overrides -px/--proxy.'))
@@ -178,6 +197,18 @@ def basic_std_parser(name):
     parser.add_argument(
         '--db-port', help='Port for the database.', type=int, default=3306)
     return parser
+
+
+def setup_proxies(args):
+    load_proxies(args)
+    if args.proxy and not args.proxy_skip_check:
+        fully_ok, ptc_banned_proxies, niantic_banned_proxies = check_proxies(args, args.proxy)
+        args.proxy = fully_ok
+        args.ptc_banned_proxy = ptc_banned_proxies
+        args.niantic_banned_proxy = niantic_banned_proxies
+    else:
+        args.ptc_banned_proxy = None
+        args.niantic_banned_proxy = None
 
 
 def load_proxies(args):
