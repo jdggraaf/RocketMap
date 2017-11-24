@@ -257,7 +257,6 @@ class Account2(PogoService):
         self.pgoApi = PGoApi(device_info=(generate_device_info(identifier)))
         self.next_get_map_objects = self.timestamp_ms()
         self.next_gym_details = self.timestamp_ms()
-        self.next_encounter = self.timestamp_ms()
         self.last_api = dt.now()
         self.first_login = True
         self.last_location = None
@@ -459,11 +458,6 @@ class Account2(PogoService):
             mssleep = self.next_gym_details - self.timestamp_ms()
             time.sleep(math.ceil(mssleep / float(1000)))
 
-    def __block_for_encounter(self):
-        if self.timestamp_ms() < self.next_encounter:
-            mssleep = self.next_encounter - self.timestamp_ms()
-            time.sleep(math.ceil(mssleep / float(1000)))
-
     def __print_gym(self, gym):
         if gym is None:
             print("Gym is None")
@@ -557,12 +551,10 @@ class Account2(PogoService):
         self.__update_position(step_location)
         self.__login_if_needed()
 
-        self.__block_for_encounter()
         encounter_result2 = self.game_api_event(
             lambda: encounter(self.pgoApi, self.account_info(), encounter_id, spawn_point_id, step_location),
             "encounter {}".format(str(encounter_id)))
 
-        self.next_encounter = (self.timestamp_ms() + 2000) + random.random() * 1000
 
         if self.is_empty_response(encounter_result2, encounter_id):
             log.warn("Payload is " + str(encounter_result2))
