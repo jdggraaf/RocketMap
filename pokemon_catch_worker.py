@@ -244,10 +244,10 @@ class PokemonCatchWorker:
                 # sleep according to flee_count and flee_duration config settings
                 # randomly chooses a number of times to 'show' wobble animation between 1 and flee_count
                 # multiplies this by flee_duration to get total sleep
-                if self.catchsim_flee_count:
-                    duration = (randrange(self.catchsim_flee_count) + 1) * self.catchsim_flee_duration
-                    log.info("Catch failed, sleeping {}".format(str(duration)))
-                    sleep(duration)
+                # if self.catchsim_flee_count:
+                #    duration = (randrange(self.catchsim_flee_count) + 1) * self.catchsim_flee_duration
+                #    log.info("Catch failed, sleeping {}".format(str(duration)))
+                #    sleep(duration)
 
                 continue
 

@@ -40,7 +40,7 @@ def filter_too_close(points):
         current = points[idx]
     return result
 
-def create_one(fence, gpx_filename, target_positions=240, xp_route=False):
+def create_one(fence, gpx_filename, target_positions=220, xp_route=False):
     box_stops = pokestops_in_box(fence.box())
     stops = fence.filter_forts(box_stops)
     add_altitudes(stops)

@@ -68,7 +68,7 @@ for s in x1:
 for s in x2:
     total += len(s[1])
 print "stops"
-for s in x1:
+for s in x2:
     for item in s[1]:
         print '"' + precise_coordinate_string(item) + '",'
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {}, replace_warned=False)
