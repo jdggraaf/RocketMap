@@ -1563,8 +1563,8 @@ class NetworkIssueRetryer(DelegatingPogoService):
                 self.__log_warning("Hashing offline")
                 time.sleep(20)
             except HashingQuotaExceededException:
-                self.__log_warning("Hashing quote exceeded, sleeping for 30 seconds")
-                time.sleep(30)
+                self.__log_warning("Hashing quote exceeded, sleeping for 25 seconds")
+                time.sleep(25)
             except ChunkedEncodingError:
                 '''ignore silently'''
                 break
