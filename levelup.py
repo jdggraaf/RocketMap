@@ -187,7 +187,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             continue
         if sm.reached_limits():
             return
-        wm.use_incense_if_ready()
+        wm.use_incense(force=True)
         if cm.can_start_evolving() and xp_feeder:
             beh_aggressive_bag_cleaning(worker)
             do_iterable_point_list(xp_feeder, None, True, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None,

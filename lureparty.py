@@ -59,7 +59,7 @@ parser.add_argument('-host', '--host', default="127.0.0.1",
                     help='port for lure dump server')
 parser.add_argument('-p', '--port', default=None,
                     help='port for lure dump server')
-parser.add_argument('-rhk', '--overflow-hash-key', default=None,
+parser.add_argument('-ohk', '--overflow-hash-key', default=None,
                     help='Key for hash server to use when capacity on first is exceeded. May be on the form http://endpoint/key')
 
 
