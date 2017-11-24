@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import datetime
 import logging
 import time
-import datetime
 
 from pgoapi.exceptions import HashingQuotaExceededException, HashingTimeoutException, UnexpectedHashResponseException
-from pgoapi.utilities import f2i, get_cell_ids
 from pgoapi.hash_server import BadHashRequestException, HashingOfflineException
+from pgoapi.utilities import f2i, get_cell_ids
 
 from .transform import jitter_location
 
@@ -67,9 +67,9 @@ def send_generic_request(req, account, settings=False, buddy=True, inbox=True):
     hash_attempts = 0
     while True:
         try:
-            resp = req.call(False)
+            resp = req_call_with_hash_retries(req)
             break
-        except HashingOfflineException:
+        except HashingOfflineException:  # todo: port logic  properly
             if hash_attempts > 5:
                 log.error('Hashing server is unreachable, {} attempts, it might be offline.'.format(str(hash_attempts)))
             hash_attempts += 1

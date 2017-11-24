@@ -23,6 +23,8 @@ check_result_timeout = 4
 check_result_exception = 5
 check_result_empty = 6
 check_result_max = 6  # Should be equal to maximal return code.
+check_result_banned_ptc = 8
+check_result_banned_niantic = 9
 
 
 # Evaluates the status of PTC and Niantic request futures, and returns the
@@ -64,7 +66,7 @@ def get_proxy_test_status(proxy, future_ptc, future_niantic):
 
     if niantic_status == 200 and ptc_status == 200:
         log.debug('Proxy %s is ok.', proxy)
-    elif (niantic_status in banned_status_codes or
+    elif (niantic_status in banned_status_codes and
           ptc_status in banned_status_codes):
         proxy_error = ('Proxy {} is banned -'
                        + ' got PTC status code: {}, Niantic status'
@@ -72,6 +74,12 @@ def get_proxy_test_status(proxy, future_ptc, future_niantic):
                                               ptc_status,
                                               niantic_status)
         check_result = check_result_banned
+    elif niantic_status in banned_status_codes:
+        proxy_error = ('Proxy {} is NIANTIC banned - Niantic status' + ' code: {}.').format(proxy, niantic_status)
+        check_result = check_result_banned_niantic
+    elif ptc_status in banned_status_codes:
+        proxy_error = 'Proxy {} is banned - got PTC status code: {}.'.format(proxy, ptc_status)
+        check_result = check_result_banned_ptc
     else:
         proxy_error = ('Wrong status codes -'
                        + ' PTC: {},'
@@ -84,7 +92,7 @@ def get_proxy_test_status(proxy, future_ptc, future_niantic):
     ptc_response.close()
     niantic_response.close()
 
-    return (proxy_error, check_result)
+    return proxy_error, check_result
 
 
 # Requests to send for testing, which returns futures for Niantic and PTC.
@@ -198,6 +206,8 @@ def check_proxies(args, proxies):
     # List to hold background workers.
     proxy_queue = []
     working_proxies = []
+    ptc_banned_proxies = []
+    niantic_banned_proxies = []
     show_warnings = total_proxies <= 10
 
     log.info('Checking %d proxies...', total_proxies)
@@ -225,7 +235,13 @@ def check_proxies(args, proxies):
 
         check_results[result] += 1
 
-        if error:
+        if result == check_result_banned_ptc:
+            log.warning(error)
+            ptc_banned_proxies.append( proxy)
+        elif result == check_result_banned_niantic:
+            log.warning(error)
+            niantic_banned_proxies.append(proxy)
+        elif error:
             # Decrease output amount if there are a lot of proxies.
             if show_warnings:
                 log.warning(error)
@@ -252,7 +268,7 @@ def check_proxies(args, proxies):
                  other_fails,
                  total_proxies)
 
-        return working_proxies
+        return working_proxies, ptc_banned_proxies, niantic_banned_proxies
 
 
 # Thread function for periodical proxy updating.
@@ -265,7 +281,7 @@ def proxies_refresher(args):
             proxies = load_proxies(args)
 
             if not args.proxy_skip_check:
-                proxies = check_proxies(args, proxies)
+                proxies = check_proxies(args, proxies)[0]
 
             # If we've arrived here, we're guaranteed to have at least one
             # working proxy. check_proxies stops the process if no proxies

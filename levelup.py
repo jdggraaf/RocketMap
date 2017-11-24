@@ -18,6 +18,7 @@ from hamburg import xp_route_2
 from levelup_tools import get_pos_to_use, is_plain_coordinate, is_encounter_to, exclusion_pokestops, CountDownLatch, \
     is_array_pokestops
 from pogom.fnord_altitude import with_gmaps_altitude
+from pogom.proxy import check_proxies
 from pogoservice import TravelTime, ApplicationBehaviour
 from pokestoproutesv2 import routes_p1, initial_grind, initial_130_stops, routes_p2, xp_p1, xp_p2
 from scannerutil import install_thread_excepthook, setup_logging, \
@@ -75,6 +76,10 @@ args.player_locale = {'country': 'DE', 'language': 'de', 'timezone': 'Europe/Ber
 args.status_name = args.system_id
 
 load_proxies(args)
+if args.proxy and not args.proxy_skip_check:
+    fully_ok, ptc_banned_proxies, niantic_banned_proxies = check_proxies(args, args.proxy)
+    args.proxy = fully_ok
+
 set_args(args)
 set_account_db_args(args)
 
