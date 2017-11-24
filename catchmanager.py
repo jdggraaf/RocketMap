@@ -214,7 +214,6 @@ class CatchManager(object):
 
     def evolve_one(self, candy, fast):
         if self.empty_evolve_map():
-            log.warn("Nothing more to evolve. Bad for business")
             return
 
         pokemon_id, pids = self.evolve_map.popitem()
