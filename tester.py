@@ -65,7 +65,10 @@ for s in x1:
     total += len(s[1])
 for s in x2:
     total += len(s[1])
-
+print "stops"
+for s in x1:
+    for item in s[1]:
+        print '"' + precise_coordinate_string(item) + '",'
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {}, replace_warned=False)
 l5account = account_manager.add_account({"username":"g0g3m3sh89863","password":"kt#9r&MnG","provider":"ptc"})
 #l5account = account_manager.add_account({"username":"g0g3m3sh89615","password":"x@WtEnv6n","provider":"ptc"})

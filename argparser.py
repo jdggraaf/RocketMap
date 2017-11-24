@@ -221,10 +221,14 @@ def location(args):
     else:
         raise ValueError("need numeric gps coordinates")
 
+triple_coord = re.compile("^(\-?\d+\.\d+),?\s?(\-?\d+\.\d+),?\s?(\-?\d+\.\d+)$")
 def location_parse(loc):
     if loc is None:
         return None
     # Use lat/lng directly if matches such a pattern.
+    res = triple_coord.match(loc)
+    if res:
+        return float(res.group(1)), float(res.group(2)), float(res.group(3))
     prog = re.compile("^(\-?\d+\.\d+),?\s?(\-?\d+\.\d+)$")
     res = prog.match(loc)
     if res:
