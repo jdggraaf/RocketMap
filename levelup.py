@@ -291,14 +291,20 @@ def do_fast25(thread_num, worker, is_forced_update):
     feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
     do_iterable_point_list(feeder, None, True, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
                            worker, 1, CatchConditions.everything_condition())
+
+    if not sm.reached_limits():
+        xp_feeder2 = PositionFeeder(xp_p2[args.route], is_forced_update)
+        do_iterable_point_list(xp_feeder2, None, True, False, global_catch_feed, cm, sm, wm, thread_num, travel_time,
+                               worker, 3, CatchConditions.everything_condition())
+
+    if not sm.reached_limits():
+        last_feeder = PositionFeeder(routes_p2[args.route], is_forced_update)
+        do_iterable_point_list(last_feeder, None, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
+                               worker, 3, CatchConditions.grind_condition())
+
     if args.final_system_id:
         db_set_system_id(worker.name(), args.final_system_id)
         log.info("Transferred account {} to system-id {}".format(worker.name(), args.final_system_id))
-
-    xp_feeder2 = PositionFeeder(xp_p2[args.route], is_forced_update)
-
-    do_iterable_point_list(xp_feeder2, None, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
-                           worker, 3, CatchConditions.grind_condition())
 
     log.info("Reached end of route with {} spins, going to rest".format(str(len(sm.spun_stops))))
 
