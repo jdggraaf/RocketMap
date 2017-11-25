@@ -19,7 +19,7 @@ api_timings = {
         "fort_details": 125,
         "fort_search": 100,
         "get_map_objects": 0,
-        "encounter": 200,
+        "encounter": 250,
         "recycle_inventory_item": 200,
         "level_up_rewards" : 20,
         "use_item_xp_boost" : 20
@@ -60,7 +60,7 @@ api_timings = {
         "catch_pokemon": 22
     },
     "catch_pokemon": {
-        "catch_pokemon": 100,
+        "catch_pokemon": 200,
         "release_pokemon": 100,
         "get_map_objects": 20,
         "use_item_encounter" : 20,
