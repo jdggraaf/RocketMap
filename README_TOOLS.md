@@ -155,8 +155,8 @@ levelUp
 =========
 
 Effectively bring accounts to a level 5/20/30 by looting pokestops and catching pokemon at a predefined set of locations,
-repeatedly if necessary. Not relly many config options. With double xp the fast-levelup flag should be used, optionally
-  also the "non-stop" flag to run until all accounts are don.
+repeatedly if necessary. Not relly many config options. With double xp the "fast-levelup" flag should be used, optionally
+  also the "non-stop" flag to run until all accounts are done. The sample config in the config folder is optimal.
 
 Usage: levelUp accountfile
 
