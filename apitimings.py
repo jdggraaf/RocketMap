@@ -19,7 +19,7 @@ api_timings = {
         "fort_details": 125,
         "fort_search": 100,
         "get_map_objects": 0,
-        "encounter": 100,
+        "encounter": 200,
         "recycle_inventory_item": 200,
         "level_up_rewards" : 20,
         "use_item_xp_boost" : 20
@@ -28,7 +28,7 @@ api_timings = {
         "get_map_objects": 100,
         "recycle_inventory_item": 250,
         "encounter": 80,
-        "fort_search" : 100,
+        "fort_search" : 200,
         "fort_details": 20,
         "use_item_xp_boost" : 200
     },
@@ -64,7 +64,7 @@ api_timings = {
         "release_pokemon": 100,
         "get_map_objects": 20,
         "use_item_encounter" : 20,
-        "encounter" : 260,
+        "encounter" : 300,
         "fort_details" :20,
         "level_up_rewards" : 20
 
