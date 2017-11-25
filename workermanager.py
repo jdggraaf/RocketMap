@@ -113,9 +113,9 @@ class WorkerManager(object):
                 self.worker.do_use_lucky_egg()
                 if self.first_egg:
                     self.first_egg = False
-                    self.next_egg = datetime.now() + timedelta(minutes=60)
+                    self.next_egg = datetime.now() + timedelta(minutes=80)
                 else:
-                    self.next_egg = datetime.now() + timedelta(minutes=40)
+                    self.next_egg = datetime.now() + timedelta(minutes=50)
                 db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
         return egg_active
 
