@@ -92,7 +92,6 @@ class WorkerManager(object):
     def has_egg(self):
         return has_lucky_egg(self.worker)
 
-
     def is_out_of_eggs_before_l30(self):
         return not has_lucky_egg(self.worker) and self.level > 25
 
@@ -116,7 +115,7 @@ class WorkerManager(object):
                     self.first_egg = False
                     self.next_egg = datetime.now() + timedelta(minutes=60)
                 else:
-                    self.next_egg = datetime.now() + timedelta(minutes=30)
+                    self.next_egg = datetime.now() + timedelta(minutes=40)
                 db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
         return egg_active
 
