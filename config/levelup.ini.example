@@ -13,12 +13,12 @@ system-id: levelup-bot
 # legal routes are amsterdam
 route: copenhagen
 proxy-file: proxies.txt
-# default threads is 5. Dont go above 7 or you'll get bans
-threads-per-proxy: 7
+# default threads is 5. Dont go above 7 per proxy or you'll get bans
+thread-count: 50
 # default level is 5
 target-level: 20
 final-system-id: lures
 # run levelup in fast mode to reach 20/25 as quickly as possible
-#fast-levelup
+fast-levelup
 # run until we're out of fresh accounts withthe non-stop flag
-#non-stop
+non-stop
