@@ -154,20 +154,14 @@ Usage: pokestops
 levelUp
 =========
 
-Effectively bring accounts to a level 5 by looting pokestops and catching pokemon at a predefined set of locations,
-repeatedly if necessary. Cycles through ALL accounts before repeating initial, giving just a few minutes for each 
-botting session. Will reach level 5 in 2 cycles if 5-6 locations are defined.
+Effectively bring accounts to a level 5/20/30 by looting pokestops and catching pokemon at a predefined set of locations,
+repeatedly if necessary. Not relly many config options. With double xp the fast-levelup flag should be used, optionally
+  also the "non-stop" flag to run until all accounts are don.
 
 Usage: levelUp accountfile
 
 Make sure levelup.ini.exmple is moved from "config" folder to "RocketMap" folder and fill in correct values.
 
-
-The config file contains a set of SPACE separate gps coordinates where your accounts will be leveled to level 5. Give it a few thousand accounts and a night
-The locations should be somewhere with access to pokestops and a reasonable amount of pokemons. Make sure they are not too
-far apart. 5-6 locations should be enough. Please also make sure there are no extra spaces in the "locations" setting :)
-
-Blindcheck needs this database table:
 
 
 Also note if you run multiple instances of the bot they should have different names in levelup.ini, since the accounts in
