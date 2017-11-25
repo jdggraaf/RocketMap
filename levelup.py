@@ -152,7 +152,7 @@ def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eg
         egg_active = wm.has_active_lucky_egg()
         if has_egg and not egg_active and num_eggs > 0:
             num_eggs -= 1
-            wm.use_egg(force=True)
+            wm.use_egg()
 
         player_location = route_element[0]
         next_pos = next_route_element[0]
@@ -193,7 +193,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             do_iterable_point_list(xp_feeder, None, True, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None,
                                    travel_time, worker, phase, catch_condition, outer=False)
 
-        egg_active = wm.use_egg_if_ready(cm, force=xp_boost_phase)
+        egg_active = wm.use_egg(cm)
         emergency_catch_out_of_evolves = egg_active and cm.empty_evolve_map()
         use_fast = egg_active and spin_evolve_with_egg and not emergency_catch_out_of_evolves
         # log.info("use_fast={}, egg_active={}, spin_evolve_with_egg={}, emergency_catch_out_of_evolves={}".format(str(use_fast), str(egg_active), str(spin_evolve_with_egg), str(emergency_catch_out_of_evolves)))

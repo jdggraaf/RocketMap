@@ -19,7 +19,7 @@ class WorkerManager(object):
         self.worker = worker
         self.travel_time = worker.getlayer(TravelTime)
         self.use_eggs = use_eggs
-        self.next_egg = datetime.now() + timedelta(minutes=120) if use_eggs else datetime.now() + timedelta(days=365)
+        self.next_egg = datetime.now()  # todo fix later
         self.next_incense = datetime.now()
         self.level = None
         self.target_level = target_level
@@ -98,20 +98,13 @@ class WorkerManager(object):
     def has_lucky_egg(self):
         return has_lucky_egg(self.worker)
 
-    def use_egg_if_ready(self, cm, force=False):
+    def use_egg(self, cm):
         has_egg = self.has_lucky_egg()
         egg_active = self.has_active_lucky_egg()
         evolving_possible = not cm or cm.can_start_evolving()
-        # log.info(
-        #    "UseEgg: Egg_active={},has_egg={},can_start_evolving{}, next_egg={}".format(str(egg_active), str(has_egg),
-        #                                                                                str(evolving_possible),
-        #                                                                                str(self.next_egg)))
+        previous_egg_expired = (datetime.now() > self.next_egg)
 
-        if not egg_active and has_egg:
-            if force:
-                self.worker.do_use_lucky_egg()
-                self.next_egg = datetime.now() + timedelta(minutes=30)
-                db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
+        if not egg_active and has_egg and previous_egg_expired:
             if evolving_possible:
                 self.worker.do_use_lucky_egg()
                 self.next_egg = datetime.now() + timedelta(minutes=90)
@@ -124,15 +117,6 @@ class WorkerManager(object):
 
     def explain(self):
         log.info("incenses={}, has_active_incense={}, next_incense={}, eggs={}, has_active_egg={}, next_egg={}".format(str(incense_count(self.worker)), str(self.has_active_incense()), str(self.next_incense), str(egg_count(self.worker)),str(self.has_active_lucky_egg()),str(self.next_egg)))
-
-    def use_egg(self, force=False):
-        has_egg = has_lucky_egg(self.worker)
-        egg_active = self.has_active_lucky_egg()
-        if not egg_active and (force or datetime.now() > self.next_egg) and has_egg:
-            self.worker.do_use_lucky_egg()
-            self.next_egg = datetime.now() + timedelta(minutes=90)
-            db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
-        return egg_active
 
     def use_incense_if_ready(self):
         if has_incense(self.worker) and not self.has_active_incense() and not self.has_active_lucky_egg() and self.next_incense > datetime.now():
