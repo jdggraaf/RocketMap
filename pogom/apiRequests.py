@@ -39,7 +39,7 @@ def req_call_with_hash_retries(req):
             log.warning("UnexpectedHashResponseException")
             if attempts > 5:
                 raise
-            time.sleep(10 * attempts)
+            time.sleep(1.5 * attempts)
         except HashingOfflineException:
             log.warning("Hashing offline")
             if attempts > 5:
