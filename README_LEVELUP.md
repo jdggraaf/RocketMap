@@ -8,6 +8,7 @@ The sample config in the config folder is optimal.
 Installing
 -------
 Only mysql is supported.
+
 Database schema is located at https://github.com/ShuckleHQ/RocketMap/blob/develop/database_scripts.md
 
 Assuming you have cloned into foobar/rm and your current directory is foobar. Copy rm/config/levelup.ini.example to levelup.ini, modify as appropriate
