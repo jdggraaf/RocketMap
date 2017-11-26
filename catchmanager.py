@@ -110,6 +110,7 @@ class CatchManager(object):
         log.info("{} pokemon in map_objects: {}".format(str(len(catch_list)), pokemon_names([x[1] for x in catch_list])))
         while len(catch_list) > 0:
             to_catch = catch_list[0][1]
+            print str(to_catch)
             encounter_id = to_catch.encounter_id
             pokemon_id = to_catch.pokemon_id
 
