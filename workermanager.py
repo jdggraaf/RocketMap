@@ -11,8 +11,6 @@ from inventory import has_lucky_egg, egg_count, has_incense, incense_count
 from pogoservice import TravelTime
 from scannerutil import setup_logging, equi_rect_distance_m
 
-setup_logging()
-
 
 class WorkerManager(object):
     def __init__(self, worker, use_eggs, target_level):

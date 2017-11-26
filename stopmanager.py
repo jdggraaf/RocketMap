@@ -7,9 +7,7 @@ from geography import *
 from inventory import inventory
 from scannerutil import setup_logging, nice_number_2
 
-setup_logging()
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 
 class StopManager(object):

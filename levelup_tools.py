@@ -1,15 +1,14 @@
 import logging
 import numbers
+import threading
 
 from geography import step_position, chunk_box, is_inside_box, move_in_direction_of
 from pokestopModel import find_largest_groups
 from pokestoproutesv2 import routes_p1
 from scannerutil import setup_logging, precise_coordinate_string, full_precision_coordinate_string, equi_rect_distance_m
 
-setup_logging()
 log = logging.getLogger(__name__)
 
-import threading
 
 
 class CountDownLatch(object):

@@ -7,13 +7,7 @@ from gymdbsql import spawnpoints_in_box
 from scannerutil import equi_rect_distance_m
 from spawnpoint import SpawnPoint
 
-logging.basicConfig(
-    format='%(asctime)s [%(threadName)12s][%(module)10s][%(levelname)8s] ' +
-           '%(message)s', level=logging.INFO)
 log = logging.getLogger(__name__)
-logging.getLogger("pgoapi").setLevel(logging.WARN)
-logging.getLogger("connectionpool").setLevel(logging.WARN)
-logging.getLogger("Account").setLevel(logging.INFO)
 
 
 class Pokestop:

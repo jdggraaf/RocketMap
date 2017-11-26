@@ -10,7 +10,7 @@ from pogoservice import TravelTime
 from pokemon_data import pokemon_name
 from scannerutil import setup_logging, equi_rect_distance_m
 
-setup_logging()
+# setup_logging()
 log = logging.getLogger("catchmgr")
 log.setLevel(logging.DEBUG)
 
