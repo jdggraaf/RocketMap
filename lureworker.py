@@ -69,7 +69,7 @@ class LureWorker(object):
        Use with multiple positions to quickly empty account for lures
     """
 
-    def __init__(self, account_manager, brander, deploy_more_lures, lure_counter):
+    def __init__(self, account_manager, brander, deploy_more_lures, lure_counter, lure_duration):
         self.account_manager = account_manager
         self.brander = brander
         self.collected = {}
@@ -82,6 +82,7 @@ class LureWorker(object):
         self.lure_counter = lure_counter
         self.next_lure_at = {}
         self.location_pokestop = {}
+        self.lure_duration_minutes = lure_duration
 
     def replace_worker(self, new_worker):
         self.worker = new_worker

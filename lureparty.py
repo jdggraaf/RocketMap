@@ -8,7 +8,7 @@ from queue import Queue
 from accountdbsql import set_account_db_args, load_accounts_for_lures
 from accounts import *
 from apiwrapper import CodenameResult
-from argparser import std_config, load_proxies, parse_unicode, add_search_rest, add_webhooks, location_parse, \
+from argparser import std_config, parse_unicode, add_search_rest, add_webhooks, location_parse, \
     add_geofence, setup_proxies
 from geofence import group_by_geofence
 from geography import *
@@ -42,6 +42,8 @@ parser.add_argument('-bn', '--base-name', default=None, action='append',
                     help='Base name(s) of accounts for branding')
 parser.add_argument('-nl', '--num-lures', default=24,
                     help='Number of lures to place before exiting')
+parser.add_argument('-nl', '--lure-duration', default=30,
+                    help='The number of minutes lures last')
 parser.add_argument('-b64', '--base64', default=False,
                     help='Use base64 with number')
 parser.add_argument('-stop', '--stop-at', default=None,
@@ -225,7 +227,7 @@ def safe_lure_one_json_worker(json_location, route_section, counter):
         else:
             log.info("{} running until {}".format(name_, stop_time))
             try:
-                ld = LureWorker(account_manager, fix_branding, lambda lure_dropped: datetime.now() < stop_time, counter)
+                ld = LureWorker(account_manager, fix_branding, lambda lure_dropped: datetime.now() < stop_time, counter,  args.lure_duration)
                 as_coordinates = [location_parse(x) for x in route_section]
                 ld.lure_json_worker_positions(as_coordinates)
                 time.sleep(60)
@@ -264,7 +266,7 @@ def lure_bomb_get(user, position, minutes, radius=50):
     remaining_lures = max_lures - current_lures
     if max_lures <= current_lures:
         return "All {} lures are spent".format(lures1.max_lures)
-    ld = LureWorker(account_manager, fix_branding, should_continue(int(minutes)), DbLureCounter(user))
+    ld = LureWorker(account_manager, fix_branding, should_continue(int(minutes)), DbLureCounter(user), args.lure_duration)
     a_thread = Thread(target=lambda: ld.lure_bomb(pos, radius))
     a_thread.start()
     db_move_to_levelup(args.system_id, "forlevelup")
