@@ -31,7 +31,7 @@ Usage:
 nohup levelUp &
 ```
 
-Log output is written to a log file called with <system-id>.log
+Log output is written to a log file called [system-id].log
 
 ```
 grep XP <logfile> | grep bot-2] | grep XP | less
@@ -59,3 +59,5 @@ idx=57 position in route
 Also note if you run multiple instances of the bot they should have different names in levelup.ini, since the accounts in
 the database are attached through the "owner" field
 
+
+Only use fresh L0 accounts to avoid problems with prior bans/shadowbans affecting the botting process.
