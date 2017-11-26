@@ -25,6 +25,7 @@ class WorkerManager(object):
         self.next_gmo = datetime.now()
         self.fast_egg = False
         self.first_egg = True
+        self.egg_number = 0
 
     def player_level(self):
         level_ = self.worker.account_info()["level"]
@@ -105,15 +106,17 @@ class WorkerManager(object):
         if not egg_active and has_egg and previous_egg_expired:
             if evolving_possible:
                 self.worker.do_use_lucky_egg()
+                self.egg_number += 1
                 self.next_egg = datetime.now() + timedelta(minutes=90)
                 db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
             elif self.fast_egg:
                 self.worker.do_use_lucky_egg()
+                self.egg_number += 1
                 if self.first_egg:
                     self.first_egg = False
                     self.next_egg = datetime.now() + timedelta(minutes=80)
                 else:
-                    self.next_egg = datetime.now() + timedelta(minutes=50)
+                    self.next_egg = datetime.now() + timedelta(minutes=55)
                 db_set_egg_count(self.worker.account_info().username, egg_count(self.worker))
         return egg_active
 
