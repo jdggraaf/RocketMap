@@ -335,7 +335,7 @@ def rpc_login_sequence(args, api, account, proceed):
     try:  # 7 - Make an empty request to retrieve store items.
         req = api.create_request()
         req.get_store_items()
-        req.call(False)
+        req_call_with_hash_retries(req)
 
         total_req += 1
         time.sleep(random.uniform(.6, 1.1))
