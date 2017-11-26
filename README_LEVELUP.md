@@ -29,7 +29,7 @@ rm/bin/loadAccounts accountsfile.txt --system-id=your-bot-system-id
 Usage:
 ```
 nohup levelUp >logfile.txt &
-``
+```
 
 ```
 grep XP <logfile> | grep bot-2] | grep XP | less
