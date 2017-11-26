@@ -18,6 +18,9 @@ from requests.packages.urllib3.util.retry import Retry
 def setup_logging(file_name=None):
     if not file_name:
         file_name ="log.out"
+    else:
+        file_name += ".log"
+    print("Logging to {}".format( file_name))
     logging.basicConfig(
         format='%(asctime)s [%(threadName)12s][%(module)13s][%(levelname)8s][%(relativeCreated)d] ' +
                '%(message)s', filename=file_name, level=logging.INFO)

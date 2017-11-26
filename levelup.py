@@ -72,8 +72,8 @@ add_geofence(parser)
 
 args = parser.parse_args()
 setup_logging(args.system_id)
-logging.getLogger("pogoservice").setLevel(logging.DEBUG)
 
+logging.getLogger("pogoservice").setLevel(logging.DEBUG)
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
