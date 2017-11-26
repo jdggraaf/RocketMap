@@ -15,10 +15,12 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-def setup_logging():
+def setup_logging(file_name=None):
+    if not file_name:
+        file_name ="log.out"
     logging.basicConfig(
         format='%(asctime)s [%(threadName)12s][%(module)13s][%(levelname)8s][%(relativeCreated)d] ' +
-               '%(message)s', level=logging.INFO)
+               '%(message)s', filename=file_name, level=logging.INFO)
     logging.getLogger("pgoapi").setLevel(logging.WARN)
     logging.getLogger("connectionpool").setLevel(logging.WARN)
     logging.getLogger("Account").setLevel(logging.INFO)

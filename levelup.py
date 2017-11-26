@@ -28,12 +28,6 @@ from stopmanager import StopManager
 from workermanager import WorkerManager, PositionFeeder
 from workers import wrap_account_no_replace
 
-setup_logging()
-logging.getLogger("pogoservice").setLevel(logging.DEBUG)
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-
 parser = std_config("levelup_default")
 add_search_rest(parser)
 add_use_account_db_true(parser)
@@ -77,6 +71,13 @@ add_webhooks(parser)
 add_geofence(parser)
 
 args = parser.parse_args()
+setup_logging(args.system_id)
+logging.getLogger("pogoservice").setLevel(logging.DEBUG)
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
+
 
 args.player_locale = {'country': 'DE', 'language': 'de', 'timezone': 'Europe/Berlin'}
 args.status_name = args.system_id
