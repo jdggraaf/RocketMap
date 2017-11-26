@@ -28,8 +28,10 @@ rm/bin/loadAccounts accountsfile.txt --system-id=your-bot-system-id
 
 Usage:
 ```
-nohup levelUp >logfile.txt &
+nohup levelUp &
 ```
+
+Log output is written to a log file called with <system-id>.log
 
 ```
 grep XP <logfile> | grep bot-2] | grep XP | less
