@@ -306,7 +306,7 @@ class LureWorker(object):
                 self.inventory[501] -= 1
                 log.info("Added lure to pokestop {}".format(pokestop_name))
                 self.lure_counter.use_lure()
-                self.next_lure_at[pos] = datetime.datetime.now() + datetime.timedelta(minutes=30)
+                self.next_lure_at[pos] = datetime.datetime.now() + datetime.timedelta(minutes=self.lure_duration_minutes)
 
                 self.should_run(lure_dropped=True)
                 return True
