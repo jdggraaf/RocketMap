@@ -42,7 +42,7 @@ parser.add_argument('-bn', '--base-name', default=None, action='append',
                     help='Base name(s) of accounts for branding')
 parser.add_argument('-nl', '--num-lures', default=24,
                     help='Number of lures to place before exiting')
-parser.add_argument('-nl', '--lure-duration', default=30,
+parser.add_argument('-lurdur', '--lure-duration', default=30,
                     help='The number of minutes lures last')
 parser.add_argument('-b64', '--base64', default=False,
                     help='Use base64 with number')

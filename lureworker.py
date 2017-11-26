@@ -13,9 +13,6 @@ from pogom.account import LoginSequenceFail
 from pogoservice import CaptchaRequired, NetworkIssueRetryer
 from workers import wrap_account_no_replace
 
-logging.basicConfig(
-    format='%(asctime)s [%(threadName)12s][%(module)10s][%(levelname)8s] ' +
-           '%(message)s', level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
