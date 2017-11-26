@@ -127,8 +127,8 @@ class WorkerManager(object):
             self.next_incense = datetime.now() + timedelta(minutes=30)
             self.worker.do_use_incense()
 
-    def use_incense(self, force=False):
-        if has_incense(self.worker) and not self.has_active_incense() and (force or self.next_incense > datetime.now()):
+    def use_incense(self):
+        if has_incense(self.worker) and not self.has_active_incense() and self.next_incense > datetime.now():
             self.next_incense = datetime.now() + timedelta(minutes=30)
             self.worker.do_use_incense()
 
