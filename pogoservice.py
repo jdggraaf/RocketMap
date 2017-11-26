@@ -605,7 +605,7 @@ class Account2(PogoService):
 
     def game_api_event(self, the_lambda, msg):
         if is_login_required(self.pgoApi):
-            self.login()
+            self.login(self.most_recent_position())
         time1 = time.time()
         try:
             return the_lambda()
