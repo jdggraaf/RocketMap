@@ -12,6 +12,12 @@ Database schema is located at https://github.com/ShuckleHQ/RocketMap/blob/develo
 
 Assuming you have cloned into foobar/rm and your current directory is foobar. Copy rm/config/levelup.ini.example to levelup.ini, modify as appropriate
 
+go into foobar/rm and run
+
+```
+pip install -r requirements.txt --upgrade
+```
+
 
 Run 
 ```
