@@ -1280,7 +1280,6 @@ class TravelTime(DelegatingPogoService):
     def __priv_time_to_location(self, location):
         if not self.prev_position:
             return 0
-        distance = equi_rect_distance_m(self.prev_position, location)
         seconds_since_last_use = dt.now() - self.positioned_at
         fast = False
         remaining_m, time_r = self.__calc_time(distance, seconds_since_last_use, self.slow_speed)

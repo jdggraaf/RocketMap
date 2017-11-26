@@ -18,16 +18,7 @@ from lureworker import LureWorker, FileLureCounter, DbLureCounter
 from pogom.apiRequests import set_goman_hash_endpoint
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogom.proxy import check_proxies
-from scannerutil import install_thread_excepthook, chunks, stop_at_datetime, start_at_datetime, is_blank
-
-logging.basicConfig(
-    format='%(asctime)s [%(threadName)12s][%(module)10s][%(levelname)8s] ' +
-           '%(message)s', level=logging.INFO)
-log = logging.getLogger(__name__)
-logging.getLogger("pgoapi").setLevel(logging.WARN)
-logging.getLogger("pogoservice").setLevel(logging.INFO)
-logging.getLogger("connectionpool").setLevel(logging.WARN)
-logging.getLogger("Account").setLevel(logging.INFO)
+from scannerutil import install_thread_excepthook, chunks, stop_at_datetime, start_at_datetime, is_blank, setup_logging
 
 '''
 Schema changes:
@@ -68,6 +59,8 @@ app = Flask(__name__, static_url_path='')
 
 args = parser.parse_args()
 args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Oslo'}
+
+setup_logging(args.system_id)
 setup_proxies(args)
 if args.overflow_hash_key:
     set_goman_hash_endpoint(args.overflow_hash_key)
