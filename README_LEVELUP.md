@@ -44,7 +44,7 @@ Will give you somethung like this (note the square bracket after 2 to diffrentia
 2017-11-25 16:38:47,692 [       bot-2][  stopmanager][    INFO][2067705] P1L21, 146S/121P//R0.83, 8E/2EW, 289780XP/260900@30minH, 0S@30min. idx=57, 199929 hash
 ```
 
-``
+```
 P1L21 = Phase 1 Level 21
 146S/121P = 146 stops spinned, 121 pokemon caught
 R = stop/spin ratio
