@@ -65,7 +65,7 @@ class StopManager(object):
         thirty_minutes_ago = datetime.now() - timedelta(minutes=30)
         self.spin_timestamps = [x for x in self.spin_timestamps if x > thirty_minutes_ago]
 
-    def log_status(self, egg_active, has_egg, index, phase):
+    def log_status(self, egg_active, has_egg, egg_number, index, phase):
         if datetime.now() > self.log_xp_at:
             self.log_xp_at = datetime.now().replace(second=0, microsecond=0) + timedelta(minutes=1)
             self.next_spin_log = len(self.spun_stops) + 10
@@ -80,7 +80,7 @@ class StopManager(object):
                              str(self.catch_manager.pokemon_caught), str(nice_number_2(ratio)),
                              str(self.catch_manager.evolves),
                              str(self.catch_manager.num_evolve_candidates()),
-                             str(xp), str(xp - xp_30min_ago), 'E' if egg_active else '', 'H' if has_egg else '',
+                             str(xp), str(xp - xp_30min_ago), 'E' + str(egg_number) if egg_active else '', 'H' if has_egg else '',
                              str(num_stops), str(index), str(rem)))
 
     def reached_limits(self):

@@ -160,7 +160,7 @@ def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eg
         if num_spun != expected_spins:
             log.info("{} pokestops spun, expected {}".format(str(num_spun),str(expected_spins)))
 
-        sm.log_status(egg_active, wm.has_egg, location_feeder.index(), phase)
+        sm.log_status(egg_active, wm.has_egg, wm.egg_number, location_feeder.index(), phase)
 
         map_objects = wm.move_to_with_gmo(next_pos)
         log.info("Complieted one route element")
@@ -210,7 +210,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
         if pos_index % 10 == 0:
             sm.log_inventory()
 
-        sm.log_status(egg_active, wm.has_egg, pos_index, phase)
+        sm.log_status(egg_active, wm.has_egg, wm.egg_number, pos_index, phase)
         if did_map_objects:
             if cm.is_within_catch_limit() and not use_fast:
                 if not egg_active or emergency_catch_out_of_evolves:
