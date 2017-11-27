@@ -24,6 +24,7 @@ def setup_logging(file_name=None):
     logging.basicConfig(
         format='%(asctime)s [%(threadName)12s][%(module)13s][%(levelname)8s][%(relativeCreated)d] ' +
                '%(message)s', filename=file_name, level=logging.INFO)
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.getLogger("pgoapi").setLevel(logging.WARN)
     logging.getLogger("connectionpool").setLevel(logging.WARN)
     logging.getLogger("Account").setLevel(logging.INFO)
