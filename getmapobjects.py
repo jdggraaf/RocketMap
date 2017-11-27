@@ -1,16 +1,13 @@
-import codecs
 import copy
 import logging
-import os
 import sys
 import unittest
 
-from flask import json
 from geopy.distance import vincenty
 
 import pokemon_data
-from pokemon_data import pokemon_name
 from gymdbsql import pokestop_coordinates
+from pokemon_data import pokemon_name
 from scannerutil import equi_rect_distance_m
 
 log = logging.getLogger(__name__)
@@ -259,6 +256,7 @@ def has_value(pkmn, fiel):
 def is_keeper(pkmn):
     return pkmn["pokemon_id"] == 64
 
+
 def regular_nonfav(response):
     inv_pokemon = inventory_pokemon(response)
     nonfavs = [x for x in inv_pokemon if "favourite" not in x["pokemon_data"] and "is_egg" not in x[
@@ -279,18 +277,25 @@ def s2_cell_ids_from_cells(cells):
 
 
 def parse_gyms(map_objects):
-    return [candidate for candidate in forts(map_objects) if candidate.type == 0]
+    return forts_of_type(map_objects, 0)
 
 
 def parse_pokestops(map_objects):
-    return [candidate for candidate in forts(map_objects) if candidate.type == 1]
+    return forts_of_type(map_objects, 1)
+
 
 def parse_pokestops_and_gyms(map_objects):
-    return [candidate for candidate in forts(map_objects) if candidate.type == 1 or candidate.type == 0]
+    return [item for sublist in (__get_map_cells(map_objects)) for item in sublist.forts]
+
+
+def forts_of_type(map_dict, type):
+    return [item for sublist in (__get_map_cells(map_dict)) for item in sublist.forts if item.type == type]
+
 
 def find_pokestop(map_objects, pokestop_id):
-    id_ = [candidate for candidate in forts(map_objects) if candidate.type == 1 and candidate.id == pokestop_id]
+    id_ = [candidate for candidate in forts_of_type(map_objects, 1) if candidate.id == pokestop_id]
     return id_[0] if len(id_) > 0 else None
+
 
 def nearest_pokstop(map_objects, pos):
     result = None
@@ -315,8 +320,10 @@ def inrange_gyms(map_objects, pos):
 def inrange_pokstops(map_objects, pos, range_m=39):
     return fort_within_distance(parse_pokestops(map_objects), pos, range_m)
 
+
 def inrange_pokstops_and_gyms(map_objects, pos, range_m=39):
     return fort_within_distance(parse_pokestops_and_gyms(map_objects), pos, range_m)
+
 
 def pokstops_within_distance(map_objects, pos, m):
     return fort_within_distance(parse_pokestops(map_objects), pos, m)
@@ -329,10 +336,7 @@ def fort_within_distance(forts, pos, m):
         if distance < m:
             items.append((distance,fort))
     items.sort()
-    result = []
-    for item in items:
-        result.append(item[1])
-    return result
+    return map(lambda item: item[1], items)
 
 
 def find_fort( map_objects, fort_id):
@@ -341,16 +345,6 @@ def find_fort( map_objects, fort_id):
         for fort in forts:
             if fort["id"] == fort_id:
                 return fort
-
-
-
-
-def forts(map_dict):
-    forts = []
-    cells = __get_map_cells( map_dict)
-    for cell in cells:
-        forts += cell.forts
-    return forts
 
 
 def __check_speed_violation(cells):

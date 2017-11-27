@@ -46,7 +46,7 @@ args.player_locale = {'country': 'NO', 'language': 'no', 'timezone': 'Europe/Osl
 g0g3m3sh89896:&PB&nQ3YH used 31. oc
 g0g3m3sh89912:SaH7QKq@C used 9 nov
 g0g3m3sh89863:kt#9r&MnG used 20 nov
-g0g3m3sh89910:T!2YAMu2k
+g0g3m3sh89910:T!2YAMu2k 27 nov
 g0g3m3sh89905:uYRST9@Bg
 g0g3m3sh89919:MKG#6s!E3
 g0g3m3sh89890:#MBYk6uAa
@@ -72,7 +72,7 @@ for s in x2:
     for item in s[1]:
         print '"' + precise_coordinate_string(item) + '",'
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {}, replace_warned=False)
-l5account = account_manager.add_account({"username":"g0g3m3sh89863","password":"kt#9r&MnG","provider":"ptc"})
+l5account = account_manager.add_account({"username":"g0g3m3sh89910","password":"T!2YAMu2k","provider":"ptc"})
 #l5account = account_manager.add_account({"username":"g0g3m3sh89615","password":"x@WtEnv6n","provider":"ptc"})
 #l5account = account_manager.add_account({"username":"g0g3m3sh89912","password":"SaH7QKq@C","provider":"ptc"})
 # l5account = account_manager.add_account({"username":"g0g3m3sh89896","password":"&PB&nQ3YH","provider":"ptc"})
@@ -87,7 +87,7 @@ stop_6_3km=(((59.907326, 10.7853680), "09abf40d1abf413990a4ff12f81734fb.16"),((5
 
 #travel_time = worker.getlayer(TravelTime)
 
-pos = (59.899319, 10.836807, 50)
+pos = (59.934393, 10.718153, 10)
 map_objects = worker.do_get_map_objects(pos)
 pokestops = inrange_pokstops(map_objects, pos)
 gyms = inrange_gyms(map_objects, pos)

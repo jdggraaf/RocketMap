@@ -64,8 +64,6 @@ parser.add_argument('-am', '--alt-mode', default=False, action='store_true',
                     help='Alt mode')
 parser.add_argument('-ns', '--non-stop', default=False, action='store_true',
                     help='Run without stop')
-parser.add_argument('-rhk', '--overflow-hash-key', default=None,
-                    help='Key for hash server to use when capacity on first is exceeded. May be on the form http://endpoint/key')
 
 add_webhooks(parser)
 add_geofence(parser)
@@ -83,7 +81,6 @@ args.player_locale = {'country': 'DE', 'language': 'de', 'timezone': 'Europe/Ber
 args.status_name = args.system_id
 
 setup_proxies(args)
-
 set_args(args)
 set_account_db_args(args)
 if args.overflow_hash_key:

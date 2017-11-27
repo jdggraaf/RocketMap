@@ -150,6 +150,8 @@ def std_pogo_api_config(name):
     parser = basic_std_parser(name)
     parser.add_argument('-hk', '--hash-key', default=None, action='append',
                         help='Key for hash server. May be on the form http://endpoint/key')
+    parser.add_argument('-ohk', '--overflow-hash-key', default=None,
+                        help='Key for hash server to use when capacity on first is exceeded. May be on the form http://endpoint/key')
     parser.add_argument('-lhk', '--login-hash-key', default=None, action='append',
                         help='Key for hash server during login. May be on the form http://endpoint/key')
     parser.add_argument('-cs', '--captcha-solving',

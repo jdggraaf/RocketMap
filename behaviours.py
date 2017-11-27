@@ -7,8 +7,8 @@ from geopy.distance import vincenty
 
 from accountdbsql import db_set_account_level, db_set_egg_count, db_set_lure_count
 from geography import move_towards
-from getmapobjects import inrange_pokstops, forts, \
-    inventory_discardable_pokemon, catchable_pokemon, find_pokestop, inrange_pokstops_and_gyms
+from getmapobjects import inrange_pokstops, inventory_discardable_pokemon, catchable_pokemon, find_pokestop, \
+    inrange_pokstops_and_gyms, parse_gyms
 from gymdb import update_gym_from_details
 from gymdbsql import do_with_backoff_for_deadlock, create_or_update_gym_from_gmo2
 from inventory import total_iventory_count, egg_count, lure_count, inventory
@@ -237,7 +237,7 @@ def beh_do_scanner_bot(pogoservice, moves_generator, delay):
         gym_id = move['gym_id']
         try:
             map_objects = pogoservice.do_get_map_objects(current_position)
-            gyms = forts(map_objects)
+            gyms = parse_gyms(map_objects)
         except GaveUpApiAction:  # this should not really happen
             log.error("Giving up on location {} for gym {}".format(str(current_position), gym_id))
             continue
@@ -279,7 +279,7 @@ def beh_gym_scan(pogoservice, moves_generator, delay):
         current_position = move['coordinates']
         gym_id = move['gym_id']
         try:
-            gyms = forts(pogoservice.do_get_map_objects(current_position))
+            gyms = parse_gyms(pogoservice.do_get_map_objects(current_position))
         except GaveUpApiAction:  # this should not really happen
             log.error("Giving up on location {} for gym {}".format(str(current_position), gym_id))
             continue
