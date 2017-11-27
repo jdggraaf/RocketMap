@@ -1207,7 +1207,7 @@ class TravelTime(DelegatingPogoService):
         self.use_fast = False
         self.prev_position = None
         self.positioned_at = None
-        self.latency = None
+        self.latency_ms = None
 
     def use_slow_speed(self):
         self.is_fast = False
@@ -1307,9 +1307,9 @@ class TravelTime(DelegatingPogoService):
         try:
             return super(TravelTime, self).do_pokestop_details(fort)
         finally:
-            if not self.latency:
-                self.latency = ((datetime.now() - now).microseconds) / 2
-                log.info("Network latency measured to {} microseonds".format(self.latency))
+            if not self.latency_ms:
+                self.latency_ms = ((datetime.now() - now).microseconds) / 2000
+                log.info("Network latency measured to {}ms".format(self.latency_ms))
 
     def __sleep_for_account_travel(self, next_location):
         if not self.prev_position:
