@@ -389,7 +389,7 @@ for i in range(nthreads):
     the_thread = Thread(target=safe_do_work, name="bot-"+str(i),args=(i, global_catch_feed, latch, forced_update))
     the_thread.start()
     threads.append(the_thread)
-    if i % len(args.proxy) == 0:
+    if args.proxy and i % len(args.proxy) == 0:
         time.sleep(10)
 
 for thread in threads:
