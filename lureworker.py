@@ -79,7 +79,7 @@ class LureWorker(object):
         self.lure_counter = lure_counter
         self.next_lure_at = {}
         self.location_pokestop = {}
-        self.lure_duration_minutes = lure_duration
+        self.lure_duration_minutes = int(lure_duration)
 
     def replace_worker(self, new_worker):
         self.worker = new_worker
