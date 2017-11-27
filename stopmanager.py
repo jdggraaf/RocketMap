@@ -33,7 +33,8 @@ class StopManager(object):
         return (self.save_pokestops and index % 2 == 0) or not self.save_pokestops
 
     def spin_all_stops(self, map_objects, player_position, range_m=39, exclusion={}):
-        spuns = beh_spin_nearby_pokestops(self.worker, map_objects, player_position, range_m, self.spun_stops, exclusion)
+        spuns = beh_spin_nearby_pokestops(self.worker, map_objects, player_position, range_m, self.spun_stops,
+                                          exclusion)
         for stop in spuns:
             self.spun_stops.add(stop)
         return len(spuns)
@@ -73,14 +74,15 @@ class StopManager(object):
             rem = HashServer.status.get('remaining', 0)
             ratio = float(self.catch_manager.pokemon_caught) / len(self.spun_stops) if len(self.spun_stops) > 0 else 0
             xp = self.worker.account_info()["xp"]
-            self.worker_manager.xp_log.append((datetime.now(), xp))
+            self.worker_manager.register_xp(xp)
             xp_30min_ago = self.worker_manager.xp_30_minutes_ago()
             log.info("P{}L{}, {}S/{}P//R{}, {}E/{}EW, {}XP/{}@30min{}{}, {}S@30min. idx={}, {} hash"
                      .format(str(phase), str(self.worker_manager.level), str(len(self.spun_stops)),
                              str(self.catch_manager.pokemon_caught), str(nice_number_2(ratio)),
                              str(self.catch_manager.evolves),
                              str(self.catch_manager.num_evolve_candidates()),
-                             str(xp), str(xp - xp_30min_ago), 'E' + str(egg_number) if egg_active else '', 'H' if has_egg else '',
+                             str(xp), str(xp - xp_30min_ago), 'E' + str(egg_number) if egg_active else '',
+                             'H' if has_egg else '',
                              str(num_stops), str(index), str(rem)))
 
     def reached_limits(self):

@@ -28,8 +28,9 @@ class SpawnPoints:
             if spawnpoint.id == spawn_point_id:
                 return spawnpoint
 
-    def explain(self,pokemon_id, last_not_seen_time, seen_time):
-        result = "Pokeomn {} in window {}-{} with".format(str(pokemon_id), str(second_of_hour(last_not_seen_time)), str(second_of_hour(seen_time)))
+    def explain(self, pokemon_id, last_not_seen_time, seen_time):
+        result = "Pokeomn {} in window {}-{} with".format(str(pokemon_id), str(second_of_hour(last_not_seen_time)),
+                                                          str(second_of_hour(seen_time)))
         for spawnpoint in self.spawnpoints:
             result += str(spawnpoint.start())
             result += "/"
@@ -52,7 +53,7 @@ class SpawnPoint:
         self.id = row["id"]
         self.latitude = row["latitude"]
         self.longitude = row["longitude"]
-        self.altitude = row.get("altitude",None)
+        self.altitude = row.get("altitude", None)
         self.kind = row["kind"]
         self.links = row["links"]
         self.latest_seen = row["latest_seen"]
@@ -69,7 +70,6 @@ class SpawnPoint:
     def is_within_range(self, position, m):
         return vincenty(self.location(), position).m <= m
 
-
     def neightbours_with_self(self):
         neighbours = self.neighbours[:]
         neighbours.append(self)
@@ -84,7 +84,6 @@ class SpawnPoint:
         for neightbour in copy:
             current_result = neightbour.intersected_with(current_result)
         return current_result
-
 
     def location(self):
         return self.latitude, self.longitude, self.altitude
@@ -128,7 +127,7 @@ class SpawnPoint:
 
     def could_have_spawned(self, last_not_seen_time, seen_time):
         return self.could_have_spawned_soh(second_of_hour(last_not_seen_time),
-                               second_of_hour(seen_time))
+                                           second_of_hour(seen_time))
 
     def could_have_spawned_soh(self, last_not_seen_time_soh, seen_time_soh):
         pokemon_observation = (last_not_seen_time_soh,
@@ -144,14 +143,13 @@ class SpawnPoint:
     def overlaps(observations, spawnpoint_time):
         if observations[1] < observations[0]:  # normalize to non-wrapping time
             observations = (observations[0], observations[1] + 3600)
-        if spawnpoint_time[1] < spawnpoint_time[0]:   # normalize to non-wrapping time
+        if spawnpoint_time[1] < spawnpoint_time[0]:  # normalize to non-wrapping time
             spawnpoint_time = (spawnpoint_time[0], spawnpoint_time[1] + 3600)
         if observations[0] < spawnpoint_time[0] < observations[1]:
             return True
         if observations[0] < spawnpoint_time[1] < observations[1]:
             return True
         return False
-
 
 
 class SpawnPoint_duration_test(unittest.TestCase):
@@ -178,7 +176,7 @@ class SpawnpointCouldHaveSpawned(unittest.TestCase):
 
         unseen = datetime(2016, 12, 1, 2, 27, 30)
         seen = datetime(2016, 12, 1, 2, 27, 30)
-        self.assertFalse(spawn_point.could_have_spawned(unseen, seen))   # not really a use case
+        self.assertFalse(spawn_point.could_have_spawned(unseen, seen))  # not really a use case
 
         outside_unseen = datetime(2016, 12, 1, 2, 39, 0)
         outside_seen = datetime(2016, 12, 1, 2, 30, 0)
@@ -194,19 +192,20 @@ class SpawnPoint_Could_Have_Spawned_Wrapping_Hour(unittest.TestCase):
         unseen = datetime(2016, 12, 1, 2, 2, 0)
         expanded_start_window = unseen - timedelta(minutes=5)
 
-        self.assertTrue(spawn_point.could_have_spawned_soh(second_of_hour(expanded_start_window),159))
+        self.assertTrue(spawn_point.could_have_spawned_soh(second_of_hour(expanded_start_window), 159))
+
 
 # Pokeomn 63 in window 78-159 with185/1153/1638/1909/2170/2364/2389/2616/2890/3046/3490/
-class SpawnPoints_could_have_spawned(unittest.TestCase):
+class SpawnpointsCouldHaveSpawned(unittest.TestCase):
     def test(self):
         point = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 3400,
                  "earliest_unseen": 3500, "s2cell": 1234, "altitude": 40}
         point2 = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 1900,
-                 "earliest_unseen": 2000, "s2cell": 1234, "altitude": 40}
+                  "earliest_unseen": 2000, "s2cell": 1234, "altitude": 40}
 
         spawn_point = SpawnPoint(point)  # 1600-1700 26:40-28:30
         print(spawn_point.startwindow())
-        spawn_point2 = SpawnPoint(point2) # 100-200   1:40-3:20
+        spawn_point2 = SpawnPoint(point2)  # 100-200   1:40-3:20
         print(spawn_point2.startwindow())
         points = SpawnPoints([spawn_point, spawn_point2])
         unseen = datetime(2016, 12, 1, 2, 25, 0)
@@ -216,20 +215,21 @@ class SpawnPoints_could_have_spawned(unittest.TestCase):
         seen2 = datetime(2016, 12, 1, 2, 3, 30)
         self.assertEqual(1, len(points.points_that_can_spawn(unseen2, seen2)))
 
-class SpawnPoints_expanded_start_window(unittest.TestCase):
+
+class SpawnpointsExpandedStartWindow(unittest.TestCase):
     def test(self):
         point = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 3400,
                  "earliest_unseen": 3500, "s2cell": 1234, "altitude": 40}
         point2 = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 3200,
-                 "earliest_unseen": 3200, "s2cell": 1234, "altitude": 40}
+                  "earliest_unseen": 3200, "s2cell": 1234, "altitude": 40}
         point3 = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 2800,
-                 "earliest_unseen": 2800, "s2cell": 1234, "altitude": 40}
+                  "earliest_unseen": 2800, "s2cell": 1234, "altitude": 40}
 
         spawn_point = SpawnPoint(point)  # 1600-1700 26:40-28:30
         print(spawn_point.startwindow())
-        spawn_point2 = SpawnPoint(point2) # 100-200   1:40-3:20
+        spawn_point2 = SpawnPoint(point2)  # 100-200   1:40-3:20
         print(spawn_point2.startwindow())
-        spawn_point3 = SpawnPoint(point3) # 100-200   1:40-3:20
+        spawn_point3 = SpawnPoint(point3)  # 100-200   1:40-3:20
         print(spawn_point3.startwindow())
         points = SpawnPoints([spawn_point, spawn_point2, spawn_point3])
         unseen = datetime(2016, 12, 1, 2, 25, 0)
@@ -238,8 +238,7 @@ class SpawnPoints_expanded_start_window(unittest.TestCase):
         self.assertEqual(2, len(points.search_points_for_runner(unseen, seen)))
 
 
-
-class overlap_test(unittest.TestCase):
+class OverlapTest(unittest.TestCase):
     def test(self):
         spawn_point_time = (20, 40)
 
@@ -251,7 +250,7 @@ class overlap_test(unittest.TestCase):
 
         point = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 600,
                  "earliest_unseen": 700, "s2cell": 1234, "altitude": 40}
-        spawn_point = SpawnPoint(point) # start window 2400-2500 40:0-41:40
+        spawn_point = SpawnPoint(point)  # start window 2400-2500 40:0-41:40
         print(str(spawn_point))
         # todo: think very hard about what to do when spawn point uncertainty > obeservation window (spawn point time fully contained in obs)
         # self.assertTrue(spawn_point.overlaps(inside, spawn_point_time))
@@ -260,7 +259,7 @@ class overlap_test(unittest.TestCase):
         self.assertTrue(spawn_point.overlaps(around, spawn_point_time))
 
 
-class SpawnPoint_startwindow_test(unittest.TestCase):
+class SpawnpointStartwindowTest(unittest.TestCase):
     def test(self):
         point = {"id": 123, "latitude": 43.2, "longitude": 48.6, "kind": "hhss", "links": "hh??", "latest_seen": 3400,
                  "earliest_unseen": 3500, "s2cell": 1234, "altitude": 40}

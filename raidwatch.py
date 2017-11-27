@@ -20,7 +20,7 @@ from gymdbsql import set_args
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogom.transform import jitter_location
 from pogom.utils import gmaps_reverse_geolocate
-from scannerutil import install_thread_excepthook, install_forced_update_check
+from scannerutil import install_thread_excepthook, create_forced_update_check
 from workers import wrap_account
 
 '''
@@ -311,8 +311,7 @@ print("Guardposts")
 for m in movesToUse:
     print(str(m[0]) + "," + str(m[1]))
 
-forced_update = Event()
-install_forced_update_check(args, forced_update)
+forced_update = create_forced_update_check(args)
 seen_raid_defender = set()
 
 for move in movesToUse:

@@ -21,7 +21,7 @@ from gymdb import update_missing_s2_ids, cell_spawnpoints, update_missing_altitu
 from gymdbsql import set_args
 from pogom.fnord_altitude import with_gmaps_altitude
 from pogom.transform import jitter_location
-from scannerutil import install_thread_excepthook, install_forced_update_check
+from scannerutil import install_thread_excepthook, create_forced_update_check
 from spawnpoint import SpawnPoints
 from workers import wrap_account
 
@@ -445,8 +445,7 @@ for m in movesToUse:
     print(str(m[0]) + "," + str(m[1]))
 
 
-forced_update = Event()
-install_forced_update_check(args, forced_update)
+forced_update = create_forced_update_check(args)
 for move in movesToUse:
     create_fnord(move, i, forced_update)
     i += 1

@@ -1,4 +1,5 @@
 import unittest
+from itertools import dropwhile
 from threading import Event
 
 from accountdbsql import db_set_egg_count
@@ -63,14 +64,15 @@ class WorkerManager(object):
         return map_objects
         # did_map_objects = True
 
+    def register_xp(self, xp):
+        self.xp_log.append((datetime.now, xp))
+
     def xp_30_minutes_ago(self):
         cutoff = datetime.now() - timedelta(minutes=30)
         best = None
-        for log_tuple in reversed(self.xp_log):
-            if cutoff <= log_tuple[0]:
-                best = log_tuple[1]
-            else:
-                return best
+        within_timeframe = dropwhile(lambda log_tuple_: cutoff >= log_tuple_[0], self.xp_log)
+        self.xp_log = within_timeframe
+        best = self.xp_log[0]
         return best
 
     def reached_target_level(self):

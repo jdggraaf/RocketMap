@@ -162,10 +162,10 @@ def parse_inventory(account, api_response):
                       account['level'], account['walked'], account['spins'])
         elif item_data.HasField("applied_items"):
             applied_items = account["applied_items"]
-            for item in item_data.applied_items.item:
-                exp = datetime.datetime.fromtimestamp(item.expire_ms / 1000)
-                applied = datetime.datetime.fromtimestamp(item.applied_ms / 1000)
-                id = item.item_id
+            for aitem in item_data.applied_items.item:
+                exp = datetime.datetime.fromtimestamp(aitem.expire_ms / 1000)
+                applied = datetime.datetime.fromtimestamp(aitem.applied_ms / 1000)
+                id = aitem.item_id
 
                 if id == 401 and applied < datetime.datetime.now() < exp:
                     applied_items[401] = exp
