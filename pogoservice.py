@@ -386,6 +386,7 @@ class Account2(PogoService):
         self.__update_proxies(login=False)
         if self.first_login:
             self.first_login = False
+            time.sleep(1)  # avoid throttling
         return result
 
     def __login_if_needed(self):

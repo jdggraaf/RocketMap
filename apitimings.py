@@ -4,19 +4,19 @@ api_timings = {
         "fort_search": 20,
         "get_map_objects": 10000,
         "encounter": 100,
-        "level_up_rewards": 100,
+        "level_up_rewards": 150,
         "use_item_xp_boost": 150,
         "gym_get_info" : 20,
         "claim_codename" : 100,
     },
     "fort_details": {
-        "fort_search": 125,
+        "fort_search": 150,
         "fort_details": 92,
         "get_map_objects": 20,
         "add_fort_modifier" : 100
     },
     "fort_search": {
-        "fort_details": 175,
+            "fort_details": 175,
         "fort_search": 100,
         "get_map_objects": 0,
         "encounter": 250,
@@ -60,11 +60,11 @@ api_timings = {
         "catch_pokemon": 22
     },
     "catch_pokemon": {
-        "catch_pokemon": 250,
+        "catch_pokemon": 280,
         "release_pokemon": 100,
         "get_map_objects": 20,
         "use_item_encounter" : 20,
-        "encounter" : 300,
+        "encounter" : 330,
         "fort_details" :20,
         "level_up_rewards" : 20
 
