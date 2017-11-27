@@ -88,8 +88,8 @@ class PokemonCatchWorker:
         self.catchsim_flee_duration = 2
         self.catchsim_berry_wait_min = 2
         self.catchsim_berry_wait_max = 2.1
-        self.catchsim_changeball_wait_min = 2
-        self.catchsim_changeball_wait_max = 2.1
+        self.catchsim_changeball_wait_min = 0.3  # 2.0
+        self.catchsim_changeball_wait_max = 0.3  # 2.1
         self.catchsim_newtodex_wait_min = 20
         self.catchsim_newtodex_wait_max = 21
 

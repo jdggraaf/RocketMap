@@ -16,12 +16,13 @@ api_timings = {
         "add_fort_modifier" : 100
     },
     "fort_search": {
-            "fort_details": 175,
+        "fort_details": 175,
         "fort_search": 100,
         "get_map_objects": 0,
         "encounter": 250,
         "recycle_inventory_item": 200,
         "level_up_rewards" : 20,
+        "release_pokemon" : 50,
         "use_item_xp_boost" : 20
     },
     "recycle_inventory_item": {

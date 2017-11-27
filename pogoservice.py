@@ -1375,7 +1375,7 @@ class ApiDelay(DelegatingPogoService):
         now_ = dt.now()
         if now_ < self.next_gmo:
             sleep_s = (self.next_gmo - now_).total_seconds()
-            log.info("Sleeping {}s for GMO api delay".format(str(sleep_s)))
+            self.add_log("{}s for GMO api delay".format(str(sleep_s)))
             time.sleep(sleep_s)
 
         try:
@@ -1576,7 +1576,6 @@ class NetworkIssueRetryer(DelegatingPogoService):
                 break
             except HashingOfflineException:
                 self.__log_warning("Hashing offline")
-                time.sleep(20)
             except HashingQuotaExceededException:
                 self.__log_warning("Hashing quote exceeded, sleeping for 5 seconds")
                 time.sleep(5)

@@ -159,17 +159,16 @@ def beh_spin_nearby_pokestops(pogoservice, map_objects, position, range_m=39, bl
             elif pokestop.cooldown_complete_timestamp_ms > 0:
                 log.debug('Pokestop is in cooldown, ignoring')
             else:
-                if idx > 0:
-                    idx_ = min(idx,2) * 200
-                    log.info("Random sleeping at least {}ms for additional stops".format(idx_))
-                    random_sleep_z(idx_, idx_ + 100, "pokestop_details")  # Do not let Niantic throttle
-                    travel_time.use_slow_speed()
-
                 dist_to_stop = distance_to_fort( position, pokestop )
                 if dist_to_stop > spinning_distance_m:
                     m_to_move = dist_to_stop - spinning_distance_m
                     log.info("Stop is {}m away, moving {}m closer".format(str(dist_to_stop), str(m_to_move)))
+                    travel_time.use_slow_speed()
                     position = move_towards(position, fort_as_coordinate(pokestop), m_to_move)
+                elif idx > 0:
+                    idx_ = min(idx, 2) * 200
+                    log.info("Random sleeping at least {}ms for additional stops".format(idx_))
+                    random_sleep_z(idx_, idx_ + 100, "pokestop_details")  # Do not let Niantic throttle
                 res = beh_spin_pokestop_raw(pogoservice, pokestop, position)
                 if res == 1:
                     spun.append(pokestop.id)

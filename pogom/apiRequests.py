@@ -44,7 +44,7 @@ def req_call_with_hash_retries(req):
             log.warning("Hashing offline")
             if attempts > 5:
                 raise
-            time.sleep(10 * attempts)
+            time.sleep(5 * attempts)
         except HashingQuotaExceededException:
             if goman_endpoint:
                 log.info("using goman endpoint for this operation")
