@@ -1,4 +1,3 @@
-import copy
 import logging
 import sys
 import unittest
@@ -6,7 +5,6 @@ import unittest
 from geopy.distance import vincenty
 
 import pokemon_data
-from gymdbsql import pokestop_coordinates
 from pokemon_data import pokemon_name
 from scannerutil import equi_rect_distance_m
 
@@ -71,19 +69,6 @@ def cells_with_pokemon_data(response):
     return result
 
 
-def update_fort_locations(cells, map_objects):
-    for cell in cells:
-        for pkmn in nearby_pokemon_from_cell(cell):
-            if 'fort_id' in pkmn:
-                fort_id = pkmn['fort_id']
-                fort1 = find_fort(map_objects, fort_id)
-                if fort1:
-                    pkmn['latitude'] = fort1['latitude']
-                    pkmn['longitude'] = fort1['longitude']
-                else:
-                    log.warning("Fort {} referenced but not in payload".format(fort_id))
-
-
 def wild_pokemon(response):
     cells = __get_map_cells(response)
     wilds = []
@@ -91,34 +76,6 @@ def wild_pokemon(response):
         for wild in cell.get('wild_pokemons', []):
             wilds.append(wild)
     return wilds
-
-
-def celldiff(old_cells, new_cells):
-    result = copy.deepcopy(new_cells)
-    if not old_cells:
-        return result
-    for new_cell in result:
-        cell_id = new_cell['s2_cell_id']
-
-        old_cell = [x for x in old_cells if x['s2_cell_id'] == cell_id]
-        if len(old_cell) == 0:
-            continue
-
-        for i, pkmn in enumerate(nearby_pokemon_from_cell(new_cell)):
-            pokemon_in_old_cell = [x for x in nearby_pokemon_from_cell(old_cell[0]) if x['encounter_id'] == pkmn['encounter_id']]
-            if pokemon_in_old_cell:
-                del new_cell.nearby_pokemons[i]
-        for i, catchable in enumerate(catchable_pokemon_from_cell(new_cell)):
-            pokemon_in_old_cell = [x for x in catchable_pokemon_from_cell(old_cell[0]) if x['encounter_id'] == catchable['encounter_id']]
-            if pokemon_in_old_cell:
-                del new_cell.catchable_pokemons[i]
-
-        for i, cell in enumerate(result):
-            if len(nearby_pokemon_from_cell(cell)) == 0 and len(catchable_pokemon_from_cell(cell)) == 0:
-                del result[i]
-
-    onlychanges = [x for x in result if not (len(nearby_pokemon_from_cell(x)) == 0 and len(catchable_pokemon_from_cell(x)) == 0)]
-    return onlychanges
 
 
 def catchable_pokemon(response):
@@ -137,23 +94,6 @@ def pokemon_names(catch_list):
 
 def nearby_pokemon(response):
     return nearby_pokemon_from_cells(__get_map_cells(response))
-
-
-def nearest_nearby_pokemon(map_objects):
-    len = sys.maxsize
-    fort_id = None
-    for nearby in nearby_pokemon(map_objects):
-        if "distance_in_meters" not in nearby:
-            print(str(nearby))
-        elif nearby["distance_in_meters"] < len:
-            len = nearby["distance_in_meters"]
-            fort_id = nearby["fort_id"]
-
-    fort = find_fort(map_objects, fort_id)
-    if not fort:
-        return pokestop_coordinates(fort_id)
-
-    return fort["latitude"], fort["longitude"]
 
 
 def encounter_capture_probablity(encounter_response):
@@ -228,6 +168,7 @@ def pokemon_by_uid(map_objects, uid):
     matchin = [x for x in inv_pokemon if x["pokemon_data"]["id"] == uid]
     return matchin
 
+
 def is_discardable(pokemon_id, pkmn, buddy_id):
     favorite_ = pkmn.get("favorite", 0) == 0
     deployed = has_value(pkmn, "deployed_fort_id")
@@ -253,6 +194,7 @@ def regular_nonfav(response):
     nonfavs = [x for x in inv_pokemon if "favourite" not in x["pokemon_data"] and "is_egg" not in x[
         "pokemon_data"] and not has_value(x, "deployed_fort_id")]
     return nonfavs
+
 
 def pokestop_detail(details_response):
     return details_response["responses"]["FORT_DETAILS"]
@@ -320,21 +262,10 @@ def pokstops_within_distance(map_objects, pos, m):
 
 
 def fort_within_distance(forts, pos, m):
-    items = []
-    for fort in forts:
-        distance = equi_rect_distance_m(pos, (fort.latitude, fort.longitude))
-        if distance < m:
-            items.append((distance,fort))
+    with_distance = [(equi_rect_distance_m(pos, (fort.latitude, fort.longitude)), fort) for fort in forts]
+    items = [it for it in with_distance if it[0] < m]
     items.sort()
     return map(lambda item: item[1], items)
-
-
-def find_fort( map_objects, fort_id):
-    for cell in __get_map_cells(map_objects):
-        forts = cell.get('forts', [])
-        for fort in forts:
-            if fort["id"] == fort_id:
-                return fort
 
 
 def __check_speed_violation(cells):
