@@ -225,7 +225,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
         time_to_location = travel_time.time_to_location(next_pos)
         out_of_eggs = wm.is_out_of_eggs_before_l30()
         if egg_active or out_of_eggs:
-            log.info("Evolvewindow {},egg_active={}, out_of_eggs={}".format(str(time_to_location), str(egg_active), str(out_of_eggs)))
+            # log.info("Evolvewindow {},egg_active={}, out_of_eggs={}".format(str(time_to_location), str(egg_active), str(out_of_eggs)))
             candy_ = worker.account_info()["candy"]
             for evo in range(0, int(math.ceil(time_to_location / 15))):
                 cm.evolve_one(candy_, fast=True)

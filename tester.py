@@ -92,6 +92,7 @@ map_objects = worker.do_get_map_objects(pos)
 pokestops = inrange_pokstops(map_objects, pos)
 gyms = inrange_gyms(map_objects, pos)
 
+cp = catchable_pokemon(map_objects)
 gym = gyms[0]
 worker.do_spin_pokestop(gym ,pos)
 

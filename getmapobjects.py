@@ -122,21 +122,10 @@ def celldiff(old_cells, new_cells):
 
 
 def catchable_pokemon(response):
-    cells = __get_map_cells(response)
-    wilds = []
-    for cell in cells:
-        for wild in cell.catchable_pokemons:
-            wilds.append(wild)
-    return wilds
-
+    return [item for sublist in (__get_map_cells(response)) for item in sublist.catchable_pokemons]
 
 def catchable_pokemon_by_distance(response, pos):
-    cells = __get_map_cells(response)
-    wilds = []
-    for cell in cells:
-        for wild in cell.catchable_pokemons:
-            wilds.append(wild)
-
+    wilds = catchable_pokemon(response)
     with_distance = [(vincenty(pos, (x.latitude, x.longitude)).m, x) for x in wilds]
     with_distance.sort(key=lambda tup: tup[0], reverse=True )
     return with_distance
@@ -144,6 +133,7 @@ def catchable_pokemon_by_distance(response, pos):
 
 def pokemon_names(catch_list):
     return ", ".join([pokemon_name(x.pokemon_id) for x in catch_list])
+
 
 def nearby_pokemon(response):
     return nearby_pokemon_from_cells(__get_map_cells(response))
@@ -171,6 +161,7 @@ def encounter_capture_probablity(encounter_response):
     if not resp:
         print(str(encounter_response))
     return resp
+
 
 def nearby_pokemon_from_cells(cells):
     wilds = []
@@ -311,7 +302,6 @@ def nearest_pokstop(map_objects, pos):
 def raid_gyms(map_objects, pos):
     gyms = inrange_gyms(map_objects, pos)
     return [candidate for candidate in gyms if candidate.raid_info.raid_level > 0]
-
 
 def inrange_gyms(map_objects, pos):
     return fort_within_distance(parse_gyms(map_objects), pos, 750)
