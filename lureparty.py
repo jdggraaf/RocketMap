@@ -294,6 +294,7 @@ if args.geofence:
 else:
     geofence_stops = defaultdict(list)
 
+num_proxies = len(args.proxy) if args.proxy else 1
 if args.json_locations:
     log.info("Geofences are: {}".format(str(geofence_stops.keys())))
     with open(args.json_locations) as data_file:
@@ -315,8 +316,9 @@ if args.json_locations:
                     worker_idx += 1
                     the_thread = Thread(name=name, target=lambda: safe_lure_one_json_worker(json_loc, route, counter))
                     the_thread.start()
-                    if will_start_now(json_loc) and not args.login_hash_key:
+                    if will_start_now(json_loc) and (not args.overflow_hash_key or worker_idx % num_proxies == 0):
                         time.sleep(15)
+
                     threads.append(the_thread)
 
 
