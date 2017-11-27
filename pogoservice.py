@@ -975,7 +975,7 @@ class Account2(PogoService):
 
             recycle_inventory_item_ = responses['responses']['RECYCLE_INVENTORY_ITEM']
             if recycle_inventory_item_.result != 1:
-                log.warning("Failed to remove item {}", item_id)
+                log.warning("Failed to remove item {}, code {}", str(item_id), str(recycle_inventory_item_.result))
             else:
                 return count
         except KeyError:  # todo align with error handling in general
