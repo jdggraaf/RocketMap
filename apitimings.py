@@ -62,7 +62,7 @@ api_timings = {
     "catch_pokemon": {
         "catch_pokemon": 280,
         "release_pokemon": 100,
-        "get_map_objects": 20,
+        "get_map_objects": 80,
         "use_item_encounter" : 20,
         "encounter" : 360,
         "fort_details" :20,
