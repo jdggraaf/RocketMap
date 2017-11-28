@@ -194,7 +194,6 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
         egg_active = wm.use_egg(cm)
         emergency_catch_out_of_evolves = egg_active and cm.empty_evolve_map()
         use_fast = egg_active and spin_evolve_with_egg and not emergency_catch_out_of_evolves
-        # log.info("use_fast={}, egg_active={}, spin_evolve_with_egg={}, emergency_catch_out_of_evolves={}".format(str(use_fast), str(egg_active), str(spin_evolve_with_egg), str(emergency_catch_out_of_evolves)))
         travel_time.set_fast_speed( use_fast)
 
         player_location = get_pos_to_use(route_element, fallback_altitude, thread_num if outer else None)
