@@ -44,11 +44,11 @@ parser.add_argument('-r', '--route', type=parse_unicode,
 parser.add_argument('-lvl', '--target-level', default=5,
                     help='Target level of the bot')
 add_threads_per_proxy(parser)
-parser.add_argument('-st', '--max-stops', default=999,
+parser.add_argument('-st', '--max-stops', default=3490,
                     help='Max pokestops for a single session')
 parser.add_argument('-tc', '--thread-count', default=5,
                     help='Number of threads to use')
-parser.add_argument('-pokemon', '--catch-pokemon', default=0,
+parser.add_argument('-pokemon', '--catch-pokemon', default=3490,
                     help='If the levelup should catch pokemon (not recommended)')
 parser.add_argument('-egg', '--use-eggs', default=True,
                     help='True to use lucky eggs')
