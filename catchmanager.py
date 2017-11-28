@@ -104,7 +104,7 @@ class CatchManager(object):
         encounter_id = location.encounter_id
         return self.is_encountered_previously(encounter_id)
 
-    def do_catch_moving(self, map_objects, player_pos, next_pos, pos_idx, catch_condition):
+    def do_catch_moving(self, map_objects, player_pos, next_pos, pos_idx, catch_condition, broadcast=True):
         all_caught = {}
         if not self.is_within_catch_limit():
             log.info("Catch limit {} exceeeded, not catching any more".format(str(self.catch_limit)))
@@ -128,7 +128,7 @@ class CatchManager(object):
             if encountered_previously:
                 log.info("{} {} encountered previously".format(str(pokemon_name(pokemon_id)), str(encounter_id)))
             elif will_catch:
-                if catch_condition.is_candy_pokemon(pokemon_id):
+                if broadcast and catch_condition.is_candy_pokemon(pokemon_id):
                     self.catch_feed.append(player_pos, to_catch, pos_idx)
                 # log.debug("To_catch={}".format(str(to_catch)))
                 pokemon_distance_to_next_position = catch_list[0][0]

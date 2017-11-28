@@ -250,7 +250,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
             map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast)
             do_extra_gmo_after_pokestops = len(catchable_pokemon(map_objects)) == 0
         else:
-            map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast, at_location=lambda po, mo:cm.do_catch_moving(mo, po, next_pos, pos_index, catch_condition) )
+            map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast, at_location=lambda po, mo:cm.do_catch_moving(mo, po, next_pos, pos_index, catch_condition, broadcast=False) )
             do_extra_gmo_after_pokestops = False
         cm.do_bulk_transfers()
         if time_to_location > 20:
