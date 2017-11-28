@@ -247,8 +247,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
                 log.info("Wating an extra cycle after fast moves")
                 map_objects = wm.get_map_objects(next_pos)
         else:
-            cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
-            map_objects = wm.get_map_objects(next_pos)
+            map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast, at_location=lambda po, mo:cm.do_catch_moving(mo, po, next_pos, pos_index, catch_condition) )
         cm.do_bulk_transfers()
         if time_to_location > 20:
             cm.clear_state()
