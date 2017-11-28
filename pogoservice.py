@@ -1250,11 +1250,6 @@ class TravelTime(DelegatingPogoService):
     def must_gmo(self):
         return (dt.now() - self.positioned_at).total_seconds() > 30
 
-    def time_to_location(self, location):
-        if not self.prev_position:
-            return 0
-        return self.__priv_time_to_location(location)[1]
-
     def speed_to_use(self):
         return self.fast_speed if self.use_fast or self.is_fast else self.slow_speed
 
@@ -1277,6 +1272,15 @@ class TravelTime(DelegatingPogoService):
         now = datetime.now()
         total_seconds = (now - self.positioned_at).total_seconds()
         return total_seconds * self.speed_to_use()
+
+    def slow_time_to_location(self, location):
+        if not self.prev_position:
+            return 0
+        distance = equi_rect_distance_m(self.prev_position, location)
+        seconds_since_last_use = dt.now() - self.positioned_at
+        remaining_m,time_r = self.__calc_time(distance, seconds_since_last_use, self.slow_speed)
+        return time_r
+
 
     def __priv_time_to_location(self, location):
         if not self.prev_position:

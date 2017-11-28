@@ -11,7 +11,7 @@ from argutils import thread_count
 from behaviours import beh_aggressive_bag_cleaning
 from catchmanager import CatchManager, CatchFeed, OneOfEachCatchFeed, Candy12Feed, NoOpFeed, CatchConditions
 from geography import *
-from getmapobjects import is_discardable, is_starter_pokemon
+from getmapobjects import is_discardable, is_starter_pokemon, catchable_pokemon
 from gymdbsql import set_args
 from hamburg import xp_route_1
 from hamburg import xp_route_2
@@ -166,9 +166,8 @@ def do_just_stops(locations, location_feeder, sm, wm, travel_time, phase, num_eg
         log.info("Complieted one route element")
 
 
-def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_with_egg, catch_feed, cm, sm, wm,
-                           thread_num, travel_time, worker, phase, catch_condition, first_time=None, outer=True,
-                           pos_index=0):
+def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm, sm, wm, thread_num, travel_time,
+                           worker, phase, catch_condition, first_time=None, outer=True, pos_index=0):
     first_loc = get_pos_to_use(locations[0], None, thread_num)
     fallback_altitude = first_loc[2]
     log.info("First lof {}".format(str(first_loc)))
@@ -188,14 +187,10 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
         # wm.use_incense()   # disabled until I can find out how to identify
         if cm.can_start_evolving() and xp_feeder:
             beh_aggressive_bag_cleaning(worker)
-            do_iterable_point_list(xp_feeder, None, True, spin_evolve_with_egg, NoOpFeed(), cm, sm, wm, None,
-                                   travel_time, worker, phase, catch_condition, outer=False)
+            do_iterable_point_list(xp_feeder, None, True, NoOpFeed(), cm, sm, wm, None, travel_time, worker, phase,
+                                   catch_condition, outer=False)
 
         egg_active = wm.use_egg(cm)
-        emergency_catch_out_of_evolves = egg_active and cm.empty_evolve_map()
-        use_fast = egg_active and spin_evolve_with_egg and not emergency_catch_out_of_evolves
-        travel_time.set_fast_speed( use_fast)
-
         player_location = get_pos_to_use(route_element, fallback_altitude, thread_num if outer else None)
         fallback_altitude = player_location[2]
         next_pos = get_pos_to_use(next_route_element, fallback_altitude, thread_num if outer else None)
@@ -210,21 +205,10 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
             sm.log_inventory()
 
         sm.log_status(egg_active, wm.has_egg, wm.egg_number, pos_index, phase)
-        if did_map_objects:
-            if cm.is_within_catch_limit() and not use_fast:
-                if not egg_active or emergency_catch_out_of_evolves:
-                    cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
-                cm.do_bulk_transfers()
-
-        if cm.is_first_at_location(pos_index):  # do a little extra to avoid running ahead of ourself
-            temp_pos = move_towards(player_location, next_pos, 40)
-            map_objects = worker.do_get_map_objects(temp_pos)
-            cm.do_catch_moving(map_objects, temp_pos, next_pos, pos_index, catch_condition)
 
         time_to_location = travel_time.time_to_location(next_pos)
         out_of_eggs = wm.is_out_of_eggs_before_l30()
         if egg_active or out_of_eggs:
-            # log.info("Evolvewindow {},egg_active={}, out_of_eggs={}".format(str(time_to_location), str(egg_active), str(out_of_eggs)))
             candy_ = worker.account_info()["candy"]
             for evo in range(0, int(math.ceil(time_to_location / 15))):
                 cm.evolve_one(candy_, fast=True)
@@ -241,8 +225,8 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
                 if not enc_id:
                     break
                 log.info("Dealing with nested location {}".format(str(enc_pos)))
-                do_iterable_point_list([encs[enc_id][0],encs[enc_id][0]], xp_feeder, xp_boost_phase, spin_evolve_with_egg, NoOpFeed(), cm, sm,
-                                       wm, None, travel_time, worker, phase, catch_condition, outer=False,
+                do_iterable_point_list([encs[enc_id][0], encs[enc_id][0]], xp_feeder, xp_boost_phase, NoOpFeed(), cm,
+                                       sm, wm, None, travel_time, worker, phase, catch_condition, outer=False,
                                        pos_index=pos_index)
                 # i dont like these heuristics one damn bit
                 cm.processed_encounters.add(enc_id)  # this must be done in case there is nothing at the location
@@ -250,12 +234,21 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, spin_evolve_wit
                     if encs[encounter_id][0] == enc_pos:
                         cm.processed_encounters.add(encounter_id)
 
+        slow_time_to_location = travel_time.slow_time_to_location(next_pos)
+        use_fast = slow_time_to_location > 20
+        travel_time.set_fast_speed( use_fast)
 
+        if use_fast:
+            map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast)
+            if len(catchable_pokemon(map_objects)) == 0:
+                log.info("Wating an extra cycle after fast moves")
+                map_objects = wm.get_map_objects(next_pos)
+        else:
+            cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
+            map_objects = wm.get_map_objects(next_pos)
+        cm.do_bulk_transfers()
         if time_to_location > 20:
             cm.clear_state()
-        did_map_objects = datetime.now() + timedelta(seconds=(time_to_location)) > wm.next_gmo
-        if did_map_objects:
-            map_objects = wm.move_to_with_gmo(next_pos)
         pos_index += 1
 
 
@@ -286,18 +279,18 @@ def do_fast25(thread_num, worker, is_forced_update):
     app_behaviour.behave_properly = False
 
     feeder = PositionFeeder(xp_p1[args.route], is_forced_update)
-    do_iterable_point_list(feeder, None, True, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
-                           worker, 1, CatchConditions.everything_condition())
+    do_iterable_point_list(feeder, None, True, candy_12_feed, cm, sm, wm, thread_num, travel_time, worker, 1,
+                           CatchConditions.everything_condition())
 
     if not sm.reached_limits():
         xp_feeder2 = PositionFeeder(xp_p2[args.route], is_forced_update)
-        do_iterable_point_list(xp_feeder2, None, True, False, global_catch_feed, cm, sm, wm, thread_num, travel_time,
-                               worker, 2, CatchConditions.everything_condition())
+        do_iterable_point_list(xp_feeder2, None, True, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker,
+                               2, CatchConditions.everything_condition())
 
     if not sm.reached_limits():
         last_feeder = PositionFeeder(routes_p2[args.route], is_forced_update)
-        do_iterable_point_list(last_feeder, None, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
-                               worker, 3, CatchConditions.grind_condition())
+        do_iterable_point_list(last_feeder, None, False, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker,
+                               3, CatchConditions.grind_condition())
 
     if args.final_system_id:
         db_set_system_id(worker.name(), args.final_system_id)
@@ -321,8 +314,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     if wm.player_level() < 8:
         log.info("Doing initial pokestops PHASE")
 
-        do_iterable_point_list(feeder, None, False, False, candy_12_feed, cm, sm, wm, thread_num, travel_time,
-                               worker, 1, CatchConditions.initial_condition())
+        do_iterable_point_list(feeder, None, False, candy_12_feed, cm, sm, wm, thread_num, travel_time, worker, 1,
+                               CatchConditions.initial_condition())
 
     sm.clear_state()
     if False and (started_at_0 or wm.player_level() < 22):
@@ -344,8 +337,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
         #        log.error("Has no egg for initial catches. Initial phase did not produce egg or bot was restarted")
         #    wm.use_incense()
         #    wm.use_egg(force=True)
-        do_iterable_point_list(feeder, None, False, False, one_of_each_catch_feed, cm, sm, wm, thread_num,
-                               travel_time, worker, 2, CatchConditions.initial_condition())
+        do_iterable_point_list(feeder, None, False, one_of_each_catch_feed, cm, sm, wm, thread_num, travel_time, worker,
+                               2, CatchConditions.initial_condition())
 
     log.info("Main grind PHASE 1")
     wm.explain()
@@ -358,8 +351,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     log.info("Waiting for other workers to join here")
     latch.await()
 
-    do_iterable_point_list(feeder, xp_feeder, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
-                           worker, 3, CatchConditions.grind_condition())
+    do_iterable_point_list(feeder, xp_feeder, False, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 3,
+                           CatchConditions.grind_condition())
 
     sm.clear_state()
     cm.evolve_requirement = 90
@@ -369,8 +362,8 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
     feeder = PositionFeeder(routes_p2[args.route], is_forced_update)
     xp_feeder2 = PositionFeeder(xp_p2[args.route], is_forced_update)
     initial_stuff(feeder, wm, cm, worker)
-    do_iterable_point_list(feeder, xp_feeder2, False, True, global_catch_feed, cm, sm, wm, thread_num, travel_time,
-                           worker, 3, CatchConditions.grind_condition())
+    do_iterable_point_list(feeder, xp_feeder2, False, global_catch_feed, cm, sm, wm, thread_num, travel_time, worker, 3,
+                           CatchConditions.grind_condition())
 
     if args.final_system_id:
         db_set_system_id(worker.name(), args.final_system_id)

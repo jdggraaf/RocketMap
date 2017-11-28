@@ -106,6 +106,9 @@ class CatchManager(object):
 
     def do_catch_moving(self, map_objects, player_pos, next_pos, pos_idx, catch_condition):
         all_caught = {}
+        if self.is_within_catch_limit():
+            log.info("Catch limit {} exceeeded, not catching any more".format(str(self.catch_limit)))
+            return
         catch_list = catchable_pokemon_by_distance(map_objects, next_pos)
         log.info("{} pokemon in map_objects: {}".format(str(len(catch_list)), pokemon_names([x[1] for x in catch_list])))
         while len(catch_list) > 0:
