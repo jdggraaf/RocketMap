@@ -207,7 +207,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
 
         if do_extra_gmo_after_pokestops:
             log.info("Wating an extra cycle after fast moves")
-            map_objects = wm.get_map_objects(next_pos)
+            map_objects = wm.get_map_objects(player_location)
 
         sm.log_status(egg_active, wm.has_egg, wm.egg_number, pos_index, phase)
         cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
