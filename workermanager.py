@@ -70,9 +70,11 @@ class WorkerManager(object):
     def xp_30_minutes_ago(self):
         cutoff = datetime.now() - timedelta(minutes=30)
         best = None
-        within_timeframe = dropwhile(lambda log_tuple_: cutoff >= log_tuple_[0], self.xp_log)
-        self.xp_log = within_timeframe
-        best = self.xp_log[0]
+        for log_tuple in reversed(self.xp_log):
+            if cutoff <= log_tuple[0]:
+                best = log_tuple[1]
+            else:
+                return best
         return best
 
     def reached_target_level(self):
