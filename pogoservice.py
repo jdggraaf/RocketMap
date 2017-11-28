@@ -622,17 +622,6 @@ class Account2(PogoService):
     def has_position(self):
         return self.most_recent_position() and self.most_recent_position()[0]
 
-    def time_to_location(self, location, meters_per_second_speed):
-        if not self.get_position():
-            return 0
-        distance = equi_rect_distance_m(self.get_position(), location)
-        seconds_since_last_use = dt.now() - self.time_of_most_recent_position()
-        remaining_m = distance - (seconds_since_last_use.total_seconds() * meters_per_second_speed)
-        if remaining_m > 0:
-            return remaining_m / meters_per_second_speed
-        else:
-            return 0
-
     def get_position(self):
         return self.last_location
 
@@ -1249,6 +1238,11 @@ class TravelTime(DelegatingPogoService):
 
     def must_gmo(self):
         return (dt.now() - self.positioned_at).total_seconds() > 30
+
+    def time_to_location(self, location):
+        if not self.prev_position:
+            return 0
+        return self.__priv_time_to_location(location)[1]
 
     def speed_to_use(self):
         return self.fast_speed if self.use_fast or self.is_fast else self.slow_speed
