@@ -51,8 +51,8 @@ api_timings = {
     "use_item_xp_boost": {
         "use_item_xp_boost": 100,
         "fort_details": 100,
-        "get_map_objects" : 100
-
+        "get_map_objects" : 100,
+        "encounter": 100
     },
     "add_fort_modifier": {
         "get_map_objects": 20

@@ -178,6 +178,7 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
     if first_time:
         first_time()
     catch_condition.log_description(phase)
+    do_extra_gmo_after_pokestops = False
 
     for route_element, next_route_element in pairwise(locations):
         if cm.is_caught_already(route_element):
@@ -203,6 +204,10 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
             sm.spin_stops(map_objects, pokestop_id, player_location, pos_index, excluded_stops)
         if pos_index % 10 == 0:
             sm.log_inventory()
+
+        if do_extra_gmo_after_pokestops:
+            log.info("Wating an extra cycle after fast moves")
+            map_objects = wm.get_map_objects(next_pos)
 
         sm.log_status(egg_active, wm.has_egg, wm.egg_number, pos_index, phase)
         cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
@@ -243,11 +248,10 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
 
         if use_fast:
             map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast)
-            if len(catchable_pokemon(map_objects)) == 0:
-                log.info("Wating an extra cycle after fast moves")
-                map_objects = wm.get_map_objects(next_pos)
+            do_extra_gmo_after_pokestops = len(catchable_pokemon(map_objects)) == 0
         else:
             map_objects = wm.move_to_with_gmo(next_pos,is_fast_speed=use_fast, at_location=lambda po, mo:cm.do_catch_moving(mo, po, next_pos, pos_index, catch_condition) )
+            do_extra_gmo_after_pokestops = False
         cm.do_bulk_transfers()
         if time_to_location > 20:
             cm.clear_state()
