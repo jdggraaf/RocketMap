@@ -213,7 +213,6 @@ def do_iterable_point_list(locations, xp_feeder, xp_boost_phase, catch_feed, cm,
         cm.do_catch_moving(map_objects, player_location, next_pos, pos_index, catch_condition)
         cm.do_bulk_transfers()
 
-
         time_to_location = travel_time.time_to_location(next_pos)
         out_of_eggs = wm.is_out_of_eggs_before_l30()
         if egg_active or out_of_eggs:

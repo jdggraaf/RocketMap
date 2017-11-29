@@ -67,14 +67,14 @@ class StopManager(object):
         self.spin_timestamps = [x for x in self.spin_timestamps if x > thirty_minutes_ago]
 
     def log_status(self, egg_active, has_egg, egg_number, index, phase):
+        xp = self.worker.account_info()["xp"]
+        self.worker_manager.register_xp(xp)
         if datetime.now() > self.log_xp_at:
             self.log_xp_at = datetime.now().replace(second=0, microsecond=0) + timedelta(minutes=1)
             self.next_spin_log = len(self.spun_stops) + 10
             num_stops = self.num_spins_last_30_minutes()
             rem = HashServer.status.get('remaining', 0)
             ratio = float(self.catch_manager.pokemon_caught) / len(self.spun_stops) if len(self.spun_stops) > 0 else 0
-            xp = self.worker.account_info()["xp"]
-            self.worker_manager.register_xp(xp)
             xp_30min_ago = self.worker_manager.xp_30_minutes_ago()
             log.info("P{}L{}, {}S/{}P//R{}, {}E/{}EW, {}XP/{}@30min{}{}, {}S@30min. idx={}, {} hash"
                      .format(str(phase), str(self.worker_manager.level), str(len(self.spun_stops)),

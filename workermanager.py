@@ -22,7 +22,7 @@ class WorkerManager(object):
         self.next_incense = datetime.now()
         self.level = None
         self.target_level = target_level
-        self.xp_log = []
+        self.xp_log = {}
         self.next_gmo = datetime.now()
         self.fast_egg = False
         self.first_egg = True
@@ -65,17 +65,12 @@ class WorkerManager(object):
         # did_map_objects = True
 
     def register_xp(self, xp):
-        self.xp_log.append((datetime.now(), xp))
+        self.xp_log[datetime.now().minute] = xp
 
     def xp_30_minutes_ago(self):
-        cutoff = datetime.now() - timedelta(minutes=30)
-        best = None
-        for log_tuple in reversed(self.xp_log):
-            if cutoff <= log_tuple[0]:
-                best = log_tuple[1]
-            else:
-                return best
-        return best
+        before_that = (datetime.now().minute - 30) % 59
+        xp_30_min_ago = self.xp_log.get(before_that, 0)
+        return xp_30_min_ago
 
     def reached_target_level(self):
         self.level = beh_handle_level_up(self.worker, self.level)

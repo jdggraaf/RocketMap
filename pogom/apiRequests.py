@@ -50,10 +50,11 @@ def req_call_with_hash_retries(req):
                 log.info("using goman endpoint for this operation")
                 req.__parent__.activate_hash_server(goman_endpoint)
             else:
-                log.warn("Hashing quota exceeded, waiting 20 seconds")
                 if attempts > 5:
                     raise
-                time.sleep(15 * attempts)
+                wait_time = 10 * attempts
+                log.warn("Hashing quota exceeded, waiting {} seconds".format(wait_time))
+                time.sleep(wait_time)
         attempts += 1
 
 

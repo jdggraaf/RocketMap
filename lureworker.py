@@ -216,7 +216,8 @@ class LureWorker(object):
             first_time = False
 
     def lure_bomb(self, pos, radius=40):
-        pokestops = self.pokestops_at_coordinate(pos, radius)
+        map_objects = self.worker_with_map_objects(pos=pos)
+        pokestops = self.pokestops_at_coordinate(pos, radius, map_objects)
         if len(pokestops) == 0:
             log.warn("Could not find pokestops at {}, aborting".format(str(pos)))
             db_set_perm_banned(self.worker.account_info())
@@ -253,11 +254,11 @@ class LureWorker(object):
                 counter += 1
 
     def pokestop_at_coordinate(self, initial_pos):
-        pokestops = self.pokestops_at_coordinate(initial_pos, m=40)
+        map_objects = self.worker_with_map_objects(pos=initial_pos)
+        pokestops = self.pokestops_at_coordinate(initial_pos, map_objects, m=40)
         return pokestops[0] if len(pokestops) > 0 else None
 
-    def pokestops_at_coordinate(self, initial_pos, m=40, retry=True):
-        map_objects = self.worker_with_map_objects(pos=initial_pos)
+    def pokestops_at_coordinate(self, initial_pos, map_objects, m=40, retry=True):
         pokestops = pokstops_within_distance(map_objects, initial_pos, m)
         if len(pokestops) == 0:
             log.info("Not seeing any pokestops at {}, retrying in 10 seconds".format(initial_pos))
@@ -266,7 +267,8 @@ class LureWorker(object):
             if len(pokestops) == 0 and retry:
                 log.warn("Still not seeing any pokestops, changing worker")
                 self.worker = None
-                return self.pokestops_at_coordinate(initial_pos, m, retry=False)
+                map_objects = self.worker_with_map_objects(pos=initial_pos)
+                return self.pokestops_at_coordinate(initial_pos, m, map_objects, retry=False)
 
         return pokestops
 

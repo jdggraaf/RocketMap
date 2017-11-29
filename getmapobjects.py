@@ -236,7 +236,7 @@ def nearest_pokstop(map_objects, pos):
     result = None
     closest = sys.maxsize
     for pokestop in parse_pokestops(map_objects):
-        distance = vincenty(pos, (pokestop.latitude, pokestop.longitude)).m
+        distance = equi_rect_distance_m(pos, (pokestop.latitude, pokestop.longitude))
         if distance < closest:
             result = pokestop
             closest = distance
