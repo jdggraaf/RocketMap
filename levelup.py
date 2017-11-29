@@ -37,6 +37,11 @@ parser.add_argument('-system-id', '--system-id',
 parser.add_argument('-fsi', '--final-system-id',
                     help='Define the name of the node where accounts are transferred upon successful botting',
                     default=None)
+parser.add_argument('-fasi', '--failed-system-id',
+                    help='Define the name of the node where accounts are transferred upon unsuccessful botting',
+                    default=None)
+parser.add_argument('-fl', '--fail-last', default=0,
+                    help='When this number of accounts remain, fail any accounts that are less than 95% done')
 parser.add_argument('-locs', '--locations', type=parse_unicode,
                     help='Location, can be an address or coordinates.')
 parser.add_argument('-r', '--route', type=parse_unicode,
@@ -91,10 +96,10 @@ pokemonhandler.set_args(args)
 install_thread_excepthook()
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-queue = []
-
 threads = []
-
+num_started = 0
+lock = Lock()
+num_completed = 0
 
 
 account_manager = AccountManager(args.system_id, args.use_account_db, args, [], [], Queue(), {})
@@ -107,6 +112,7 @@ candy_12_feed = Candy12Feed()
 
 
 def safe_do_work(thread_num, global_catch_feed, latch , forced_update_):
+    global num_completed
     # while not forced_update_.isSet():
     # noinspection PyBroadException
     while True:
@@ -129,7 +135,8 @@ def safe_do_work(thread_num, global_catch_feed, latch , forced_update_):
             latch.count_down()
         if not args.non_stop:  # latch does not work in non-stop mode
             break
-
+    with lock:
+        num_completed += 1
 
 
 def next_worker():
@@ -378,12 +385,12 @@ def do_work(thread_num, worker, global_catch_feed, latch, is_forced_update, use_
 
 
 forced_update = create_forced_update_check(args)
-
 nthreads = int(args.thread_count)
 log.info("Bot using {} threads".format(str(nthreads)))
 latch = CountDownLatch(nthreads)
 for i in range(nthreads):
     the_thread = Thread(target=safe_do_work, name="bot-"+str(i),args=(i, global_catch_feed, latch, forced_update))
+    num_started += 1
     the_thread.start()
     threads.append(the_thread)
     if args.proxy and i % len(args.proxy) == 0:
