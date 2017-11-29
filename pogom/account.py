@@ -153,7 +153,7 @@ def check_login(args, account, api, proxy_url, proceed=lambda worker: True):
     try:
         return rpc_login_sequence(args, api, account, proceed)
     except NianticIPBannedException:
-        log.info("IP seems to be NIANTIC banned {}".format(str(current_proxy))
+        log.info("IP seems to be NIANTIC banned {}".format(str(current_proxy)))
         raise
 
 
