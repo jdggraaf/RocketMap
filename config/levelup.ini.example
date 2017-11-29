@@ -13,8 +13,8 @@ system-id: levelup-bot
 # legal routes are hamburg
 route: hamburg
 proxy-file: proxies.txt
-# default threads is 5. Dont go above 7 per proxy or you'll get bans
-thread-count: 50
+# default threads is 5. Dont go above 7 per IP or you'll get bans
+thread-count: 7
 # default level is 5
 target-level: 20
 final-system-id: lures
