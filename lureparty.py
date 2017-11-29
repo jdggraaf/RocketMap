@@ -298,7 +298,11 @@ num_proxies = len(args.proxy) if args.proxy else 1
 if args.json_locations:
     log.info("Geofences are: {}".format(str(geofence_stops.keys())))
     with open(args.json_locations) as data_file:
-        json_config = json.load(data_file)
+        try:
+            json_config = json.load(data_file)
+        except ValueError:
+            log.error("Failed to load JSON, malformed file. Use an online JSON validator to check it")
+            raise
 
         routes = json_config["routes"]
         for json_loc in json_config["schedules"]:

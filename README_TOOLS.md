@@ -20,6 +20,8 @@ See config/lureparty.ini.example and config/locations_sample.json
 
 Requires mysql with "account" table described below.
 
+Database schema is located at https://github.com/ShuckleHQ/RocketMap/blob/develop/database_scripts.md
+
 ** One pokestop per coordinate in the routes section. Pokestop closest to coordinate will be lured.
 
 ```
