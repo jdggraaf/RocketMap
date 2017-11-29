@@ -8,7 +8,7 @@ from threading import Lock
 from timeit import default_timer
 
 from pgoapi import PGoApi
-from pgoapi.exceptions import AuthException, HashingQuotaExceededException
+from pgoapi.exceptions import AuthException, HashingQuotaExceededException, NianticIPBannedException
 
 from scannerutil import is_forced_version
 from .fakePogoApi import FakePogoApi
@@ -111,42 +111,51 @@ def check_login(args, account, api, proxy_url, proceed=lambda worker: True):
     #if is_forced_version(proxy_url):
     #    raise ForcedApiException()
 
-    # One initial try + login_retries.
-    while num_tries < (args.login_retries + 1):
-        try:
-            if proxy_url:
-                log.info("Using proxy {} for login".format(str(proxy_url)))
-                api.set_authentication(
-                    provider=account['auth_service'],
-                    username=account['username'],
-                    password=account['password'],
-                    proxy_config={'http': proxy_url, 'https': proxy_url})
-            else:
-                api.set_authentication(
-                    provider=account['auth_service'],
-                    username=account['username'],
-                    password=account['password'])
-            # Success!
-            break
-        except AuthException:
-            num_tries += 1
-            log.warn(
-                ('Failed to login to Pokemon Go with account %s and proxy %s. ' +
-                 'Trying again in %g seconds.'),
-                account['username'], str(proxy_url), args.login_delay)
-            time.sleep(args.login_delay)
+    current_proxy = api.get_proxy()
+    try:
+        # One initial try + login_retries.
+        while num_tries < (args.login_retries + 1):
+            try:
+                if proxy_url:
+                    log.info("Using proxy {} for login".format(str(proxy_url)))
+                    api.set_authentication(
+                        provider=account['auth_service'],
+                        username=account['username'],
+                        password=account['password'],
+                        proxy_config={'http': proxy_url, 'https': proxy_url})
+                else:
+                    api.set_authentication(
+                        provider=account['auth_service'],
+                        username=account['username'],
+                        password=account['password'])
+                # Success!
+                break
+            except AuthException:
+                num_tries += 1
+                log.warn(
+                    ('Failed to login to Pokemon Go with account %s and proxy %s. ' +
+                     'Trying again in %g seconds.'),
+                    account['username'], str(proxy_url), args.login_delay)
+                time.sleep(args.login_delay)
 
-    if num_tries > args.login_retries:
-        log.error(
-            ('Failed to login to Pokemon Go with account %s in ' +
-             '%d tries with proxy %s. Giving up.'),
-            account['username'], num_tries, str(proxy_url))
-        raise TooManyLoginAttempts('Exceeded login attempts.')
+        if num_tries > args.login_retries:
+            log.error(
+                ('Failed to login to Pokemon Go with account %s in ' +
+                 '%d tries with proxy %s. Giving up.'),
+                account['username'], num_tries, str(proxy_url))
+            raise TooManyLoginAttempts('Exceeded login attempts.')
+    finally:
+        api.set_proxy(current_proxy)
 
     time.sleep(random.uniform(2, 4))
 
     # Simulate login sequence.
-    return rpc_login_sequence(args, api, account, proceed)
+    try:
+        return rpc_login_sequence(args, api, account, proceed)
+    except NianticIPBannedException:
+        log.info("IP seems to be NIANTIC banned {}".format(str(current_proxy))
+        raise
+
 
 
 # Simulate real app via login sequence.
