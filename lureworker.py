@@ -124,7 +124,7 @@ class LureWorker(object):
         db_set_logged_in_stats(info.username, lures, eggs, level)
         if warning_:
             db_set_warned(info,datetime.datetime.now())
-        return lures > 0
+        return True
 
     def get_account_with_lures(self, pos):
         worker = wrap_account_no_replace(self.account_manager.get_account(), self.account_manager)
